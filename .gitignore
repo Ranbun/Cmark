@@ -33,4 +33,6 @@
 
 # directory
 .idea
+out
+/src/vendor/easyexif
 
