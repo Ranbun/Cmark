@@ -35,4 +35,5 @@
 .idea
 out
 /src/vendor/easyexif
+.vs
 
