@@ -18,7 +18,17 @@ namespace CM
         MainWindow();
 
     private:
+
+        void InitUI();
+    	void InitMenu();
+        void InitConnect();
+
+    private:
         std::shared_ptr<DisplayWidget> m_displayWidget;
+
+        /// File Actions
+        QAction* newAction;
+        QAction* openDirectoryAction;   ///< 打开文件夹
 
     };
 
