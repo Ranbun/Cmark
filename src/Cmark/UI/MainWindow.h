@@ -1,15 +1,26 @@
-//
-// Created by RanLH on 11/23/2023.
-//
-
 #ifndef CAMERAMARK_MAINWINDOW_H
 #define CAMERAMARK_MAINWINDOW_H
 
-namespace CM {
+#include <QMainWindow>
+#include <memory>
 
-class MainWindow {
+namespace CM
+{
+    class DisplayWidget;
+}
 
-};
+namespace CM
+{
+
+    class MainWindow :public  QMainWindow
+    {
+    public:
+        MainWindow();
+
+    private:
+        std::shared_ptr<DisplayWidget> m_displayWidget;
+
+    };
 
 } // CM
 

@@ -1,8 +1,17 @@
-//
-// Created by RanLH on 11/23/2023.
-//
-
+#include <QPen>
 #include "DisplayWidget.h"
 
-namespace CM {
+namespace CM
+{
+    DisplayWidget::DisplayWidget(QWidget *parent)
+    :QWidget(parent)
+    {
+
+    }
+
+    void DisplayWidget::paintEvent(QPaintEvent *event)
+    {
+
+        QWidget::paintEvent(event);
+    }
 } // CM

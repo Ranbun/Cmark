@@ -1,17 +1,18 @@
 #include <QApplication>
 #include <iostream>
-#include <QWidget>
+
 #include "Load/FileLoad.h"
 #include "Load/EXIFResolver.h"
+#include "UI/MainWindow.h"
 
 int main(int argc,char ** argv)
 {
     QApplication app(argc,argv);
-    QWidget w(nullptr);
-    w.setWindowTitle("Test Widget");
-    w.show();
+    CM::MainWindow manApp;
+    manApp.setWindowTitle("Window App");
+    manApp.show();
 
-    const auto & pictureData= CM::FileLoad::Load("./sources/pictures/DSC_4.jpg");
+    const auto & pictureData= CM::FileLoad::Load("./sources/pictures/DSC_3.jpg");
     CM::EXIFResolver resolver;
     CM::EXIFResolver::check(resolver.resolver(pictureData));
     const auto & result = resolver.getInfos();
