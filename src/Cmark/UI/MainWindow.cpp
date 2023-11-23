@@ -60,4 +60,9 @@ namespace CM
         StatusBar->showMessage("Init loading");
 
     }
+
+    void MainWindow::AddImage(std::filesystem::path &path)
+    {
+        m_displayWidget->AddImage(path);
+    }
 } // CM

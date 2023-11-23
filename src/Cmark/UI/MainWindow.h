@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <memory>
+#include <filesystem>
 
 namespace CM
 {
@@ -16,6 +17,7 @@ namespace CM
     {
     public:
         MainWindow();
+        void AddImage(std::filesystem::path & path);
 
     private:
 

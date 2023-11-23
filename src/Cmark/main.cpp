@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <iostream>
+#include <filesystem>
 
 #include "Load/FileLoad.h"
 #include "Load/EXIFResolver.h"
@@ -10,12 +11,18 @@ int main(int argc,char ** argv)
     QApplication app(argc,argv);
     CM::MainWindow manApp;
     manApp.setWindowTitle("Window App");
-    manApp.show();
 
-    const auto & pictureData= CM::FileLoad::Load("./sources/pictures/DSC_3.jpg");
+    auto path = std::filesystem::path("./sources/pictures/DSC_3.jpg");
+
+    manApp.AddImage(path);
+
+    const auto & pictureData= CM::FileLoad::Load(path.string());
     CM::EXIFResolver resolver;
     CM::EXIFResolver::check(resolver.resolver(pictureData));
     const auto & result = resolver.getInfos();
+
+    manApp.show();
+
 
 #if _DEBUG
     // Dump EXIF information
