@@ -8,6 +8,8 @@
 namespace CM
 {
     class DisplayWidget;
+    class LeftDockWidget;
+
 }
 
 namespace CM
@@ -21,16 +23,20 @@ namespace CM
 
     private:
 
-        void InitUI();
+        void InitWindowLayout();
+        void InitUi();
     	void InitMenu();
         void InitConnect();
 
     private:
+        /// widget
         std::shared_ptr<DisplayWidget> m_displayWidget;
+        std::shared_ptr<LeftDockWidget> m_leftDockWidget;
+
 
         /// File Actions
         QAction* newAction;
-        QAction* openDirectoryAction;   ///< ´ò¿ªÎÄ¼þ¼Ð
+        QAction* openDirectoryAction;   ///< æ‰“å¼€æ–‡ä»¶å¤¹
 
     };
 

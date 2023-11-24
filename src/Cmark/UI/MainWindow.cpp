@@ -5,36 +5,60 @@
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QFileDialog>
+#include <QTextEdit>
+
+#include "LeftDockWidget.h"
 
 #if _DEBUG
 #include <QDebug>
-#endif 
+#endif
 
 namespace CM
 {
     MainWindow::MainWindow()
     : QMainWindow(nullptr)
     {
-        m_displayWidget = std::shared_ptr<DisplayWidget>(new DisplayWidget,[]([[maybe_unused]] DisplayWidget * w){});
+        InitUi();
+    }
+
+    void MainWindow::InitWindowLayout()
+    {
+        /// Central Widget
+        m_displayWidget = std::shared_ptr<DisplayWidget>(new DisplayWidget, []([[maybe_unused]] DisplayWidget* w) {});
         this->setCentralWidget(m_displayWidget.get());
         this->resize({ 960,720 });  ///< resize Window
 
-        InitUI();
+        /// left dock widget
+        {
+            m_leftDockWidget = std::shared_ptr<LeftDockWidget>(new LeftDockWidget("Dock Widget", this), []([[maybe_unused]] LeftDockWidget* w) {});
+            m_leftDockWidget->setWindowTitle("");
+
+            addDockWidget(Qt::LeftDockWidgetArea, m_leftDockWidget.get());
+        }
+
+        setContentsMargins(0,0,0,0);
+
     }
 
-    void MainWindow::InitUI()
+    void MainWindow::InitUi()
     {
+        InitWindowLayout();
         InitMenu();
         InitConnect();
     }
 
     void MainWindow::InitConnect()
     {
-        connect(newAction, &QAction::triggered, []() {});
+        connect(newAction, &QAction::triggered, [this]()
+        {
+            m_leftDockWidget->New();
+
+        });
         connect(openDirectoryAction, &QAction::triggered, [this]()
         {
             const auto directoryPath = QFileDialog::getExistingDirectory(this);
             const auto path = std::filesystem::path(directoryPath.toStdString());
+            m_leftDockWidget->ShowMessage(directoryPath.toStdString());
             m_displayWidget->Open(path);
         });
 
