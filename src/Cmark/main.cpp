@@ -13,8 +13,10 @@ int main(int argc,char ** argv)
     manApp.setWindowTitle("Window App");
 
     auto path = std::filesystem::path("./sources/pictures/DSC_3.jpg");
+    auto path2 = std::filesystem::path("./sources/pictures/DSC_4.jpg");
 
     manApp.AddImage(path);
+    manApp.AddImage(path2);
 
     const auto & pictureData= CM::FileLoad::Load(path.string());
     CM::EXIFResolver resolver;

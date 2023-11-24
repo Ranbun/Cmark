@@ -4,6 +4,8 @@ FILE(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT
         ${third_party}/easyexif/exif.cpp ${third_party}/easyexif/exif.h
 )
 
+SET(CMAKE_AUTOMOC ON)
+
 ADD_EXECUTABLE(${target_} ${SOURCE_FILES})
 
 TARGET_INCLUDE_DIRECTORIES(${target_} PRIVATE ${third_party}/easyexif)
