@@ -4,15 +4,14 @@
 #include <QDockWidget>
 #include <QTextEdit>
 
-
 class QTreeView;
 class QFileSystemModel;
 
 namespace CM
 {
-
     class LeftDockWidget : public QDockWidget
     {
+        Q_OBJECT
     public:
         LeftDockWidget(const QString & title,QWidget * parent = nullptr);
         ~LeftDockWidget() override;
@@ -23,6 +22,9 @@ namespace CM
     private:
         QTreeView * m_TreeView;
         QFileSystemModel * m_FileSystemModel;
+
+    signals:
+        void previewImage(const QString & path);
 
     };
 

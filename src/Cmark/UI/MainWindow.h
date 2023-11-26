@@ -17,6 +17,7 @@ namespace CM
 
     class MainWindow :public  QMainWindow
     {
+        Q_OBJECT
     public:
         MainWindow();
         void AddImage(std::filesystem::path & path);

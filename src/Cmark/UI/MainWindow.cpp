@@ -62,6 +62,13 @@ namespace CM
             m_displayWidget->Open(path);
         });
 
+        QObject::connect(m_leftDockWidget.get(), &LeftDockWidget::previewImage, [this](const QString & path)
+        {
+            std::filesystem::path imagePath(path.toStdString());
+            AddImage(imagePath);
+        });
+
+
     }
 
     void MainWindow::InitMenu()

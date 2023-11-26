@@ -7,7 +7,7 @@
 
 #if _DEBUG
 #include <QDebug>
-#endif 
+#endif
 
 namespace CM
 {
@@ -30,6 +30,7 @@ namespace CM
         connect(m_TreeView, &QTreeView::clicked, this, [this](const QModelIndex& index)
         {
                 QString filePath = m_FileSystemModel->filePath(index);
+                emit previewImage(filePath);
                 qDebug() << "Clicked file path: " << filePath;
         });
 
