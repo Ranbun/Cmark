@@ -38,24 +38,36 @@ namespace CM
         QWidget::paintEvent(event);
     }
 
-    void DisplayWidget::AddImage(std::filesystem::path & path)
+    void DisplayWidget::AddImage(const std::filesystem::path & path) const
     {
         const auto & geometry = this->geometry();
-        QVBoxLayout layout(this);
+
 
         auto p = QString::fromStdString(path.string());
-        QPixmap pixmap(p);
-        pixmap = pixmap.scaled(400,300);
-        auto item = m_scene->addPixmap(pixmap);
-        static int i = 1;
-        item->setPos((i++) * 400,300);
+        QPixmap preViewImage(p);
+
+        const auto imageW = geometry.width()/ 2.0;
+
+        preViewImage = preViewImage.scaled(imageW,300);
+        const auto item = m_scene->addPixmap(preViewImage);
+
+
+        const auto imageY = geometry.height() / 2 - preViewImage.height() / 2;
+        const auto imageX = 0;
+
+        item->setPos(imageX, imageY);
+
+        item->setAcceptDrops(true);
+
         // 将视图添加到布局中
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent *event)
     {
-        auto windowSize = event->size();
+        const auto windowSize = event->size();
         m_view->setGeometry(QRect(0, 0, windowSize.width(), windowSize.height()));
+        m_scene->setSceneRect(QRect(0, 0, windowSize.width(), windowSize.height()));
+
         QWidget::resizeEvent(event);
     }
 } // CM

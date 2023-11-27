@@ -19,7 +19,7 @@ namespace CM
         explicit DisplayWidget(QWidget * parent = nullptr);
     public:
         void Open(const std::filesystem::path& path);
-        void AddImage(std::filesystem::path & path);
+        void AddImage(const std::filesystem::path & path) const;
 
     protected:
         void paintEvent(QPaintEvent * event) override;

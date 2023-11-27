@@ -15,8 +15,8 @@ int main(int argc,char ** argv)
     auto path = std::filesystem::path("./sources/pictures/DSC_3.jpg");
     auto path2 = std::filesystem::path("./sources/pictures/DSC_4.jpg");
 
-    manApp.AddImage(path);
-    manApp.AddImage(path2);
+    //manApp.AddImage(path);
+    //manApp.AddImage(path2);
 
     const auto & pictureData= CM::FileLoad::Load(path.string());
     CM::EXIFResolver resolver;
