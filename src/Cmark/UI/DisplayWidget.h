@@ -8,6 +8,7 @@
 
 class QGraphicsView;
 class QGraphicsScene;
+class QGraphicsPixmapItem;
 
 
 namespace CM
@@ -18,8 +19,8 @@ namespace CM
     public:
         explicit DisplayWidget(QWidget * parent = nullptr);
     public:
-        void Open(const std::filesystem::path& path);
-        void AddImage(const std::filesystem::path & path) const;
+        void Open(const std::filesystem::path& path) const;
+        void PreViewImage(const std::filesystem::path & path) const;
 
     protected:
         void paintEvent(QPaintEvent * event) override;
@@ -28,6 +29,12 @@ namespace CM
     private:
         QGraphicsScene * m_scene{nullptr};
         QGraphicsView * m_view{nullptr};
+
+        QGraphicsPixmapItem* m_previewImage{nullptr};
+
+        int m_offsetX = 5;
+        int m_offsetY = 5;
+
 
     signals:
         void Created();

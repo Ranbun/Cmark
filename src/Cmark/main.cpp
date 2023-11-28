@@ -11,22 +11,23 @@ int main(int argc,char ** argv)
     QApplication app(argc,argv);
     CM::MainWindow manApp;
     manApp.setWindowTitle("Window App");
-
-    auto path = std::filesystem::path("./sources/pictures/DSC_3.jpg");
-    auto path2 = std::filesystem::path("./sources/pictures/DSC_4.jpg");
-
-    //manApp.AddImage(path);
-    //manApp.AddImage(path2);
-
-    const auto & pictureData= CM::FileLoad::Load(path.string());
-    CM::EXIFResolver resolver;
-    CM::EXIFResolver::check(resolver.resolver(pictureData));
-    const auto & result = resolver.getInfos();
-
     manApp.show();
 
+#if   _DEBUG
+    auto path = std::filesystem::path("./sources/pictures/DSC_3.jpg");
+    auto path2 = std::filesystem::path("./sources/pictures/DSC_4.jpg");
+    manApp.PreViewImage(path);
+    //manApp.AddImage(path2);
 
-#if _DEBUG
+    const auto& pictureData = CM::FileLoad::Load(path.string());
+    CM::EXIFResolver resolver;
+    CM::EXIFResolver::check(resolver.resolver(pictureData));
+    const auto& result = resolver.getInfos();
+
+#endif 
+
+
+#if _DEBUG 
     // Dump EXIF information
     printf("Camera make          : %s\n", result.Make.c_str());
     printf("Camera model         : %s\n", result.Model.c_str());

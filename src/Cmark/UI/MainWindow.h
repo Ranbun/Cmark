@@ -20,7 +20,7 @@ namespace CM
         Q_OBJECT
     public:
         MainWindow();
-        void AddImage(std::filesystem::path & path);
+        void PreViewImage(const std::filesystem::path & path) const;
 
     private:
 

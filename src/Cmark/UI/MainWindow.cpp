@@ -65,7 +65,7 @@ namespace CM
         QObject::connect(m_leftDockWidget.get(), &LeftDockWidget::previewImage, [this](const QString & path)
         {
             std::filesystem::path imagePath(path.toStdString());
-            AddImage(imagePath);
+            PreViewImage(imagePath);
         });
 
 
@@ -92,8 +92,8 @@ namespace CM
 
     }
 
-    void MainWindow::AddImage(std::filesystem::path &path)
+    void MainWindow::PreViewImage(const std::filesystem::path & path) const
     {
-        m_displayWidget->AddImage(path);
+        m_displayWidget->PreViewImage(path);
     }
 } // CM
