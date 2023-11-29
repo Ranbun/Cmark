@@ -20,7 +20,7 @@ namespace CM
         explicit DisplayWidget(QWidget * parent = nullptr);
     public:
         void Open(const std::filesystem::path& path) const;
-        void PreViewImage(const std::filesystem::path & path) const;
+        void PreViewImage(const std::filesystem::path & path);
 
     protected:
         void paintEvent(QPaintEvent * event) override;
@@ -30,7 +30,7 @@ namespace CM
         QGraphicsScene * m_scene{nullptr};
         QGraphicsView * m_view{nullptr};
 
-        QGraphicsPixmapItem* m_previewImage{nullptr};
+        QGraphicsPixmapItem* m_previewImageItem{nullptr};
 
         int m_offsetX = 5;
         int m_offsetY = 5;

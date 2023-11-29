@@ -3,7 +3,9 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
+#include "../Base/type.h"
 
+#include <algorithm>
 
 namespace CM
 {
@@ -14,20 +16,39 @@ namespace CM
         int z;
     };
 
+    using Size = Point;
+
     struct ImageInfoItem
     {
+        CM::ExifKey m_key;
+        std::string m_title;
         QGraphicsTextItem * m_field;
-        Point pos;  ///< position
-        std::string m_infos;
+        Point pos{-1,-1};  ///< position
+        std::string m_infos{};
+        bool m_visible{false};
     };
 
     class PreViewImageScene : public QGraphicsScene
     {
     public:
-        PreViewImageScene(QObject * parent = nullptr);
+        explicit PreViewImageScene(QObject * parent = nullptr);
         ~PreViewImageScene() override = default;
+        void setPixmapItem(QGraphicsPixmapItem *item);
+        void updateSceneRect(const Size & rectSize);
+        void Init();
+
+        void updateTexItems(const CM::ExifMap & map);
+
     private:
+        QGraphicsPixmapItem * m_pixmapItem;
         std::vector<ImageInfoItem> m_infos;
+
+    protected:
+
+    private:
+        void InitTexItems();
+
+
     };
 
 } // CM

@@ -4,6 +4,10 @@
 #include "exif.h"
 #include <iostream>
 #include <vector>
+#include <unordered_map>
+#include <string>
+
+#include "../Base/type.h"
 
 namespace CM
 {
@@ -37,6 +41,8 @@ namespace CM
                     break;
             }
         }
+
+        [[maybe_unused]] static ExifMap resolverImageExif(const easyexif::EXIFInfo & result);
 
     private:
         easyexif::EXIFInfo m_EXIFResolver;
