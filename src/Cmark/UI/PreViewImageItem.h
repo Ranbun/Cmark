@@ -12,11 +12,12 @@ namespace CM
         explicit PreViewImageItem(QGraphicsItem * parent = nullptr);
         ~PreViewImageItem()  override = default;
 
-        void updatePixmapSize();
         void resetPixmap(const QPixmap & previewPixmap);
-        void updatePos();
-
         void update();
+
+    private:
+        void updatePixmapSize();
+        void updatePos();
 
     private:
         QPixmap m_pixmap;

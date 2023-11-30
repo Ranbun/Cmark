@@ -1,16 +1,21 @@
 #include "PreViewImageScene.h"
+#include <QGraphicsView>
 
 namespace CM
 {
+
+    static int textOffset = 5;
+
     PreViewImageScene::PreViewImageScene(QObject *parent)
     : QGraphicsScene(parent)
     {
         Init();
     }
 
-    void PreViewImageScene::updateSceneRect(const Size & rectSize)
+    void PreViewImageScene::updateSceneRect(QGraphicsView *view)
     {
-        setSceneRect(0, 0, rectSize.x, rectSize.y);
+        auto rect = view->geometry();
+        setSceneRect(0, 0, rect.width() - 2, rect.height() - 2);
     }
 
     void PreViewImageScene::Init()
@@ -76,15 +81,12 @@ namespace CM
         }
     }
 
-    void PreViewImageScene::updateTexItems(const ExifMap &map)
+    void PreViewImageScene::updateTexItems(const ExifList &map)
     {
-        auto beginPos = CM::Point{0,0,0};
-
-        int offset = 5;
         auto pos = m_pixmapItem->pos();
         auto rect = m_pixmapItem->boundingRect();
 
-        QPoint position(pos.x() + rect.width() + offset, offset + pos.y());
+        QPoint position(pos.x() + rect.width() + textOffset, textOffset + pos.y());
 
         for(const auto & item : map)
         {
@@ -98,12 +100,33 @@ namespace CM
                 it->m_infos = text;
                 it->m_visible = true;
                 it->pos = CM::Point{position.x(),position.y(),0};
-                it->m_field->setVisible(it->m_visible);
-                it->m_field->setPos(position);
-                it->m_field->setPlainText(it->m_infos.c_str());
 
-                position.setY(it->m_field->pos().y() + it->m_field->boundingRect().height() + offset);
+                auto pixmapItem = it->m_field;
+
+                pixmapItem->setVisible(it->m_visible);
+                pixmapItem->setPos(position);
+                pixmapItem->setPlainText((it->m_title + it->m_infos).c_str());
+
+                position.setY(static_cast<int>((pixmapItem->pos().y())) + (int)(pixmapItem->boundingRect().height()) + textOffset);
             }
+        }
+    }
+
+    void PreViewImageScene::updateTexItems()
+    {
+        const auto pos = m_pixmapItem->pos();
+        const auto rect = m_pixmapItem->boundingRect();
+
+        QPoint position(pos.x() + rect.width() + textOffset, textOffset + pos.y());
+
+        for(auto & item : m_infos)
+        {
+            auto pixmapItem = item.m_field;
+
+            item.pos = Point{(position.x()),(position.y()),0};
+            pixmapItem->setPos(position);
+
+            position.setY(static_cast<int>((pixmapItem->pos().y())) + (int)(pixmapItem->boundingRect().height()) + textOffset);
         }
     }
 

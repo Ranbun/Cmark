@@ -17,7 +17,7 @@ namespace CM
     {
 
         setContentsMargins(0, 0, 0, 0);
-        setFeatures(DockWidgetMovable | DockWidgetFloatable);
+        setFeatures(NoDockWidgetFeatures);
 
         /// show file tree
         m_TreeView = new QTreeView(this);
@@ -33,6 +33,16 @@ namespace CM
                 emit previewImage(filePath);
                 qDebug() << "Clicked file path: " << filePath;
         });
+
+#if  _DEBUG
+        auto lTitleBar = this->titleBarWidget();
+        auto lEmptyWidget = new QWidget();
+        setTitleBarWidget(lEmptyWidget);
+        delete lTitleBar;
+#endif
+
+        layout()->setContentsMargins(0,0,0,0);
+        layout()->setSpacing(0);
 
     }
 

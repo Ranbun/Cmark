@@ -66,85 +66,11 @@ namespace CM
 
         auto pixmapItem = dynamic_cast<PreViewImageItem*>(m_previewImageItem);
         pixmapItem->resetPixmap(preViewImage);
-        // pixmapItem->update();
 
         auto infos = EXIFResolver::resolverImageExif(result);
         auto scene = dynamic_cast<PreViewImageScene*>(m_scene);
         scene->updateTexItems(infos);
 
-#if  0
-        /// update pixmapItem pos
-        auto sceneRect = m_scene->sceneRect();
-        pixmapItem->updatePixmapSize();
-
-        const auto& geometry = this->geometry();
-        const auto previewSize = QSizeF{ static_cast<float>(geometry.width()) * 0.6f,static_cast<float>(geometry.height()) };
-
-        const int imageW = static_cast<int>(previewSize.width());
-        const int imageH = static_cast<int>(static_cast<float>(previewSize.height()) / static_cast<float>(previewSize.width()) * imageW);
-
-        preViewImage = preViewImage.scaled(imageW, imageH, Qt::AspectRatioMode::KeepAspectRatio);
-        // m_previewImageItem->setPixmap(preViewImage);
-
-        const auto imageY = previewSize.height() / 2 - preViewImage.height() / 2;
-        constexpr auto imageX = 0;
-
-        m_previewImageItem->setPos(imageX, imageY);
-#endif
-
-        /// show image infos
-#if  _DEBUG >> 1
-        {
-            const auto & pos = m_previewImageItem->pos();
-            auto imageX = pos.x();
-            auto imageY = pos.y();
-            auto rect = m_previewImageItem->boundingRect();
-            auto imageW = rect.width();
-            QPoint itemPos(imageX + imageW + m_offsetX, m_offsetY + imageY);
-            {
-                const std::string camera_make = "Camera make: " + result.Make;
-                auto camera_make_item = m_scene->addText(camera_make.c_str());
-                camera_make_item->setPos(itemPos);
-                itemPos.setY(camera_make_item->pos().y() + camera_make_item->boundingRect().height() + m_offsetY);
-            }
-
-            {
-                const std::string camera_model = "Camera model: " + result.Model;
-                const auto camera_model_item = m_scene->addText(camera_model.c_str());
-                camera_model_item->setPos(itemPos);
-                itemPos.setY(camera_model_item->pos().y() + camera_model_item->boundingRect().height() + m_offsetY);
-            }
-
-            {
-                const std::string camera_model =
-                        "Exposure time: " + std::to_string(static_cast<int>(1.0 / result.ExposureTime));
-                const auto camera_model_item = m_scene->addText(camera_model.c_str());
-                camera_model_item->setPos(itemPos);
-                itemPos.setY(camera_model_item->pos().y() + camera_model_item->boundingRect().height() + m_offsetY);
-            }
-            {
-                const std::string camera_model = "F-stop: " + std::to_string(static_cast<int>(result.FNumber)) + "." +
-                                                 std::to_string(static_cast<int>(result.FNumber * 10) % 10) + "f";
-                const auto camera_model_item = m_scene->addText(camera_model.c_str());
-                camera_model_item->setPos(itemPos);
-                itemPos.setY(camera_model_item->pos().y() + camera_model_item->boundingRect().height() + m_offsetY);
-            }
-
-            {
-                const std::string camera_model = "ISO speed: " + std::to_string(result.ISOSpeedRatings);
-                const auto camera_model_item = m_scene->addText(camera_model.c_str());
-                camera_model_item->setPos(itemPos);
-                itemPos.setY(camera_model_item->pos().y() + camera_model_item->boundingRect().height() + m_offsetY);
-            }
-
-            {
-                const std::string camera_model = "Lens model: " + result.LensInfo.Model;
-                const auto camera_model_item = m_scene->addText(camera_model.c_str());
-                camera_model_item->setPos(itemPos);
-                itemPos.setY(camera_model_item->pos().y() + camera_model_item->boundingRect().height() + m_offsetY);
-            }
-        }
-#endif
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent *event)
@@ -152,8 +78,7 @@ namespace CM
         const auto windowSize = event->size();
         m_view->resize(windowSize);   ///< resize view
 
-        const auto viewGeometry= m_view->geometry();
-        ((PreViewImageScene *) m_scene)->updateSceneRect(CM::Size{viewGeometry.width() - 2, viewGeometry.height() - 2, 0});
+        ((PreViewImageScene *) m_scene)->updateSceneRect(m_view);
 
         /// update preview image size
         if(this->isActiveWindow())
@@ -161,6 +86,7 @@ namespace CM
             ((PreViewImageItem *) m_previewImageItem)->update();
         }
 
+        ((PreViewImageScene *) m_scene)->updateTexItems();
 
         QWidget::resizeEvent(event);
     }

@@ -7,9 +7,9 @@ namespace CM
         return m_EXIFResolver.parseFrom(pictureData.data(), pictureData.size());
     }
 
-    ExifMap EXIFResolver::resolverImageExif(const easyexif::EXIFInfo &result)
+    ExifList EXIFResolver::resolverImageExif(const easyexif::EXIFInfo &result)
     {
-        ExifMap infoMaps;
+        ExifList infoMaps;
         infoMaps.emplace_back(ExifPack{ExifKey::Camera_make,result.Make});
         infoMaps.emplace_back(ExifPack{ExifKey::Camera_model,result.Model});
         infoMaps.emplace_back(ExifPack{ExifKey::Image_width,std::to_string(result.ImageWidth)});

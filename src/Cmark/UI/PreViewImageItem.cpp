@@ -1,7 +1,3 @@
-//
-// Created by RanLH on 11/29/2023.
-//
-
 #include "PreViewImageItem.h"
 
 namespace CM
@@ -24,6 +20,10 @@ namespace CM
         auto pw = m_pixmap.width();
 #endif
         auto w = (int)(sceneRectSize.x * 0.6);
+        if(w < sceneRect.width() - 200)
+        {
+            w = sceneRect.width() - 200;
+        }
         auto h = static_cast<int>(static_cast<float>(m_pixmap.height()) / static_cast<float>(m_pixmap.width()) * w);
 
         if(m_pixmap.isNull()) return ;

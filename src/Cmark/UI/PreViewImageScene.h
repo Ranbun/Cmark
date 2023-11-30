@@ -11,9 +11,9 @@ namespace CM
 {
     struct Point
     {
-        int x;
-        int y;
-        int z;
+        [[maybe_unused]] int x;
+        [[maybe_unused]] int y;
+        [[maybe_unused]] int z;
     };
 
     using Size = Point;
@@ -33,11 +33,30 @@ namespace CM
     public:
         explicit PreViewImageScene(QObject * parent = nullptr);
         ~PreViewImageScene() override = default;
-        void setPixmapItem(QGraphicsPixmapItem *item);
-        void updateSceneRect(const Size & rectSize);
         void Init();
 
-        void updateTexItems(const CM::ExifMap & map);
+        /**
+         * @brief 记录pixmap Item
+         * @param item pixmap item
+         */
+        void setPixmapItem(QGraphicsPixmapItem *item);
+
+        /**
+         * @brief 根据当前使用的视图更新场景的大小(此时场景和视图具有1对一关系)
+         * @param view 当前使用的视图
+         */
+        void updateSceneRect(QGraphicsView *view);
+
+        /**
+         * @brief 当前显示的所有文字信息
+         * @param map 所有的文字信息
+         */
+        void updateTexItems(const CM::ExifList & map);
+
+        /**
+         * @brief 更新所有文字的位置
+         */
+        void updateTexItems();
 
     private:
         QGraphicsPixmapItem * m_pixmapItem;

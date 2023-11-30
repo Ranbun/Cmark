@@ -42,7 +42,7 @@ namespace CM
             }
         }
 
-        [[maybe_unused]] static ExifMap resolverImageExif(const easyexif::EXIFInfo & result);
+        [[maybe_unused]] static ExifList resolverImageExif(const easyexif::EXIFInfo & result);
 
     private:
         easyexif::EXIFInfo m_EXIFResolver;

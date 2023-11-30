@@ -8,6 +8,7 @@
 #include <QTextEdit>
 
 #include "LeftDockWidget.h"
+#include "StatusBar.h"
 
 #if _DEBUG
 #include <QDebug>
@@ -37,7 +38,6 @@ namespace CM
         }
 
         setContentsMargins(0,0,0,0);
-
     }
 
     void MainWindow::InitUi()
@@ -45,6 +45,8 @@ namespace CM
         InitWindowLayout();
         InitMenu();
         InitConnect();
+
+        StatusBar::showMessage("Initialized!");
     }
 
     void MainWindow::InitConnect()
@@ -65,14 +67,18 @@ namespace CM
         QObject::connect(m_leftDockWidget.get(), &LeftDockWidget::previewImage, [this](const QString & path)
         {
             std::filesystem::path imagePath(path.toStdString());
+            StatusBar::showMessage("preview image: " + path);
+            StatusBar::repaint();
             PreViewImage(imagePath);
         });
-
 
     }
 
     void MainWindow::InitMenu()
     {
+        auto status = statusBar();  ///< 使用内置方法创建 status bar
+        CM::StatusBar::Init(status);
+
         const auto MenuBar = menuBar();
 
         const auto file = new QMenu("File(&F)");
@@ -85,11 +91,6 @@ namespace CM
         openDirectoryAction = new QAction("Open");
         openDirectoryAction->setShortcut({ "Ctrl+P" });
         file->addAction(openDirectoryAction);
-
-
-        const auto StatusBar = statusBar();
-        StatusBar->showMessage("Init loading");
-
     }
 
     void MainWindow::PreViewImage(const std::filesystem::path & path) const

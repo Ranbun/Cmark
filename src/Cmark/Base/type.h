@@ -31,7 +31,7 @@ namespace CM
         std::string text;
     };
 
-    using ExifMap = std::vector<ExifPack>;
+    using ExifList = std::vector<ExifPack>;
 
     // using ExifMap = std::unordered_map<ExifKey,std::string>;
 
