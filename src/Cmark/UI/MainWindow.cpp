@@ -103,7 +103,7 @@ namespace CM
 
     void MainWindow::InitTool()
     {
-        auto toolBar = addToolBar("MainWindow");
+        auto toolBar = addToolBar("toolbar");
 
         toolBar->setFloatable(false);
         toolBar->setMovable(false);
