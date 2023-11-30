@@ -27,6 +27,7 @@ namespace CM
         void InitWindowLayout();
         void InitUi();
     	void InitMenu();
+        void InitTool();
         void InitConnect();
 
     private:

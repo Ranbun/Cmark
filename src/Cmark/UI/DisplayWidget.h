@@ -13,6 +13,15 @@ class QGraphicsPixmapItem;
 
 namespace CM
 {
+
+    enum SceneIndex
+    {
+        NONE,
+        PREVIEW_SCENE,
+        GENREATELOGO_SCENE
+    };
+
+
     class DisplayWidget : public QWidget
     {
         Q_OBJECT
@@ -21,6 +30,11 @@ namespace CM
     public:
         void Open(const std::filesystem::path& path) const;
         void PreViewImage(const std::filesystem::path & path);
+
+        /**
+         * @brief save scene as Image
+         */
+        void saveScene(SceneIndex sceneIndex);
 
     protected:
         void paintEvent(QPaintEvent * event) override;

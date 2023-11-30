@@ -4,8 +4,10 @@
 
 #include <QMenuBar>
 #include <QStatusBar>
+#include <QToolBar>
 #include <QFileDialog>
 #include <QTextEdit>
+#include <QAction>
 
 #include "LeftDockWidget.h"
 #include "StatusBar.h"
@@ -44,6 +46,7 @@ namespace CM
     {
         InitWindowLayout();
         InitMenu();
+        InitTool();
         InitConnect();
 
         StatusBar::showMessage("Initialized!");
@@ -96,5 +99,25 @@ namespace CM
     void MainWindow::PreViewImage(const std::filesystem::path & path) const
     {
         m_displayWidget->PreViewImage(path);
+    }
+
+    void MainWindow::InitTool()
+    {
+        auto toolBar = addToolBar("MainWindow");
+
+        toolBar->setFloatable(false);
+        toolBar->setMovable(false);
+        toolBar->setIconSize({16,16});
+
+        auto savePreviewImageAction = toolBar->addAction("Save");
+        savePreviewImageAction->setToolTip("Save preview Image");
+        QPixmap previewSceneSaveIcon("./sources/icons/previewSceneSave.png");
+        previewSceneSaveIcon = previewSceneSaveIcon.scaled({16,16},Qt::KeepAspectRatio);
+        savePreviewImageAction->setIcon(previewSceneSaveIcon);
+
+        connect(savePreviewImageAction,&QAction::triggered,[this]()
+        {
+            m_displayWidget->saveScene(SceneIndex::PREVIEW_SCENE);
+        });
     }
 } // CM

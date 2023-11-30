@@ -90,4 +90,34 @@ namespace CM
 
         QWidget::resizeEvent(event);
     }
+
+    void DisplayWidget::saveScene(SceneIndex sceneIndex)
+    {
+        auto save = [](QGraphicsScene * scene){
+            scene->clearSelection();                                                       // Selections would also render to the file
+            QImage image(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);  // Create the image with the exact size of the shrunk scene
+            image.fill(Qt::white);                                              // Start all pixels transparent
+
+            QPainter painter(&image);
+            scene->render(&painter);
+            bool res = image.save("file_name.png");
+            if(!res)
+            {
+                std::runtime_error("save scene failed!");
+            }
+        };
+
+        switch (sceneIndex)
+        {
+            case SceneIndex::NONE:
+                break;
+            case SceneIndex::PREVIEW_SCENE:
+            {
+                save(m_scene);
+            }
+            break;
+            default:
+                break;
+        }
+    }
 } // CM
