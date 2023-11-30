@@ -7,14 +7,15 @@
 
 #include <QImage>
 #include <QPixmap>
+#include <QFileDialog>
 
 #include <QGraphicsView>
-#include <QGraphicsPixmapItem>
 #include "PreViewImageScene.h"
 #include "PreViewImageItem.h"
 
 #include <QVBoxLayout>
 #include <QResizeEvent>
+#include "LogoManager.h"
 
 namespace CM
 {
@@ -55,21 +56,34 @@ namespace CM
     void DisplayWidget::PreViewImage(const std::filesystem::path & path)
     {
         // m_scene->clear();
-        const auto& pictureData = CM::FileLoad::Load(path.string());
+        const auto &pictureData = CM::FileLoad::Load(path.string());
         EXIFResolver resolver;
         EXIFResolver::check(resolver.resolver(pictureData));
-        const auto& result = resolver.getInfos();
+        const auto &result = resolver.getInfos();
+
+        auto cameraIndex = LogoManager::resolverCameraIndex(result.Make);
+        LogoManager::loadCameraLogo(cameraIndex);
+        auto previewImagelogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
         /// load image
         const QImage loadedImage = QImage::fromData(pictureData.data(), pictureData.size());
         auto preViewImage = QPixmap::fromImage(loadedImage);
 
-        auto pixmapItem = dynamic_cast<PreViewImageItem*>(m_previewImageItem);
+        auto pixmapItem = dynamic_cast<PreViewImageItem *>(m_previewImageItem);
         pixmapItem->resetPixmap(preViewImage);
 
         auto infos = EXIFResolver::resolverImageExif(result);
-        auto scene = dynamic_cast<PreViewImageScene*>(m_scene);
+        auto scene = dynamic_cast<PreViewImageScene *>(m_scene);
         scene->updateTexItems(infos);
+
+        scene->updateLogoPixmap(*previewImagelogo);
+
+//        {
+//            auto rect = m_previewImageItem->boundingRect();
+//            auto pos = m_previewImageItem->pos();
+//            auto logoItem = m_scene->addPixmap(previewImagelogo->scaled(64,64,Qt::KeepAspectRatio,Qt::SmoothTransformation));
+//            logoItem->setPos(pos.x() + rect.width() / 2,pos.y() + rect.height() + 20);
+//        }
 
     }
 
@@ -87,20 +101,26 @@ namespace CM
         }
 
         ((PreViewImageScene *) m_scene)->updateTexItems();
+        ((PreViewImageScene *) m_scene)->updateLogoPos();
 
         QWidget::resizeEvent(event);
     }
 
     void DisplayWidget::saveScene(SceneIndex sceneIndex)
     {
-        auto save = [](QGraphicsScene * scene){
+        auto save = [this](QGraphicsScene * scene){
             scene->clearSelection();                                                       // Selections would also render to the file
             QImage image(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);  // Create the image with the exact size of the shrunk scene
             image.fill(Qt::white);                                              // Start all pixels transparent
 
             QPainter painter(&image);
             scene->render(&painter);
-            bool res = image.save("file_name.png");
+
+            auto fileName = QFileDialog::getSaveFileName(this,tr("Save File"),
+                                                         "./untitled.png",
+                                                         tr("Images (*.png *.xpm *.jpg)"));
+
+            bool res = image.save(fileName);
             if(!res)
             {
                 std::runtime_error("save scene failed!");

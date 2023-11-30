@@ -8,6 +8,7 @@ namespace CM
 
     PreViewImageScene::PreViewImageScene(QObject *parent)
     : QGraphicsScene(parent)
+    , m_logoPixmapItem(new QGraphicsPixmapItem)
     {
         Init();
     }
@@ -21,6 +22,7 @@ namespace CM
     void PreViewImageScene::Init()
     {
         InitTexItems();
+        InitLogoItem();
     }
 
     void PreViewImageScene::InitTexItems()
@@ -133,5 +135,29 @@ namespace CM
     void PreViewImageScene::setPixmapItem(QGraphicsPixmapItem *item)
     {
         m_pixmapItem = item;
+    }
+
+    void PreViewImageScene::InitLogoItem()
+    {
+        auto pixmap = QPixmap();
+        pixmap.fill(Qt::TransparentMode);
+        m_logoPixmapItem->setPixmap(pixmap);
+        addItem(m_logoPixmapItem);
+    }
+
+    void PreViewImageScene::updateLogoPixmap(const QPixmap &logo)
+    {
+        m_logoPixmapItem->setPixmap(logo.scaled({64,64},Qt::KeepAspectRatio,Qt::SmoothTransformation));
+
+        auto rect = m_pixmapItem->boundingRect();
+        auto pos = m_pixmapItem->pos();
+        m_logoPixmapItem->setPos(pos.x() + rect.width() / 2.0,pos.y() + rect.height() + 20);
+    }
+
+    void PreViewImageScene::updateLogoPos()
+    {
+        auto rect = m_pixmapItem->boundingRect();
+        auto pos = m_pixmapItem->pos();
+        m_logoPixmapItem->setPos(pos.x() + rect.width() / 2.0,pos.y() + rect.height() + 20);
     }
 } // CM

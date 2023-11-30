@@ -58,14 +58,20 @@ namespace CM
          */
         void updateTexItems();
 
+        void updateLogoPixmap(const QPixmap & logo);
+
+        void updateLogoPos();
+
     private:
         QGraphicsPixmapItem * m_pixmapItem;
+        QGraphicsPixmapItem * m_logoPixmapItem;
         std::vector<ImageInfoItem> m_infos;
 
     protected:
 
     private:
         void InitTexItems();
+        void InitLogoItem();
 
 
     };
