@@ -6,7 +6,6 @@
 #include <QStatusBar>
 #include <QToolBar>
 #include <QFileDialog>
-#include <QTextEdit>
 #include <QAction>
 
 #include "LeftDockWidget.h"
@@ -29,8 +28,8 @@ namespace CM
         /// Central Widget
         m_displayWidget = std::shared_ptr<DisplayWidget>(new DisplayWidget, []([[maybe_unused]] DisplayWidget* w) {});
         this->setCentralWidget(m_displayWidget.get());
-        this->resize({ 960,720 });  ///< resize Window
-
+        this->setMinimumSize({ 960,720 });  ///< resize Window
+        m_displayWidget->setMinimumSize(640,480);
         /// left dock widget
         {
             m_leftDockWidget = std::shared_ptr<LeftDockWidget>(new LeftDockWidget("Dock Widget", this), []([[maybe_unused]] LeftDockWidget* w) {});
@@ -88,11 +87,15 @@ namespace CM
         MenuBar->addMenu(file);
 
         newAction = new QAction("New");
+        newAction->setIcon(QIcon("./sources/icons/new.png"));
+        newAction->setToolTip(tr("set FileSystem Empty "));
         newAction->setShortcut({ "Ctrl+N" });
         file->addAction(newAction);
 
         openDirectoryAction = new QAction("Open");
+        openDirectoryAction->setToolTip(tr("Open Directory"));
         openDirectoryAction->setShortcut({ "Ctrl+P" });
+        openDirectoryAction->setIcon(QIcon("./sources/icons/open.png"));
         file->addAction(openDirectoryAction);
     }
 
@@ -109,15 +112,32 @@ namespace CM
         toolBar->setMovable(false);
         toolBar->setIconSize({16,16});
 
-        auto savePreviewImageAction = toolBar->addAction("Save");
-        savePreviewImageAction->setToolTip("Save preview Image");
-        QPixmap previewSceneSaveIcon("./sources/icons/previewSceneSave.png");
-        previewSceneSaveIcon = previewSceneSaveIcon.scaled({16,16},Qt::KeepAspectRatio);
-        savePreviewImageAction->setIcon(previewSceneSaveIcon);
-
-        connect(savePreviewImageAction,&QAction::triggered,[this]()
+        /// save preview image
         {
-            m_displayWidget->saveScene(SceneIndex::PREVIEW_SCENE);
-        });
+            auto savePreviewImageAction = toolBar->addAction("Save preview");
+            savePreviewImageAction->setToolTip("Save preview Image");
+            QPixmap previewSceneSaveIcon("./sources/icons/previewSceneSave.png");
+            previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio);
+            savePreviewImageAction->setIcon(previewSceneSaveIcon);
+
+            connect(savePreviewImageAction, &QAction::triggered, [this]() {
+                m_displayWidget->saveScene(SceneIndex::PREVIEW_SCENE);
+            });
+        }
+
+        /// save it
+        {
+            auto save = toolBar->addAction("Add Logo Save");
+            save->setToolTip("Save as Image with logo");
+            QPixmap previewSceneSaveIcon("./sources/icons/save.png");
+            previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio);
+            save->setIcon(previewSceneSaveIcon);
+
+            connect(save, &QAction::triggered, [this]() {
+                m_displayWidget->saveScene(SceneIndex::GENREATELOGO_SCENE);
+            });
+        }
+
+
     }
 } // CM

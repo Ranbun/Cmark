@@ -6,6 +6,14 @@
 
 namespace CM
 {
+    struct ImageLayout
+    {
+        int leftMargin;
+        int topMargin;
+        int bottomMargin;
+        int rightMargin;
+    };
+
     class PreViewImageItem : public QGraphicsPixmapItem
     {
     public:
@@ -21,6 +29,7 @@ namespace CM
 
     private:
         QPixmap m_pixmap;
+        ImageLayout m_margin{};
     };
 
 } // CM

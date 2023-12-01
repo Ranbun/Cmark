@@ -21,11 +21,11 @@ namespace CM
 {
     DisplayWidget::DisplayWidget(QWidget *parent)
     : QWidget(parent)
-    , m_scene(new PreViewImageScene)
+    , m_previewImageScene(new PreViewImageScene)
+    , m_addLogoScene(new PreViewImageScene)
     , m_view (new QGraphicsView)
-    , m_previewImageItem(new PreViewImageItem)
     {
-        m_view->setScene(m_scene);
+        m_view->setScene(m_previewImageScene);
         connect(this,&DisplayWidget::Created,this, [ parent= this, view = m_view ]()
         {
             view->setParent(parent);
@@ -33,11 +33,7 @@ namespace CM
 
         m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
         m_view->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-
-        m_view->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-
-        m_scene->addItem(m_previewImageItem);
-        ((PreViewImageScene*)(m_scene))->setPixmapItem(m_previewImageItem);
+        m_view->setAlignment(Qt::AlignCenter);
 
         emit Created();
     }
@@ -49,13 +45,11 @@ namespace CM
 
     void DisplayWidget::paintEvent(QPaintEvent *event)
     {
-
         QWidget::paintEvent(event);
     }
 
     void DisplayWidget::PreViewImage(const std::filesystem::path & path)
     {
-        // m_scene->clear();
         const auto &pictureData = CM::FileLoad::Load(path.string());
         EXIFResolver resolver;
         EXIFResolver::check(resolver.resolver(pictureData));
@@ -69,62 +63,80 @@ namespace CM
         const QImage loadedImage = QImage::fromData(pictureData.data(), pictureData.size());
         auto preViewImage = QPixmap::fromImage(loadedImage);
 
-        auto pixmapItem = dynamic_cast<PreViewImageItem *>(m_previewImageItem);
-        pixmapItem->resetPixmap(preViewImage);
-
         auto infos = EXIFResolver::resolverImageExif(result);
-        auto scene = dynamic_cast<PreViewImageScene *>(m_scene);
-        scene->updateTexItems(infos);
+        auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
 
+        scene->updatePreviewPixmap(preViewImage);
+        scene->updateTexItems(infos);
         scene->updateLogoPixmap(*previewImagelogo);
 
-//        {
-//            auto rect = m_previewImageItem->boundingRect();
-//            auto pos = m_previewImageItem->pos();
-//            auto logoItem = m_scene->addPixmap(previewImagelogo->scaled(64,64,Qt::KeepAspectRatio,Qt::SmoothTransformation));
-//            logoItem->setPos(pos.x() + rect.width() / 2,pos.y() + rect.height() + 20);
-//        }
-
+#if _DEBUG >> 1
+        auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
+        logoScene->setSceneRect(0,0,result.ImageWidth,result.ImageHeight);
+        logoScene->updatePreviewPixmap(preViewImage);
+        scene->updateTexItems(infos);
+        scene->updateLogoPixmap(*previewImagelogo);
+#endif
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent *event)
     {
         const auto windowSize = event->size();
         m_view->resize(windowSize);   ///< resize view
+        ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view, m_previewImageScene->itemsBoundingRect());
 
-        ((PreViewImageScene *) m_scene)->updateSceneRect(m_view);
-
-        /// update preview image size
-        if(this->isActiveWindow())
         {
-            ((PreViewImageItem *) m_previewImageItem)->update();
+            const auto bound = m_previewImageScene->itemsBoundingRect();
+            const auto rect = m_previewImageScene->sceneRect();
+            const auto newRect = QRectF(0,0,rect.width(),bound.height());
+            m_view->setSceneRect(newRect); // 设置场景矩形
+            m_view->centerOn(newRect.center());
         }
-
-        ((PreViewImageScene *) m_scene)->updateTexItems();
-        ((PreViewImageScene *) m_scene)->updateLogoPos();
-
         QWidget::resizeEvent(event);
     }
 
     void DisplayWidget::saveScene(SceneIndex sceneIndex)
     {
-        auto save = [this](QGraphicsScene * scene){
-            scene->clearSelection();                                                       // Selections would also render to the file
-            QImage image(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);  // Create the image with the exact size of the shrunk scene
-            image.fill(Qt::white);                                              // Start all pixels transparent
+        auto saveAsFile = [](const std::shared_ptr<QImage>& image,const QString & filePath)
+        {
+            bool res = image->save(filePath);
+            if(!res)
+            {
+                std::runtime_error("save scene failed!");
+            }
+            else
+            {
+                std::cout << "Image Save success!" << std::endl;
+            }
+        };
 
-            QPainter painter(&image);
+        auto save = [this,saveAsFile](QGraphicsScene * scene)
+        {
+            if(!scene) return ;
+
+            scene->clearSelection();                                                       // Selections would also render to the file
+
+            const auto rect = scene->sceneRect();
+            const auto bound = scene->itemsBoundingRect();
+            scene->setSceneRect({0,0,rect.width(),bound.height()});
+
+            std::shared_ptr<QImage> image = std::make_shared<QImage>(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);
+
+            image->fill(Qt::white);   // Start all pixels white
+
+            QPainter painter(image.get());
             scene->render(&painter);
+            painter.end();
 
             auto fileName = QFileDialog::getSaveFileName(this,tr("Save File"),
                                                          "./untitled.png",
                                                          tr("Images (*.png *.xpm *.jpg)"));
 
-            bool res = image.save(fileName);
-            if(!res)
-            {
-                std::runtime_error("save scene failed!");
-            }
+            std::thread saveImage(saveAsFile,image,fileName);
+            saveImage.detach();
+
+            scene->setSceneRect(rect);
+
         };
 
         switch (sceneIndex)
@@ -133,7 +145,12 @@ namespace CM
                 break;
             case SceneIndex::PREVIEW_SCENE:
             {
-                save(m_scene);
+                save(m_previewImageScene);
+            }
+            break;
+            case SceneIndex::GENREATELOGO_SCENE:
+            {
+                save(m_addLogoScene);
             }
             break;
             default:

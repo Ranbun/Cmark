@@ -3,29 +3,40 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
-#include "../Base/type.h"
+#include "../Base/Type.h"
+#include "../Base/CPoint.h"
 
 #include <algorithm>
 
 namespace CM
 {
-    struct Point
-    {
-        [[maybe_unused]] int x;
-        [[maybe_unused]] int y;
-        [[maybe_unused]] int z;
-    };
-
-    using Size = Point;
+    using Size = CPoint;
 
     struct ImageInfoItem
     {
         CM::ExifKey m_key;
         std::string m_title;
         QGraphicsTextItem * m_field;
-        Point pos{-1,-1};  ///< position
+        CPoint pos{-1, -1};  ///< position
         std::string m_infos{};
         bool m_visible{false};
+    };
+
+    enum class Exiflayout
+    {
+        left_top,
+        left_bottom,
+        right_top,
+        right_bottom
+    };
+
+    /**
+     * @brief 记录显示的Exif信息和它的布局位置
+     */
+    struct showExifInfo
+    {
+        Exiflayout layout;
+        std::vector<ExifKey> m_keys;
     };
 
     class PreViewImageScene : public QGraphicsScene
@@ -36,16 +47,10 @@ namespace CM
         void Init();
 
         /**
-         * @brief 记录pixmap Item
-         * @param item pixmap item
-         */
-        void setPixmapItem(QGraphicsPixmapItem *item);
-
-        /**
          * @brief 根据当前使用的视图更新场景的大小(此时场景和视图具有1对一关系)
          * @param view 当前使用的视图
          */
-        void updateSceneRect(QGraphicsView *view);
+        void updateSceneRect(QGraphicsView *view, const QRectF &sceneSize);
 
         /**
          * @brief 当前显示的所有文字信息
@@ -62,16 +67,21 @@ namespace CM
 
         void updateLogoPos();
 
+        void updatePreviewPixmap(const QPixmap & pixmap);
+
+
     private:
-        QGraphicsPixmapItem * m_pixmapItem;
+        QGraphicsPixmapItem * m_previewImageItem;
         QGraphicsPixmapItem * m_logoPixmapItem;
         std::vector<ImageInfoItem> m_infos;
+        std::vector<showExifInfo> m_showInfos;
 
     protected:
 
     private:
         void InitTexItems();
         void InitLogoItem();
+        void InitPreviewImageItem();
 
 
     };

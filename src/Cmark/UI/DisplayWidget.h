@@ -41,14 +41,14 @@ namespace CM
         void resizeEvent(QResizeEvent *event) override;
 
     private:
-        QGraphicsScene * m_scene{nullptr};
+        QGraphicsScene * m_previewImageScene{nullptr};
+        QGraphicsScene * m_addLogoScene{nullptr};
         QGraphicsView * m_view{nullptr};
 
-        QGraphicsPixmapItem* m_previewImageItem{nullptr};
+        //
 
         int m_offsetX = 5;
         int m_offsetY = 5;
-
 
     signals:
         void Created();

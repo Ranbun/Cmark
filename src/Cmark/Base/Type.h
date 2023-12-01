@@ -5,7 +5,7 @@
 
 namespace CM
 {
-    enum class ExifKey: uint8_t
+    enum class ExifKey: uint16_t
     {
         None = 0,
         Camera_make,    ///<相机制造商
@@ -20,6 +20,9 @@ namespace CM
 
         F_stop,     ///< 光圈
         ISO_speed,  ///<感光度
+        Shutter_speed,
+
+        Lens_Model,  ///< 棱镜组 -- 镜头信息
 
         /// GPS
         GPS = None
@@ -32,9 +35,6 @@ namespace CM
     };
 
     using ExifList = std::vector<ExifPack>;
-
-    // using ExifMap = std::unordered_map<ExifKey,std::string>;
-
 }
 
 

@@ -5,6 +5,7 @@
 #include "Load/FileLoad.h"
 #include "Load/EXIFResolver.h"
 #include "UI/MainWindow.h"
+#include "UI/LogoManager.h"
 
 namespace Tools
 {
@@ -64,6 +65,8 @@ int main(int argc,char ** argv)
 {
     QApplication app(argc,argv);
     CM::MainWindow manApp;
+
+    CM::LogoManager::loadCameraLogo(CM::CameraIndex::Nikon);  ///< load camera logo
 
     manApp.resize(720,560);
 

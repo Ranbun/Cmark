@@ -25,9 +25,36 @@ namespace CM
         infoMaps.emplace_back(ExifPack{ExifKey::F_stop,f_stop});
 
         infoMaps.emplace_back(ExifPack{ExifKey::ISO_speed,std::to_string(result.ISOSpeedRatings)});
+        infoMaps.emplace_back(ExifPack{ExifKey::Lens_Model,result.LensInfo.Model});
 
         /// TODO: we need resolver all info and write it to ExifMap and output it
+        infoMaps.emplace_back(ExifPack{ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
+
 
         return std::move(infoMaps);
+    }
+
+    void EXIFResolver::check(int resolverCode)
+    {
+        switch(resolverCode)
+        {
+            case PARSE_EXIF_SUCCESS:
+                std::cout<<"Resolver Picture Info Success!"<<std::endl;
+                break;
+            case PARSE_EXIF_ERROR_NO_JPEG:
+                std::cout<<"No JPEG markers found in buffer, possibly invalid JPEG file!"<<std::endl;
+                break;
+            case PARSE_EXIF_ERROR_NO_EXIF:
+                std::cout<<"No EXIF header found in JPEG file."<<std::endl;
+                break;
+            case PARSE_EXIF_ERROR_UNKNOWN_BYTEALIGN:
+                std::cout<<"Byte alignment specified in EXIF file was unknown (not Motorola or Intel)."<<std::endl;
+                break;
+            case PARSE_EXIF_ERROR_CORRUPT:
+                std::cout<<"EXIF header was found, but data was corrupted."<<std::endl;
+                break;
+            default:
+                break;
+        }
     }
 } // CM
