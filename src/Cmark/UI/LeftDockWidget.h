@@ -1,5 +1,5 @@
 #ifndef  CAMERAMARK_LEFTDOCKWIDGET_H_
-#define CAMERAMARK_LEFTDOCKWIDGET_H_
+#define  CAMERAMARK_LEFTDOCKWIDGET_H_
 
 #include <QDockWidget>
 #include <QTextEdit>
@@ -13,7 +13,7 @@ namespace CM
     {
         Q_OBJECT
     public:
-        LeftDockWidget(const QString & title,QWidget * parent = nullptr);
+        explicit LeftDockWidget(const QString & title,QWidget * parent = nullptr);
         ~LeftDockWidget() override;
 
         void New();
