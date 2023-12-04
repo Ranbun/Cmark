@@ -8,6 +8,7 @@
 #include <QImage>
 #include <QPixmap>
 #include <QFileDialog>
+#include <QImageReader>
 
 #include <QGraphicsView>
 #include "PreViewImageScene.h"
@@ -15,7 +16,10 @@
 
 #include <QVBoxLayout>
 #include <QResizeEvent>
+#include <QImageReader>
 #include "LogoManager.h"
+
+#include <thread>
 
 namespace CM
 {
@@ -50,25 +54,39 @@ namespace CM
 
     void DisplayWidget::PreViewImage(const std::filesystem::path & path)
     {
-        const auto &pictureData = CM::FileLoad::Load(path.string());
+        QImage readerFile;
+        readerFile.fill(Qt::transparent);
+
+        auto readFileToImage = [&readerFile](const std::filesystem::path & path)
+        {
+            QImageReader reader(path.string().c_str());
+            reader.setAutoTransform(true);
+            readerFile = reader.read();
+        };
+
+        std::thread readImage(readFileToImage, path);
+
+        const auto &pictureData = CM::FileLoad::Load(path);
+
+        /// TODO: need to define struct save exif infos
         EXIFResolver resolver;
         EXIFResolver::check(resolver.resolver(pictureData));
         const auto &result = resolver.getInfos();
 
         auto cameraIndex = LogoManager::resolverCameraIndex(result.Make);
         LogoManager::loadCameraLogo(cameraIndex);
-        auto previewImagelogo = LogoManager::getCameraMakerLogo(cameraIndex);
+        auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
         /// load image
-        const QImage loadedImage = QImage::fromData(pictureData.data(), pictureData.size());
-        auto preViewImage = QPixmap::fromImage(loadedImage);
+        readImage.join();
+        QPixmap preViewImage = QPixmap::fromImage(readerFile);
 
         auto infos = EXIFResolver::resolverImageExif(result);
         auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
 
         scene->updatePreviewPixmap(preViewImage);
         scene->updateTexItems(infos);
-        scene->updateLogoPixmap(*previewImagelogo);
+        scene->updateLogoPixmap(*previewImageLogo);
 
 #if _DEBUG >> 1
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
@@ -157,4 +175,11 @@ namespace CM
                 break;
         }
     }
+
+    void DisplayWidget::saveLoadedPixmap()
+    {
+        ((PreViewImageScene*)(m_previewImageScene))->saveLoadedPixmap();
+    }
+
+
 } // CM
