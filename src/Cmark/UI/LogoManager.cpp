@@ -9,7 +9,7 @@ namespace CM
     {
         if(cameraMake.empty())
         {
-            std::runtime_error("Camera Make empty!");
+            throw std::runtime_error("Camera Make empty!");
         }
 
         QString Make = cameraMake.c_str();
@@ -22,7 +22,7 @@ namespace CM
         {
             return res->second;
         }
-        std::runtime_error("Can't found Camera Maker!");
+        throw std::runtime_error("Can't found Camera Maker!");
     }
 
     void LogoManager::loadCameraLogo(const CameraIndex &cameraIndex)
@@ -38,8 +38,14 @@ namespace CM
             case CameraIndex::Nikon:
                 m_logos.insert(loadLogo(CameraIndex::Nikon,"./sources/logos/nikon.png"));
                 break;
+            case CameraIndex::Sony:
+                m_logos.insert(loadLogo(CameraIndex::Sony,"./sources/logos/sony.png"));
+                break;
+            case CameraIndex::Canon:
+                m_logos.insert(loadLogo(CameraIndex::Canon,"./sources/logos/canon.png"));
+                break;
             default:
-                std::runtime_error("load error!");
+                throw std::runtime_error("load error!");
                 break;
         }
     }
@@ -52,7 +58,7 @@ namespace CM
             return res->second;
         }
 
-        std::runtime_error("Can't found Camera Maker Logo!");
+        throw std::runtime_error("Can't found Camera Maker Logo!");
     }
 } // CM
 
