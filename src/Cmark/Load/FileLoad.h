@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <filesystem>
 
 namespace CM
 {
@@ -14,7 +15,7 @@ namespace CM
     {
     public:
         FileLoad() = default;
-        [[maybe_unused]] static std::vector<unsigned char> Load(const std::string &path); ///< just read signal file
+        [[maybe_unused]] static std::vector<unsigned char> Load(const std::filesystem::path &path); ///< just read signal file
 
     };
 }
