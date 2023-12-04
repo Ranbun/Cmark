@@ -8,13 +8,12 @@
 namespace CM
 {
     class DisplayWidget;
-    class LeftDockWidget;
-
+    class FileTreeDockWidget;
+    class ImagePropertyDockWidget;
 }
 
 namespace CM
 {
-
     class MainWindow :public  QMainWindow
     {
         Q_OBJECT
@@ -23,23 +22,21 @@ namespace CM
         void PreViewImage(const std::filesystem::path & path) const;
 
     private:
-
         void InitWindowLayout();
         void InitUi();
-    	void InitMenu();
+        void InitMenu();
         void InitTool();
         void InitConnect();
 
     private:
         /// widget
-        std::shared_ptr<DisplayWidget> m_displayWidget;
-        std::shared_ptr<LeftDockWidget> m_leftDockWidget;
-
+        std::shared_ptr<DisplayWidget> m_displayWidget{nullptr};
+        std::shared_ptr<FileTreeDockWidget> m_leftDockWidget{nullptr};
+        std::shared_ptr<ImagePropertyDockWidget> m_rightDockWidget{nullptr};
 
         /// File Actions
-        QAction* newAction;
-        QAction* openDirectoryAction;   ///< 打开文件夹
-
+        QAction* newAction{nullptr};
+        QAction* openDirectoryAction{nullptr};   ///< 打开文件夹
     };
 
 } // CM

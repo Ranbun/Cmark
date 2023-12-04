@@ -10,17 +10,14 @@ class QGraphicsView;
 class QGraphicsScene;
 class QGraphicsPixmapItem;
 
-
 namespace CM
 {
-
     enum SceneIndex
     {
         NONE,
         PREVIEW_SCENE,
-        GENREATELOGO_SCENE
+        GENERATELOGO_SCENE
     };
-
 
     class DisplayWidget : public QWidget
     {
@@ -46,11 +43,6 @@ namespace CM
         QGraphicsScene * m_previewImageScene{nullptr};
         QGraphicsScene * m_addLogoScene{nullptr};
         QGraphicsView * m_view{nullptr};
-
-        //
-
-        int m_offsetX = 5;
-        int m_offsetY = 5;
 
     signals:
         void Created();

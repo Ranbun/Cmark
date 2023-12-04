@@ -6,23 +6,25 @@
 #include "../Base/Type.h"
 #include "../Base/CPoint.h"
 
+#include "SceneLayout.h"
+
 #include <algorithm>
 
 namespace CM
 {
     using Size = CPoint;
 
-    struct ImageInfoItem
+    struct ImageInfoItemPack
     {
-        CM::ExifKey m_key;
-        std::string m_title;
-        QGraphicsTextItem * m_field;
-        CPoint pos{-1, -1};  ///< position
-        std::string m_infos{};
-        bool m_visible{false};
+        CM::ExifKey m_key;                   ///< info's index
+        std::string m_title;                 ///< add it pre in info
+        QGraphicsTextItem * m_field;         ///< Items
+        CPoint pos{-1, -1};            ///< position
+        std::string m_infos{};               ///< show infos
+        bool m_visible{false};               ///< item's visibility
     };
 
-    enum class Exiflayout
+    enum class ExifLayout
     {
         left_top,
         left_bottom,
@@ -35,8 +37,8 @@ namespace CM
      */
     struct showExifInfo
     {
-        Exiflayout layout;
-        std::vector<ExifKey> m_keys;
+        ExifLayout layout;   ///< 显示信息的位置
+        std::vector<ExifKey> m_keys;  ///< 显示的信息 - 某一个位置可以有多条信息
     };
 
     class PreViewImageScene : public QGraphicsScene
@@ -44,6 +46,10 @@ namespace CM
     public:
         explicit PreViewImageScene(QObject * parent = nullptr);
         ~PreViewImageScene() override = default;
+
+        /**
+         * @brief 初始化场景显示的Item
+         */
         void Init();
 
         /**
@@ -63,27 +69,63 @@ namespace CM
          */
         void updateTexItems();
 
+        /**
+         * @brief 更新logo
+         * @param logo logo的pixmap对象
+         */
         void updateLogoPixmap(const QPixmap & logo);
 
+        /**
+         * @brief 更新logo的位置
+         */
         void updateLogoPos();
 
+        /**
+         * @brief 更新预览显示的图片
+         * @param pixmap 图片对象
+         */
         void updatePreviewPixmap(const QPixmap & pixmap);
 
+        /**
+         * @brief 存储加载的图片
+         */
         void saveLoadedPixmap();
 
-
     private:
-        QGraphicsPixmapItem * m_previewImageItem;
-        QGraphicsPixmapItem * m_logoPixmapItem;
-        std::vector<ImageInfoItem> m_infos;
+        QGraphicsPixmapItem * m_showImageItem;
+        QGraphicsPixmapItem * m_logoItem;
+
+        QGraphicsRectItem * m_left;
+        QGraphicsRectItem * m_right;
+        QGraphicsRectItem * m_top;
+        QGraphicsRectItem * m_bottom;
+
+        std::vector<ImageInfoItemPack> m_infos;
         std::vector<showExifInfo> m_showInfos;
 
-    protected:
+        SceneLayout m_sceneLayout;  ///< 记录场景的布局
+
 
     private:
+        /**
+         * @brief init text item
+         */
         void InitTexItems();
+
+        /**
+         * @brief init logo item
+         */
         void InitLogoItem();
+
+        /**
+         * @brief init preview image
+         */
         void InitPreviewImageItem();
+
+        /**
+         * @brief init scene margin
+         */
+        void InitMargin();
 
 
     };

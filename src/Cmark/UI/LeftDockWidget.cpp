@@ -1,4 +1,4 @@
-#include "LeftDockWidget.h"
+#include "FileTreeDockWidget.h"
 
 #include <QTextEdit>
 #include <QVBoxLayout>
@@ -11,7 +11,7 @@
 
 namespace CM
 {
-    LeftDockWidget::LeftDockWidget(const QString& title, QWidget* parent)
+    FileTreeDockWidget::FileTreeDockWidget(const QString& title, QWidget* parent)
         : QDockWidget(title,parent)
         , m_FileSystemModel(nullptr)
     {
@@ -46,9 +46,9 @@ namespace CM
 
     }
 
-    LeftDockWidget::~LeftDockWidget() = default;
+    FileTreeDockWidget::~FileTreeDockWidget() = default;
 
-    void LeftDockWidget::New()
+    void FileTreeDockWidget::New()
     {
         m_TreeView->setModel(nullptr);
         m_FileSystemModel->deleteLater();
@@ -56,13 +56,18 @@ namespace CM
         m_FileSystemModel = nullptr;
     }
 
-    void LeftDockWidget::ShowMessage(const std::string& message)
+    void FileTreeDockWidget::ShowMessage(const std::string& message)
     {
         if(!m_FileSystemModel)
         {
             m_FileSystemModel = new QFileSystemModel;
             m_FileSystemModel->setRootPath(message.c_str());
             m_TreeView->setModel(m_FileSystemModel);
+
+            QStringList filter;
+            filter <<"*.jpg";
+            m_FileSystemModel->setNameFilters(filter);
+            m_FileSystemModel->setNameFilterDisables(false);
         }
         m_FileSystemModel->setRootPath(message.c_str());
         m_TreeView->setRootIndex(m_FileSystemModel->index(message.c_str()));

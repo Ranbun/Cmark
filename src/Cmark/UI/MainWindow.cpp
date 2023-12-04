@@ -8,7 +8,8 @@
 #include <QFileDialog>
 #include <QAction>
 
-#include "LeftDockWidget.h"
+#include "FileTreeDockWidget.h"
+#include "ImagePropertyDockWidget.h"
 #include "StatusBar.h"
 
 #if _DEBUG
@@ -32,10 +33,18 @@ namespace CM
         m_displayWidget->setMinimumSize(640,480);
         /// left dock widget
         {
-            m_leftDockWidget = std::shared_ptr<LeftDockWidget>(new LeftDockWidget("Dock Widget", this), []([[maybe_unused]] LeftDockWidget* w) {});
+            m_leftDockWidget = std::shared_ptr<FileTreeDockWidget>(new FileTreeDockWidget("Dock Widget", this), []([[maybe_unused]] FileTreeDockWidget* w) {});
             m_leftDockWidget->setWindowTitle("");
 
             addDockWidget(Qt::LeftDockWidgetArea, m_leftDockWidget.get());
+        }
+
+        /// right dock widget
+        {
+            m_rightDockWidget = std::shared_ptr<ImagePropertyDockWidget>(new ImagePropertyDockWidget(this), []([[maybe_unused]] ImagePropertyDockWidget* w) {});
+            m_rightDockWidget->setWindowTitle("");
+
+            addDockWidget(Qt::RightDockWidgetArea, m_rightDockWidget.get());
         }
 
         setContentsMargins(0,0,0,0);
@@ -66,7 +75,7 @@ namespace CM
             m_displayWidget->Open(path);
         });
 
-        QObject::connect(m_leftDockWidget.get(), &LeftDockWidget::previewImage, [this](const QString & path)
+        QObject::connect(m_leftDockWidget.get(), &FileTreeDockWidget::previewImage, [this](const QString & path)
         {
             std::filesystem::path imagePath(path.toStdString());
             StatusBar::showMessage("preview image: " + path);
@@ -134,7 +143,7 @@ namespace CM
             save->setIcon(previewSceneSaveIcon);
 
             connect(save, &QAction::triggered, [this]() {
-                m_displayWidget->saveScene(SceneIndex::GENREATELOGO_SCENE);
+                m_displayWidget->saveScene(SceneIndex::GENERATELOGO_SCENE);
             });
         }
 

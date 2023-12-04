@@ -101,6 +101,7 @@ namespace CM
     {
         const auto windowSize = event->size();
         m_view->resize(windowSize);   ///< resize view
+
         ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view, m_previewImageScene->itemsBoundingRect());
 
         {
@@ -110,6 +111,11 @@ namespace CM
             m_view->setSceneRect(newRect); // 设置场景矩形
             m_view->centerOn(newRect.center());
         }
+
+        ((PreViewImageScene *) m_previewImageScene)->updateTexItems();
+
+        m_view->fitInView(m_previewImageScene->itemsBoundingRect(),Qt::KeepAspectRatio);
+
         QWidget::resizeEvent(event);
     }
 
@@ -166,7 +172,7 @@ namespace CM
                 save(m_previewImageScene);
             }
             break;
-            case SceneIndex::GENREATELOGO_SCENE:
+            case SceneIndex::GENERATELOGO_SCENE:
             {
                 save(m_addLogoScene);
             }

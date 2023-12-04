@@ -1,5 +1,5 @@
-#ifndef  CAMERAMARK_LEFTDOCKWIDGET_H_
-#define  CAMERAMARK_LEFTDOCKWIDGET_H_
+#ifndef  CAMERAMARK_FILETREEDOCKWIDGET_H_
+#define  CAMERAMARK_FILETREEDOCKWIDGET_H_
 
 #include <QDockWidget>
 #include <QTextEdit>
@@ -9,12 +9,12 @@ class QFileSystemModel;
 
 namespace CM
 {
-    class LeftDockWidget : public QDockWidget
+    class FileTreeDockWidget : public QDockWidget
     {
         Q_OBJECT
     public:
-        explicit LeftDockWidget(const QString & title,QWidget * parent = nullptr);
-        ~LeftDockWidget() override;
+        explicit FileTreeDockWidget(const QString & title, QWidget * parent = nullptr);
+        ~FileTreeDockWidget() override;
 
         void New();
         void ShowMessage(const std::string& message);
@@ -31,4 +31,4 @@ namespace CM
 }
 
 
-#endif // ! CAMERAMARK_LEFTDOCKWIDGET_H_
+#endif // ! CAMERAMARK_FILETREEDOCKWIDGET_H_
