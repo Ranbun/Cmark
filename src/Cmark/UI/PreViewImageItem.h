@@ -26,6 +26,7 @@ namespace CM
     private:
         void updatePixmapSize();
         void updatePos();
+        static QPixmap scaledPixmap(const QPixmap &image, int w, int h);
 
     private:
         QPixmap m_pixmap;

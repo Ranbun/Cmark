@@ -69,6 +69,8 @@ namespace CM
 
         void updatePreviewPixmap(const QPixmap & pixmap);
 
+        void saveLoadedPixmap();
+
 
     private:
         QGraphicsPixmapItem * m_previewImageItem;

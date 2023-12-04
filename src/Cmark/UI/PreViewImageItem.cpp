@@ -21,25 +21,12 @@ namespace CM
 
         CM::Size sceneRectSize{(int)sceneRect.width(),(int)sceneRect.height(),0};
 
-#if  0
-        auto w = (int)(sceneRectSize.x * 0.6);
-        if(w < sceneRect.width() - 200)
-        {
-            w = sceneRect.width() - 200;
-        }
-        auto h = static_cast<int>(static_cast<float>(m_pixmap.height()) / static_cast<float>(m_pixmap.width()) * w);
-
-        if(m_pixmap.isNull()) return ;
-
-        setPixmap(m_pixmap.scaled(w,h,Qt::KeepAspectRatio, Qt::SmoothTransformation));
-#endif
-
         auto newWidth = sceneRectSize.x - m_margin.leftMargin - m_margin.rightMargin;
         auto newHeight = static_cast<int>(static_cast<float>(m_pixmap.height()) / static_cast<float>(m_pixmap.width()) * static_cast<float>(newWidth));
 
         if(m_pixmap.isNull()) return ;
 
-        setPixmap(m_pixmap.scaled(newWidth,newHeight,Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap,newWidth,newHeight));
     }
 
     void PreViewImageItem::resetPixmap(const QPixmap &previewPixmap)
@@ -50,7 +37,8 @@ namespace CM
             throw std::runtime_error("Pixmap is Null!");
         }
 
-        update();
+        auto rect = sceneBoundingRect().toRect();
+        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap, rect.width(),rect.height()));
     }
 
     void PreViewImageItem::update()
@@ -65,14 +53,17 @@ namespace CM
         if(!currentScene) return;
         const auto &  sceneRect = currentScene->sceneRect();
 
-#if  0
-        const auto & rect = boundingRect();
-        const auto imageY = sceneRect.height() / 2 - rect.height() / 2;
-        constexpr auto imageX = 0;
-        setPos(imageX, imageY);
-#endif
         auto posX = m_margin.leftMargin;
         auto posY = m_margin.topMargin;
         setPos(posX, posY);
+    }
+
+    QPixmap PreViewImageItem::scaledPixmap(const QPixmap &image, int w, int h)
+    {
+        if(image.isNull())
+        {
+            return {w,h};
+        }
+        return image.scaled(w,h,Qt::KeepAspectRatio, Qt::SmoothTransformation);
     }
 } // CM

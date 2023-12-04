@@ -1,6 +1,8 @@
 #include "PreViewImageScene.h"
 #include "PreViewImageItem.h"
 #include <QGraphicsView>
+#include <QFileDialog>
+#include <iostream>
 
 namespace CM
 {
@@ -323,5 +325,15 @@ namespace CM
     void PreViewImageScene::updatePreviewPixmap(const QPixmap &pixmap)
     {
         ((PreViewImageItem*)(m_previewImageItem))->resetPixmap(pixmap);
+    }
+
+    void PreViewImageScene::saveLoadedPixmap()
+    {
+        auto fileName = QFileDialog::getSaveFileName(nullptr,tr("Save File"),
+                                                     "./untitled.png",
+                                                     tr("Images (*.png *.xpm *.jpg)"));
+
+        auto res = m_previewImageItem->pixmap().save(fileName);
+        std::cout <<"Save res:" << res<<std::endl;
     }
 } // CM

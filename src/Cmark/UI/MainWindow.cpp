@@ -130,11 +130,24 @@ namespace CM
             auto save = toolBar->addAction("Add Logo Save");
             save->setToolTip("Save as Image with logo");
             QPixmap previewSceneSaveIcon("./sources/icons/save.png");
-            previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio);
+            previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio,Qt::SmoothTransformation);
             save->setIcon(previewSceneSaveIcon);
 
             connect(save, &QAction::triggered, [this]() {
                 m_displayWidget->saveScene(SceneIndex::GENREATELOGO_SCENE);
+            });
+        }
+
+        /// save loaded pixmap
+        {
+            auto save = toolBar->addAction("loaded pixmap Save");
+            save->setToolTip("Save Loaded pixmap");
+            QPixmap previewSceneSaveIcon("./sources/icons/save_uploaded.png");
+            previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio,Qt::SmoothTransformation);
+            save->setIcon(previewSceneSaveIcon);
+
+            connect(save, &QAction::triggered, [this]() {
+                m_displayWidget->saveLoadedPixmap();
             });
         }
 
