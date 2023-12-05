@@ -6,31 +6,29 @@ namespace CM
     : QGraphicsPixmapItem(parent)
     , m_sceneLayout(layout)
     {
-        m_margin = {30,30,213,30};
+
     }
 
     void PreViewImageItem::updatePixmapSize()
     {
-#if _DEBUG
-        auto ph = m_pixmap.height();
-        auto pw = m_pixmap.width();
-#endif
-
         const auto currentScene = scene();
         if(!currentScene) return;
-        const auto &  sceneRect = currentScene->sceneRect();
+        const auto &  sceneRect = currentScene->sceneRect().toRect();
 
-        CM::Size sceneRectSize{(int)sceneRect.width(),(int)sceneRect.height(),0};
+        CM::Size sceneRectSize{sceneRect.width(),sceneRect.height(),0};
 
-        auto newWidth = sceneRectSize.x - m_margin.leftMargin - m_margin.rightMargin;
-        auto newHeight = static_cast<int>(static_cast<float>(m_pixmap.height()) / static_cast<float>(m_pixmap.width()) * static_cast<float>(newWidth));
+        const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
 
-        if(m_pixmap.isNull()) return ;
+        auto newWidth = sceneRect.width() - left - right;
+        auto ImageRatio = static_cast<float>(m_pixmap.height()) / static_cast<float>(m_pixmap.width());
+        auto newHeight = static_cast<int>(ImageRatio * static_cast<float>(newWidth));
+
+        if(m_pixmap.isNull()) return;
 
         setPixmap(PreViewImageItem::scaledPixmap(m_pixmap,newWidth,newHeight));
     }
 
-    void PreViewImageItem::resetPixmap(const QPixmap &previewPixmap)
+    void PreViewImageItem::resetPixmap(const QPixmap & previewPixmap)
     {
         m_pixmap = previewPixmap;
         if(m_pixmap.isNull())
@@ -45,17 +43,16 @@ namespace CM
     void PreViewImageItem::update()
     {
         updatePixmapSize();
-        updatePos();
+        updatePixmapPosition();
     }
 
-    void PreViewImageItem::updatePos()
+    void PreViewImageItem::updatePixmapPosition()
     {
         const auto currentScene = scene();
         if(!currentScene) return;
-        const auto &  sceneRect = currentScene->sceneRect();
 
-        auto posX = m_margin.leftMargin;
-        auto posY = m_margin.topMargin;
+        auto posX = m_sceneLayout.getMargin().left;
+        auto posY = m_sceneLayout.getMargin().right;
         setPos(posX, posY);
     }
 
@@ -67,4 +64,7 @@ namespace CM
         }
         return image.scaled(w,h,Qt::KeepAspectRatio, Qt::SmoothTransformation);
     }
+
+    PreViewImageItem::~PreViewImageItem() = default;
+
 } // CM

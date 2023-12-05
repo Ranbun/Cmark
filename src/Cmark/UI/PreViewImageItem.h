@@ -7,33 +7,39 @@
 
 namespace CM
 {
-    struct ImageLayout
-    {
-        int leftMargin;
-        int topMargin;
-        int bottomMargin;
-        int rightMargin;
-    };
-
     class PreViewImageItem : public QGraphicsPixmapItem
     {
     public:
         explicit PreViewImageItem(QGraphicsItem *parent , const SceneLayout & layout);
-        ~PreViewImageItem()  override = default;
+        ~PreViewImageItem()  override;
 
+        /**
+         * @brief 重新设置显示的图片
+         * @param previewPixmap 显示的图片
+         */
         void resetPixmap(const QPixmap & previewPixmap);
+
+        /**
+         * @brief 更新当前的pixmap item(更新pixmap的大小和在场景中的位置)
+         */
         void update();
 
+        /**
+         * @brief 更新显示pixmap的大小
+         */
         void updatePixmapSize();
-        void updatePos();
+
+        /**
+         * @brief 更新pixmap的位置
+         */
+        void updatePixmapPosition();
 
     private:
         static QPixmap scaledPixmap(const QPixmap &image, int w, int h);
 
     private:
         QPixmap m_pixmap;
-        ImageLayout m_margin{};
-        const CM::SceneLayout & m_sceneLayout;
+        const SceneLayout & m_sceneLayout;
     };
 
 } // CM

@@ -20,7 +20,7 @@ namespace CM
         SceneLayout() = default;
         ~SceneLayout() = default;
 
-        const Margin & getMargin(){return m_margin;}
+        [[nodiscard]] const Margin & getMargin() const {return m_margin;}
         void setMargin(int left,int right,int top,int bottom);
 
         void setLogoSpace(int space);;

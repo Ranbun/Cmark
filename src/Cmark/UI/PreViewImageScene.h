@@ -25,7 +25,7 @@ namespace CM
         bool m_visible{false};               ///< item's visibility
     };
 
-    enum class ExifLayout
+    enum class showExifTexPositionIndex
     {
         left_top,
         left_bottom,
@@ -38,8 +38,8 @@ namespace CM
      */
     struct showExifInfo
     {
-        ExifLayout layout;            ///< 显示信息的位置
-        std::vector<ExifKey> m_keys;  ///< 显示的信息 - 某一个位置可以有多条信息
+        showExifTexPositionIndex layout;            ///< 显示信息的位置
+        std::vector<ExifKey> m_keys;                ///< 显示的信息 - 某一个位置可以有多条信息
         /// TODO: make it editor in widget
     };
 
@@ -58,7 +58,7 @@ namespace CM
          * @brief 根据当前使用的视图更新场景的大小(此时场景和视图具有1对一关系)
          * @param view 当前使用的视图
          */
-        void updateSceneRect(QGraphicsView *view);
+        void updateSceneRect(QGraphicsView *view, const QRect &newSceneRect);
 
         /**
          * @brief 当前显示的所有文字信息
@@ -69,13 +69,13 @@ namespace CM
         /**
          * @brief 更新所有文字的位置
          */
-        void updateTexItemsPos();
+        void updateTexItemsPosition();
 
         /**
          * @brief 更新logo
          * @param logo logo的pixmap对象
          */
-        void updateLogoPixmap(const QPixmap & logo);
+        void resetLogoPixmap(const QPixmap & logo);
 
         /**
          * @brief 更新logo的位置
@@ -102,10 +102,10 @@ namespace CM
         QGraphicsPixmapItem * m_showImageItem;  ///< 预览加载的图片
         QGraphicsPixmapItem * m_logoItem;       ///< 加载的logo
 
-        QGraphicsRectItem * m_left;
-        QGraphicsRectItem * m_right;
-        QGraphicsRectItem * m_top;
-        QGraphicsRectItem * m_bottom;
+        QGraphicsRectItem * m_left{};
+        QGraphicsRectItem * m_right{};
+        QGraphicsRectItem * m_top{};
+        QGraphicsRectItem * m_bottom{};
 
         std::vector<ImageInfoItemPack> m_infos; ///< 场景中所有可能会显示的Exif信息
         std::vector<showExifInfo> m_showInfos;  ///< 最终显示到屏幕上的Exif信息

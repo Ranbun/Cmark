@@ -18,6 +18,7 @@
 #include <QVBoxLayout>
 #include <QResizeEvent>
 #include <QImageReader>
+
 #include "LogoManager.h"
 
 #include <thread>
@@ -39,6 +40,9 @@ namespace CM
         m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
         m_view->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
         m_view->setAlignment(Qt::AlignCenter);
+
+        m_view->resize(640,480);
+        m_previewImageScene->setSceneRect(0,0,m_view->rect().width(),m_view->rect().height());
 
         emit Created();
     }
@@ -91,9 +95,11 @@ namespace CM
         auto infos = EXIFResolver::resolverImageExif(result);
 
         auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
-        scene->resetPreviewPixmap(preViewImage);
-        scene->updateTexItems(infos);
-        scene->updateLogoPixmap(*previewImageLogo);
+        {
+            scene->resetPreviewPixmap(preViewImage);
+            scene->updateTexItems(infos);
+            scene->resetLogoPixmap(*previewImageLogo);
+        }
 
 #if _DEBUG >> 1
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
@@ -104,6 +110,7 @@ namespace CM
         logoScene->updateLogoPos();
         logoScene->updateMarginItems();
 #endif
+        /// 构建一个resizeEvent make it to update all item
         auto revent = new QResizeEvent(this->size(),this->size());
         this->resizeEvent(revent);
         delete revent;
@@ -114,15 +121,14 @@ namespace CM
         const auto windowSize = event->size();
         m_view->resize(windowSize);   ///< resize view
 
-        ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view);
+        ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view, {});
+        ((PreViewImageScene *) m_previewImageScene)->updateTexItemsPosition();
+
         {
             const auto bound = m_previewImageScene->itemsBoundingRect();
             m_view->setSceneRect(bound); // 设置场景矩形
             m_view->centerOn(bound.center());
         }
-
-        ((PreViewImageScene *) m_previewImageScene)->updateTexItemsPos();
-
         m_view->fitInView(m_previewImageScene->itemsBoundingRect(),Qt::KeepAspectRatio);
 
         QWidget::resizeEvent(event);

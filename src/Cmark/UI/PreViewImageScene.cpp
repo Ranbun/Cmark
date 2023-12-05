@@ -19,17 +19,19 @@ namespace CM
         Init();
     }
 
-    void PreViewImageScene::updateSceneRect(QGraphicsView *view)
+    void PreViewImageScene::updateSceneRect(QGraphicsView *view, const QRect &newSceneRect)
     {
-        auto func = [](){};   /// do nothing
+        QRect rect = view ? view->geometry() : newSceneRect;
+        auto createRect = [&rect](int offset)->QRect
+        {
+            return {0,0,rect.width() - offset,rect.height() - offset};
+        };   /// do nothing
 
-        QRectF rect = view ? view->geometry() : this->sceneRect();
-        view ? setSceneRect(0,0,rect.width() - 2,rect.height() - 2):func();
+        view ? setSceneRect(createRect(2)): setSceneRect(createRect(0));
 
         ((PreViewImageItem*)m_showImageItem)->update();
-        ((PreViewImageItem*)m_showImageItem)->updatePixmapSize();
 
-        updateTexItemsPos();
+        updateTexItemsPosition();
         updateLogoPosition();
         updateMarginItems();
     }
@@ -45,10 +47,10 @@ namespace CM
     void PreViewImageScene::InitTexItems()
     {
         /// default show infos in image
-        m_showInfos.emplace_back(showExifInfo{ExifLayout::left_top, {ExifKey::Camera_model}});
-        m_showInfos.emplace_back(showExifInfo{ExifLayout::left_bottom, {ExifKey::Image_date}});
-        m_showInfos.emplace_back(showExifInfo{ExifLayout::right_top, {ExifKey::Lens_Model}});
-        m_showInfos.emplace_back(showExifInfo{ExifLayout::right_bottom, {ExifKey::F_stop, ExifKey::Exposure_time, ExifKey::ISO_speed}});   ///< TODO： 可以显示多条信息 需要做 || 处理
+        m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::left_top, {ExifKey::Camera_model}});
+        m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::left_bottom, {ExifKey::Image_date}});
+        m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_top, {ExifKey::Lens_Model}});
+        m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_bottom, {ExifKey::F_stop, ExifKey::Exposure_time, ExifKey::ISO_speed}});   ///< TODO： 可以显示多条信息 需要做 || 处理
 
         {
             ImageInfoItemPack item;
@@ -167,7 +169,7 @@ namespace CM
 
             switch (layout)
             {
-                case ExifLayout::left_top:
+                case showExifTexPositionIndex::left_top:
                 {
                     QPoint position(static_cast<int>(pos.x()), static_cast<int>(logoPos.y()));
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
@@ -176,7 +178,7 @@ namespace CM
                     pixmapItem->setPos(position);
                 }
                 break;
-                case ExifLayout::left_bottom:
+                case showExifTexPositionIndex::left_bottom:
                 {
                     auto pixmapItem = it->m_field;
                     auto itemRect = pixmapItem->boundingRect();
@@ -187,7 +189,7 @@ namespace CM
                     pixmapItem->setPos(position);
                 }
                 break;
-                case ExifLayout::right_top:
+                case showExifTexPositionIndex::right_top:
                 {
                     auto pixmapItem = it->m_field;
                     auto itemRect = pixmapItem->boundingRect();
@@ -198,7 +200,7 @@ namespace CM
                     pixmapItem->setPos(position);
                 }
                 break;
-                case ExifLayout::right_bottom:
+                case showExifTexPositionIndex::right_bottom:
                 {
                     auto pixmapItem = it->m_field;
                     auto itemRect = pixmapItem->boundingRect();
@@ -215,7 +217,7 @@ namespace CM
         }
     }
 
-    void PreViewImageScene::updateTexItemsPos()
+    void PreViewImageScene::updateTexItemsPosition()
     {
         const auto pos = m_showImageItem->pos();
 #if  0
@@ -248,7 +250,7 @@ namespace CM
 
             switch (layout)
             {
-                case ExifLayout::left_top:
+                case showExifTexPositionIndex::left_top:
                 {
                     QPoint position(static_cast<int>(pos.x()), static_cast<int>(logoPos.y()));
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
@@ -256,7 +258,7 @@ namespace CM
                     pixmapItem->setPos(position);
                 }
                     break;
-                case ExifLayout::left_bottom:
+                case showExifTexPositionIndex::left_bottom:
                 {
                     auto pixmapItem = it->m_field;
                     auto itemRect = pixmapItem->boundingRect();
@@ -266,7 +268,7 @@ namespace CM
                     pixmapItem->setPos(position);
                 }
                     break;
-                case ExifLayout::right_top:
+                case showExifTexPositionIndex::right_top:
                 {
                     auto pixmapItem = it->m_field;
                     auto itemRect = pixmapItem->boundingRect();
@@ -276,7 +278,7 @@ namespace CM
                     pixmapItem->setPos(position);
                 }
                     break;
-                case ExifLayout::right_bottom:
+                case showExifTexPositionIndex::right_bottom:
                 {
                     auto pixmapItem = it->m_field;
                     auto itemRect = pixmapItem->boundingRect();
@@ -301,7 +303,7 @@ namespace CM
         addItem(m_logoItem);
     }
 
-    void PreViewImageScene::updateLogoPixmap(const QPixmap &logo)
+    void PreViewImageScene::resetLogoPixmap(const QPixmap &logo)
     {
         m_logoItem->setPixmap(logo.scaled({64, 64}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
