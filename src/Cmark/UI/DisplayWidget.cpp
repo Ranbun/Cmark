@@ -101,14 +101,17 @@ namespace CM
             scene->resetLogoPixmap(*previewImageLogo);
         }
 
-#if _DEBUG >> 1
+#if _DEBUG
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
-        logoScene->setSceneRect(0,0,result.ImageWidth,result.ImageHeight);
-        logoScene->updatePreviewPixmap(preViewImage);
+        // logoScene->setSceneRect(0,0,result.ImageWidth,result.ImageHeight);
+        logoScene->resetPreviewPixmap(preViewImage);
         logoScene->updateTexItems(infos);
-        logoScene->updateLogoPixmap(*previewImageLogo);
-        logoScene->updateLogoPos();
+        logoScene->resetLogoPixmap(*previewImageLogo);
+        logoScene->updateLogoPosition();
         logoScene->updateMarginItems();
+
+        logoScene->updateSceneRect(nullptr,{0,0,(int)(result.ImageWidth),(int)(result.ImageHeight)});
+        logoScene->updateTexItemsPosition();
 #endif
         /// 构建一个resizeEvent make it to update all item
         auto revent = new QResizeEvent(this->size(),this->size());
