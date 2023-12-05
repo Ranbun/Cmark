@@ -1,4 +1,7 @@
 #include "EXIFResolver.h"
+#include <UI/StatusBar.h>
+
+#include <tuple>
 
 namespace CM
 {
@@ -34,27 +37,42 @@ namespace CM
         return std::move(infoMaps);
     }
 
-    void EXIFResolver::check(int resolverCode)
+    std::tuple<bool, std::string> EXIFResolver::check(int resolverCode)
     {
+        bool status = false;
+        std::string outputInfos{"Resolver Picture Info Success!"};
         switch(resolverCode)
         {
             case PARSE_EXIF_SUCCESS:
-                std::cout<<"Resolver Picture Info Success!"<<std::endl;
+                status = true;
+                outputInfos = "Resolver Picture Info Success!";
+                std::cout<<outputInfos<<std::endl;
                 break;
             case PARSE_EXIF_ERROR_NO_JPEG:
-                std::cout<<"No JPEG markers found in buffer, possibly invalid JPEG file!"<<std::endl;
+                status = false;
+                outputInfos = "No JPEG markers found in buffer, possibly invalid JPEG file!";
+                std::cout<<outputInfos<<std::endl;
                 break;
             case PARSE_EXIF_ERROR_NO_EXIF:
-                std::cout<<"No EXIF header found in JPEG file."<<std::endl;
+                status = false;
+                outputInfos = "No EXIF header found in JPEG file.";
+                std::cout<<outputInfos<<std::endl;
                 break;
             case PARSE_EXIF_ERROR_UNKNOWN_BYTEALIGN:
-                std::cout<<"Byte alignment specified in EXIF file was unknown (not Motorola or Intel)."<<std::endl;
+                status = false;
+                outputInfos = "Byte alignment specified in EXIF file was unknown (not Motorola or Intel).";
+                std::cout<<outputInfos<<std::endl;
                 break;
             case PARSE_EXIF_ERROR_CORRUPT:
-                std::cout<<"EXIF header was found, but data was corrupted."<<std::endl;
+                status = false;
+                outputInfos = "EXIF header was found, but data was corrupted.";
+                std::cout<<outputInfos<<std::endl;
                 break;
             default:
                 break;
         }
+
+        CM::StatusBar::showMessage(outputInfos.c_str());
+        return {status,outputInfos};
     }
 } // CM
