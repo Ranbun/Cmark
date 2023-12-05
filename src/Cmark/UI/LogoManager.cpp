@@ -1,8 +1,11 @@
 #include "LogoManager.h"
+#include <QMessageBox>
 
 namespace CM
 {
-    std::map<std::string,CameraIndex> cameraMakerMap{{"nikon",CameraIndex::Nikon}};
+    std::map<std::string,CameraIndex> cameraMakerMap{{"nikon",CameraIndex::Nikon},
+                                                     {"sony",CameraIndex::Sony},
+                                                     {"canon",CameraIndex::Canon}};
     std::unordered_map<CameraIndex,std::shared_ptr<QPixmap>>  LogoManager::m_logos{};
 
     CameraIndex LogoManager::resolverCameraIndex(const std::string &cameraMake)
@@ -22,6 +25,8 @@ namespace CM
         {
             return res->second;
         }
+
+        QMessageBox::about(nullptr,"Warning",("We Don't supported: " + maker).c_str());
         throw std::runtime_error("Can't found Camera Maker!");
     }
 

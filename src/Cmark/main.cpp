@@ -155,13 +155,14 @@ int main(int argc,char ** argv)
 
     manApp.setWindowTitle("Window App");
     manApp.show();
+
 #endif
 
     // return Tools::testPath("./sources/pictures/DSC_0947.jpg");
 
 #if  _DEBUG
 
-    auto path = std::filesystem::path("./sources/pictures/DSC_3.jpg");
+    auto path = std::filesystem::path("./sources/pictures/Nikon/DSC_3.jpg");
     manApp.PreViewImage(path);
 
     const auto& pictureData = CM::FileLoad::Load(path.string());

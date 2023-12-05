@@ -1,11 +1,11 @@
 #include "PreViewImageScene.h"
 #include "PreViewImageItem.h"
 
-#include "SceneLayout.h"
-
 #include <QGraphicsView>
 #include <QFileDialog>
 #include <iostream>
+
+#include <CMark.h>
 
 namespace CM
 {
@@ -13,13 +13,13 @@ namespace CM
 
     PreViewImageScene::PreViewImageScene(QObject *parent)
     : QGraphicsScene(parent)
-    , m_showImageItem(new PreViewImageItem)
+    , m_showImageItem(new PreViewImageItem(nullptr, m_sceneLayout))
     , m_logoItem(new QGraphicsPixmapItem)
     {
         Init();
     }
 
-    void PreViewImageScene::updateSceneRect(QGraphicsView *view, const QRectF &sceneSize)
+    void PreViewImageScene::updateSceneRect(QGraphicsView *view)
     {
         auto func = [](){};   /// do nothing
 
@@ -27,8 +27,11 @@ namespace CM
         view ? setSceneRect(0,0,rect.width() - 2,rect.height() - 2):func();
 
         ((PreViewImageItem*)m_showImageItem)->update();
-        updateTexItems();
-        updateLogoPos();
+        ((PreViewImageItem*)m_showImageItem)->updatePixmapSize();
+
+        updateTexItemsPos();
+        updateLogoPosition();
+        updateMarginItems();
     }
 
     void PreViewImageScene::Init()
@@ -130,7 +133,6 @@ namespace CM
     void PreViewImageScene::updateTexItems(const ExifList &map)
     {
         auto pos = m_showImageItem->pos();
-        auto rect = m_showImageItem->boundingRect();
 
         for(const auto & item : map)
         {
@@ -144,7 +146,7 @@ namespace CM
                 it->m_infos = text;
                 it->m_visible = true;
                 auto pixmapItem = it->m_field;
-                pixmapItem->setPlainText((it->m_title + it->m_infos).c_str());
+                pixmapItem->setPlainText((it->m_infos).c_str());
             }
         }
 
@@ -160,7 +162,7 @@ namespace CM
 
             if(it == m_infos.end())
             {
-                std::runtime_error("No Key!");
+                throw std::runtime_error("No Key!");
             }
 
             switch (layout)
@@ -213,11 +215,9 @@ namespace CM
         }
     }
 
-    void PreViewImageScene::updateTexItems()
+    void PreViewImageScene::updateTexItemsPos()
     {
         const auto pos = m_showImageItem->pos();
-        const auto rect = m_showImageItem->boundingRect();
-
 #if  0
         QPoint position(pos.x() + rect.width() + textOffset, textOffset + pos.y());
 
@@ -231,7 +231,6 @@ namespace CM
             position.setY(static_cast<int>((pixmapItem->pos().y())) + (int)(pixmapItem->boundingRect().height()) + textOffset);
         }
 #endif
-
         const auto logoPos = m_logoItem->pos();
         const auto logoRect = m_logoItem->boundingRect();
 
@@ -244,7 +243,7 @@ namespace CM
 
             if(it == m_infos.end())
             {
-                std::runtime_error("No Key!");
+                throw std::runtime_error("No Key!");
             }
 
             switch (layout)
@@ -311,11 +310,12 @@ namespace CM
         m_logoItem->setPos(pos.x() + rect.width() / 2.0, pos.y() + rect.height() + 20);
     }
 
-    void PreViewImageScene::updateLogoPos()
+    void PreViewImageScene::updateLogoPosition()
     {
         auto rect = m_showImageItem->boundingRect();
         auto pos = m_showImageItem->pos();
-        m_logoItem->setPos(pos.x() + rect.width() / 2.0, pos.y() + rect.height() + 20);
+        auto logoSpaceWithImage = m_sceneLayout.logoSpace();
+        m_logoItem->setPos(pos.x() + rect.width() / 2.0, pos.y() + rect.height() + logoSpaceWithImage);
     }
 
     void PreViewImageScene::InitPreviewImageItem()
@@ -326,7 +326,7 @@ namespace CM
         addItem(m_showImageItem);
     }
 
-    void PreViewImageScene::updatePreviewPixmap(const QPixmap &pixmap)
+    void PreViewImageScene::resetPreviewPixmap(const QPixmap &pixmap)
     {
         ((PreViewImageItem*)(m_showImageItem))->resetPixmap(pixmap);
     }
@@ -344,13 +344,39 @@ namespace CM
     void PreViewImageScene::InitMargin()
     {
         auto rect = sceneRect().toRect();
+        const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
 
-        m_left = new QGraphicsRectItem(0,0,m_sceneLayout.getMargin().left,rect.width());
-        m_right = new QGraphicsRectItem(0,0,m_sceneLayout.getMargin().left,rect.width());
-        m_top = new QGraphicsRectItem(0,0,m_sceneLayout.getMargin().left,rect.width());
+        m_left = new QGraphicsRectItem(0,0,left,rect.width());
+        m_right = new QGraphicsRectItem(0,0,right,rect.height());
+        m_top = new QGraphicsRectItem(0,0,rect.width(),top);
         m_bottom = new QGraphicsRectItem(0,0,m_sceneLayout.getMargin().left,rect.width());
 
-        addItem(m_left);
+        const auto & rectPen = QPen(Qt::transparent);
+        m_left->setPen(rectPen);
+        m_right->setPen(rectPen);
+        m_top->setPen(rectPen);
+        m_bottom->setPen(rectPen);
 
+        addItem(m_left);
+        addItem(m_right);
+        addItem(m_bottom);
+        addItem(m_top);
+    }
+
+    void PreViewImageScene::updateMarginItems()
+    {
+        const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
+        auto logoSpaceWithShowImage = m_sceneLayout.logoSpace();
+        const auto & imageRect = m_showImageItem->sceneBoundingRect().toRect();
+        const auto & logoRect = m_logoItem->sceneBoundingRect().toRect();
+
+        auto sceneBoundMarginRectH = top + imageRect.height() + logoSpaceWithShowImage + logoRect.height() + bottom;
+        auto sceneBoundMarginRectW = left + imageRect.width() + right;
+
+        m_left->setRect(0, 0, left, sceneBoundMarginRectH);
+        m_right->setRect(left + imageRect.width(), 0, right, sceneBoundMarginRectH);
+        m_top->setRect(0,0,sceneBoundMarginRectW,top);
+
+        m_bottom->setRect(0,top + imageRect.height() + logoSpaceWithShowImage + logoRect.height(),sceneBoundMarginRectW,bottom);
     }
 } // CM

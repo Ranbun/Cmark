@@ -43,7 +43,6 @@ namespace CM
          */
         static std::shared_ptr<QPixmap> getCameraMakerLogo(const CameraIndex & cameraIndex);
 
-
     private:
         static std::unordered_map<CameraIndex,std::shared_ptr<QPixmap>> m_logos;
     };

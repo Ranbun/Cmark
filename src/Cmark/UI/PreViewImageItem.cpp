@@ -2,8 +2,9 @@
 
 namespace CM
 {
-    PreViewImageItem::PreViewImageItem(QGraphicsItem *parent)
+    PreViewImageItem::PreViewImageItem(QGraphicsItem *parent, const SceneLayout & layout)
     : QGraphicsPixmapItem(parent)
+    , m_sceneLayout(layout)
     {
         m_margin = {30,30,213,30};
     }

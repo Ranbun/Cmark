@@ -43,8 +43,9 @@ namespace CM
         {
             m_rightDockWidget = std::shared_ptr<ImagePropertyDockWidget>(new ImagePropertyDockWidget(this), []([[maybe_unused]] ImagePropertyDockWidget* w) {});
             m_rightDockWidget->setWindowTitle("");
+            m_rightDockWidget->setVisible(false);
 
-            addDockWidget(Qt::RightDockWidgetArea, m_rightDockWidget.get());
+            // addDockWidget(Qt::RightDockWidgetArea, m_rightDockWidget.get());
         }
 
         setContentsMargins(0,0,0,0);

@@ -9,6 +9,7 @@
 #include <QPixmap>
 #include <QFileDialog>
 #include <QImageReader>
+#include <QMessageBox>
 
 #include <QGraphicsView>
 #include "PreViewImageScene.h"
@@ -56,35 +57,41 @@ namespace CM
     {
         QImage readerFile;
         readerFile.fill(Qt::transparent);
-
         auto readFileToImage = [&readerFile](const std::filesystem::path & path)
         {
             QImageReader reader(path.string().c_str());
             reader.setAutoTransform(true);
             readerFile = reader.read();
         };
-
         std::thread readImage(readFileToImage, path);
 
         const auto &pictureData = CM::FileLoad::Load(path);
-
         /// TODO: need to define struct save exif infos
         EXIFResolver resolver;
-        EXIFResolver::check(resolver.resolver(pictureData));
+        const auto & [res,message] = EXIFResolver::check(resolver.resolver(pictureData));
+        if(!res)
+        {
+            QMessageBox::about(this,"Warning",message.c_str());
+            return ;
+        }
         const auto &result = resolver.getInfos();
 
+        /// 加载logo
         auto cameraIndex = LogoManager::resolverCameraIndex(result.Make);
         LogoManager::loadCameraLogo(cameraIndex);
         auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
         /// load image
         readImage.join();
+
+        /// convert to QPixmap
         QPixmap preViewImage = QPixmap::fromImage(readerFile);
 
+        /// get enable exif item
         auto infos = EXIFResolver::resolverImageExif(result);
-        auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
 
-        scene->updatePreviewPixmap(preViewImage);
+        auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
+        scene->resetPreviewPixmap(preViewImage);
         scene->updateTexItems(infos);
         scene->updateLogoPixmap(*previewImageLogo);
 
@@ -92,9 +99,14 @@ namespace CM
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
         logoScene->setSceneRect(0,0,result.ImageWidth,result.ImageHeight);
         logoScene->updatePreviewPixmap(preViewImage);
-        scene->updateTexItems(infos);
-        scene->updateLogoPixmap(*previewImagelogo);
+        logoScene->updateTexItems(infos);
+        logoScene->updateLogoPixmap(*previewImageLogo);
+        logoScene->updateLogoPos();
+        logoScene->updateMarginItems();
 #endif
+        auto revent = new QResizeEvent(this->size(),this->size());
+        this->resizeEvent(revent);
+        delete revent;
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent *event)
@@ -102,17 +114,14 @@ namespace CM
         const auto windowSize = event->size();
         m_view->resize(windowSize);   ///< resize view
 
-        ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view, m_previewImageScene->itemsBoundingRect());
-
+        ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view);
         {
             const auto bound = m_previewImageScene->itemsBoundingRect();
-            const auto rect = m_previewImageScene->sceneRect();
-            const auto newRect = QRectF(0,0,rect.width(),bound.height());
-            m_view->setSceneRect(newRect); // 设置场景矩形
-            m_view->centerOn(newRect.center());
+            m_view->setSceneRect(bound); // 设置场景矩形
+            m_view->centerOn(bound.center());
         }
 
-        ((PreViewImageScene *) m_previewImageScene)->updateTexItems();
+        ((PreViewImageScene *) m_previewImageScene)->updateTexItemsPos();
 
         m_view->fitInView(m_previewImageScene->itemsBoundingRect(),Qt::KeepAspectRatio);
 
@@ -142,7 +151,7 @@ namespace CM
 
             const auto rect = scene->sceneRect();
             const auto bound = scene->itemsBoundingRect();
-            scene->setSceneRect({0,0,rect.width(),bound.height()});
+            scene->setSceneRect(bound);
 
             std::shared_ptr<QImage> image = std::make_shared<QImage>(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);
 

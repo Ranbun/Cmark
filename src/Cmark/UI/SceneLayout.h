@@ -11,7 +11,7 @@ namespace CM
         int left {30};
         int right {30};
         int top {30};
-        int bottom {30};
+        int bottom {5};
     };
 
     class SceneLayout

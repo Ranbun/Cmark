@@ -29,6 +29,12 @@ namespace CM
 
         connect(m_TreeView, &QTreeView::clicked, this, [this](const QModelIndex& index)
         {
+            auto isDir = m_FileSystemModel->isDir(index);
+            if(isDir)
+            {
+                return ;
+            }
+
             const QString filePath = m_FileSystemModel->filePath(index);
             emit previewImage(filePath);
             qDebug() << "Clicked file path: " << filePath;

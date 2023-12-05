@@ -33,7 +33,7 @@ namespace CM
          */
         void saveScene(SceneIndex sceneIndex);
 
-        void saveLoadedPixmap();
+        [[deprecated]] void saveLoadedPixmap();
 
     protected:
         void paintEvent(QPaintEvent * event) override;

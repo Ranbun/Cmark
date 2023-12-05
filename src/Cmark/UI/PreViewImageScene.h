@@ -3,12 +3,13 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
-#include "../Base/Type.h"
-#include "../Base/CPoint.h"
 
+#include <CMark.h>
+
+#include "Base/Type.h"
+#include "Base/CPoint.h"
 #include "SceneLayout.h"
 
-#include <algorithm>
 
 namespace CM
 {
@@ -37,8 +38,9 @@ namespace CM
      */
     struct showExifInfo
     {
-        ExifLayout layout;   ///< 显示信息的位置
+        ExifLayout layout;            ///< 显示信息的位置
         std::vector<ExifKey> m_keys;  ///< 显示的信息 - 某一个位置可以有多条信息
+        /// TODO: make it editor in widget
     };
 
     class PreViewImageScene : public QGraphicsScene
@@ -56,7 +58,7 @@ namespace CM
          * @brief 根据当前使用的视图更新场景的大小(此时场景和视图具有1对一关系)
          * @param view 当前使用的视图
          */
-        void updateSceneRect(QGraphicsView *view, const QRectF &sceneSize);
+        void updateSceneRect(QGraphicsView *view);
 
         /**
          * @brief 当前显示的所有文字信息
@@ -67,7 +69,7 @@ namespace CM
         /**
          * @brief 更新所有文字的位置
          */
-        void updateTexItems();
+        void updateTexItemsPos();
 
         /**
          * @brief 更新logo
@@ -78,33 +80,36 @@ namespace CM
         /**
          * @brief 更新logo的位置
          */
-        void updateLogoPos();
+        void updateLogoPosition();
 
         /**
          * @brief 更新预览显示的图片
          * @param pixmap 图片对象
          */
-        void updatePreviewPixmap(const QPixmap & pixmap);
+        void resetPreviewPixmap(const QPixmap & pixmap);
 
         /**
          * @brief 存储加载的图片
          */
-        void saveLoadedPixmap();
+        [[deprecated]] void saveLoadedPixmap();
+
+        /**
+         * @brief 更新margin rect的位置
+         */
+        void updateMarginItems();
 
     private:
-        QGraphicsPixmapItem * m_showImageItem;
-        QGraphicsPixmapItem * m_logoItem;
+        QGraphicsPixmapItem * m_showImageItem;  ///< 预览加载的图片
+        QGraphicsPixmapItem * m_logoItem;       ///< 加载的logo
 
         QGraphicsRectItem * m_left;
         QGraphicsRectItem * m_right;
         QGraphicsRectItem * m_top;
         QGraphicsRectItem * m_bottom;
 
-        std::vector<ImageInfoItemPack> m_infos;
-        std::vector<showExifInfo> m_showInfos;
-
-        SceneLayout m_sceneLayout;  ///< 记录场景的布局
-
+        std::vector<ImageInfoItemPack> m_infos; ///< 场景中所有可能会显示的Exif信息
+        std::vector<showExifInfo> m_showInfos;  ///< 最终显示到屏幕上的Exif信息
+        SceneLayout m_sceneLayout;              ///< 记录场景的布局
 
     private:
         /**
