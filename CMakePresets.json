@@ -48,5 +48,11 @@
                 }
             }
         }
+    ],
+    "buildPresets": [
+        {
+            "name": "VS 2022",
+            "configurePreset": "x64-debug"
+        }
     ]
 }
