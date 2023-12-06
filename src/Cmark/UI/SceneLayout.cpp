@@ -17,4 +17,24 @@ namespace CM
         return m_logoSpace;
     }
 
+    const Margin &SceneLayout::getMargin() const
+    {
+        return m_margin;
+    }
+
+    const CSize &SceneLayout::LogoSize() const
+    {
+        return m_LogoSize;
+    }
+
+    void SceneLayout::setLogoSize(int w, int h)
+    {
+        setLogoSize({w,h});
+    }
+
+    void SceneLayout::setLogoSize(const CSize &size)
+    {
+        m_LogoSize = size;
+    }
+
 } // CM

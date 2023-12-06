@@ -43,12 +43,10 @@ namespace CM
 #endif
         });
 
-#if  _DEBUG
         auto lTitleBar = this->titleBarWidget();
         auto lEmptyWidget = new QWidget();
         setTitleBarWidget(lEmptyWidget);
         delete lTitleBar;
-#endif
 
         layout()->setContentsMargins(0,0,0,0);
         layout()->setSpacing(0);
