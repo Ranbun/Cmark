@@ -13,8 +13,6 @@
 
 namespace CM
 {
-    using Size = CPoint;
-
     struct ImageInfoItemPack
     {
         CM::ExifKey m_key;                   ///< info's index
@@ -97,6 +95,8 @@ namespace CM
          * @brief 更新margin rect的位置
          */
         void updateMarginItems();
+
+        const QPixmap & previewImageTarget();
 
     private:
         QGraphicsPixmapItem * m_showImageItem;  ///< 预览加载的图片

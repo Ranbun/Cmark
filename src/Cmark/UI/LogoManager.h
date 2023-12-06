@@ -1,20 +1,23 @@
 #ifndef CAMERAMARK_LOGOMANAGER_H
 #define CAMERAMARK_LOGOMANAGER_H
 
-#include <iostream>
-#include <unordered_map>
-
 #include <QPixmap>
+
+#include <CMark.h>
 
 namespace CM
 {
     enum CameraIndex : uint8_t
     {
-        None,
+        None,   ///< empty
         Nikon,
         Sony,
         Canon,
         Apple,
+        Panasonic,
+        Leica,
+        Hasselblad,
+        Fujifilm
          /// ...... TODO: need add others
     };
 
@@ -22,6 +25,8 @@ namespace CM
     {
     public:
         LogoManager() = default;
+
+        static void Init();
 
         /**
          * @brief 通过cameraMake参数获取使用的相机
@@ -45,6 +50,8 @@ namespace CM
 
     private:
         static std::unordered_map<CameraIndex,std::shared_ptr<QPixmap>> m_logos;
+        static std::unordered_map<std::string,CameraIndex> cameraMakerMap;
+        static std::once_flag m_initFlag;
     };
 
 } // CM

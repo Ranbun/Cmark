@@ -129,13 +129,10 @@ namespace CM
             addItem(item.m_field);
         }
 
-
     }
 
     void PreViewImageScene::updateTexItems(const ExifList &map)
     {
-        auto pos = m_showImageItem->pos();
-
         for(const auto & item : map)
         {
             const auto & [key,text] = item;
@@ -152,8 +149,11 @@ namespace CM
             }
         }
 
-        const auto logoPos = m_logoItem->pos();
-        const auto logoRect = m_logoItem->boundingRect();
+        auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
+        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
+        const auto & logoSize = m_sceneLayout.LogoSize();
+
+        auto imageRect = m_showImageItem->boundingRect().toRect();
 
         for(const auto & info: m_showInfos)
         {
@@ -171,7 +171,7 @@ namespace CM
             {
                 case showExifTexPositionIndex::left_top:
                 {
-                    QPoint position(static_cast<int>(pos.x()), static_cast<int>(logoPos.y()));
+                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
                     auto pixmapItem = it->m_field;
                     pixmapItem->setVisible(it->m_visible);
@@ -181,9 +181,9 @@ namespace CM
                 case showExifTexPositionIndex::left_bottom:
                 {
                     auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect();
+                    auto itemRect = pixmapItem->boundingRect().toRect();
 
-                    QPoint position(static_cast<int>(pos.x()), logoPos.y() + logoRect.height() - itemRect.height());
+                    QPoint position(left, top + logoWithImageSpacing + logoSize.h - itemRect.height());
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
                     pixmapItem->setVisible(it->m_visible);
                     pixmapItem->setPos(position);
@@ -191,21 +191,21 @@ namespace CM
                 break;
                 case showExifTexPositionIndex::right_top:
                 {
-                    auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect();
+                    auto Item = it->m_field;
+                    const auto & itemRect = Item->boundingRect().toRect();
 
-                    QPoint position(static_cast<int>(logoPos.x()) + logoRect.width() + 40, static_cast<int>(logoPos.y()));
+                    QPoint position(left + right + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    pixmapItem->setVisible(it->m_visible);
-                    pixmapItem->setPos(position);
+                    Item->setVisible(it->m_visible);
+                    Item->setPos(position);
                 }
                 break;
                 case showExifTexPositionIndex::right_bottom:
                 {
                     auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect();
+                    auto itemRect = pixmapItem->boundingRect().toRect();
 
-                    QPoint position(static_cast<int>(logoPos.x()) + logoRect.width() + 40, logoPos.y() + logoRect.height() - itemRect.height());
+                    QPoint position(left + right + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + logoSize.h - itemRect.height());
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
                     pixmapItem->setVisible(it->m_visible);
                     pixmapItem->setPos(position);
@@ -219,22 +219,11 @@ namespace CM
 
     void PreViewImageScene::updateTexItemsPosition()
     {
-        const auto pos = m_showImageItem->pos();
-#if  0
-        QPoint position(pos.x() + rect.width() + textOffset, textOffset + pos.y());
+        auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
+        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
+        const auto & logoSize = m_sceneLayout.LogoSize();
 
-        for(auto & item : m_infos)
-        {
-            auto pixmapItem = item.m_field;
-
-            item.pos = CPoint{(position.x()), (position.y()), 0};
-            pixmapItem->setPos(position);
-
-            position.setY(static_cast<int>((pixmapItem->pos().y())) + (int)(pixmapItem->boundingRect().height()) + textOffset);
-        }
-#endif
-        const auto logoPos = m_logoItem->pos();
-        const auto logoRect = m_logoItem->boundingRect();
+        auto imageRect = m_showImageItem->boundingRect().toRect();
 
         for(auto & info: m_showInfos)
         {
@@ -252,7 +241,7 @@ namespace CM
             {
                 case showExifTexPositionIndex::left_top:
                 {
-                    QPoint position(static_cast<int>(pos.x()), static_cast<int>(logoPos.y()));
+                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
                     auto pixmapItem = it->m_field;
                     pixmapItem->setPos(position);
@@ -261,29 +250,29 @@ namespace CM
                 case showExifTexPositionIndex::left_bottom:
                 {
                     auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect();
+                    auto itemRect = pixmapItem->boundingRect().toRect();
+                    QPoint position(left, top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
 
-                    QPoint position(static_cast<int>(pos.x()), logoPos.y() + logoRect.height() - itemRect.height());
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
                     pixmapItem->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::right_top:
                 {
-                    auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect();
+                    auto Item = it->m_field;
+                    const auto & itemRect = Item->boundingRect().toRect();
+                    QPoint position(left + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
 
-                    QPoint position(static_cast<int>(logoPos.x()) + logoRect.width() + 40, static_cast<int>(logoPos.y()));
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    pixmapItem->setPos(position);
+                    Item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::right_bottom:
                 {
                     auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect();
+                    auto itemRect = pixmapItem->boundingRect().toRect();
+                    QPoint position(left + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
 
-                    QPoint position(static_cast<int>(logoPos.x()) + logoRect.width() + 40, logoPos.y() + logoRect.height() - itemRect.height());
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
                     pixmapItem->setPos(position);
                 }
@@ -380,5 +369,10 @@ namespace CM
         m_top->setRect(0,0,sceneBoundMarginRectW,top);
 
         m_bottom->setRect(0,top + imageRect.height() + logoSpaceWithShowImage + logoRect.height(),sceneBoundMarginRectW,bottom);
+    }
+
+    const QPixmap &PreViewImageScene::previewImageTarget()
+    {
+        return ((PreViewImageItem*)(m_showImageItem))->target();
     }
 } // CM

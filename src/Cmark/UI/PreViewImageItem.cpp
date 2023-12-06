@@ -15,8 +15,6 @@ namespace CM
         if(!currentScene) return;
         const auto &  sceneRect = currentScene->sceneRect().toRect();
 
-        CM::Size sceneRectSize{sceneRect.width(),sceneRect.height(),0};
-
         const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
 
         auto newWidth = sceneRect.width() - left - right;

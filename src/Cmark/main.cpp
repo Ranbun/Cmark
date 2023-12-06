@@ -136,7 +136,6 @@ namespace Tools
 
         return 0;
     }
-
 };
 
 #define SHOW_WIDGET 1
@@ -147,12 +146,9 @@ int main(int argc,char ** argv)
     QApplication app(argc,argv);
     CM::MainWindow manApp;
 
-    CM::LogoManager::loadCameraLogo(CM::CameraIndex::Nikon);  ///< load camera logo
-    CM::LogoManager::loadCameraLogo(CM::CameraIndex::Sony);  ///< load camera logo
-    CM::LogoManager::loadCameraLogo(CM::CameraIndex::Canon);  ///< load camera logo
+    CM::LogoManager::Init();
 
     manApp.resize(720,560);
-
     manApp.setWindowTitle("Window App");
     manApp.show();
 

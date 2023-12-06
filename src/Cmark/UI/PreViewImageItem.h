@@ -34,6 +34,8 @@ namespace CM
          */
         void updatePixmapPosition();
 
+        const QPixmap & target() const {return m_pixmap;}
+
     private:
         static QPixmap scaledPixmap(const QPixmap &image, int w, int h);
 

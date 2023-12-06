@@ -12,7 +12,7 @@ namespace CM
         m_logoSpace = space;
     }
 
-    int SceneLayout::logoSpace()
+    int SceneLayout::logoSpace() const
     {
         return m_logoSpace;
     }

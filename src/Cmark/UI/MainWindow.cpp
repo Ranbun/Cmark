@@ -150,6 +150,7 @@ namespace CM
 
         /// save loaded pixmap
         {
+#if  _DEBUG
             auto save = toolBar->addAction("loaded pixmap Save");
             save->setToolTip("Save Loaded pixmap");
             QPixmap previewSceneSaveIcon("./sources/icons/save_uploaded.png");
@@ -159,6 +160,7 @@ namespace CM
             connect(save, &QAction::triggered, [this]() {
                 m_displayWidget->saveLoadedPixmap();
             });
+#endif
         }
 
 

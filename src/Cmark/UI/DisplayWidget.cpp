@@ -101,17 +101,12 @@ namespace CM
             scene->resetLogoPixmap(*previewImageLogo);
         }
 
-#if _DEBUG
+#ifdef NDEBUG
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
         // logoScene->setSceneRect(0,0,result.ImageWidth,result.ImageHeight);
         logoScene->resetPreviewPixmap(preViewImage);
         logoScene->updateTexItems(infos);
         logoScene->resetLogoPixmap(*previewImageLogo);
-        logoScene->updateLogoPosition();
-        logoScene->updateMarginItems();
-
-        logoScene->updateSceneRect(nullptr,{0,0,(int)(result.ImageWidth),(int)(result.ImageHeight)});
-        logoScene->updateTexItemsPosition();
 #endif
         /// 构建一个resizeEvent make it to update all item
         auto revent = new QResizeEvent(this->size(),this->size());
@@ -141,7 +136,7 @@ namespace CM
     {
         auto saveAsFile = [](const std::shared_ptr<QImage>& image,const QString & filePath)
         {
-            bool res = image->save(filePath);
+            bool res = image->save(filePath,nullptr,1);
             if(!res)
             {
                 std::runtime_error("save scene failed!");
@@ -192,6 +187,16 @@ namespace CM
             break;
             case SceneIndex::GENERATELOGO_SCENE:
             {
+                auto logoScene = dynamic_cast<PreViewImageScene*>(m_addLogoScene);
+                logoScene->updateLogoPosition();
+                logoScene->updateMarginItems();
+
+                const auto & targetPixmap = logoScene->previewImageTarget();
+                logoScene->updateSceneRect(nullptr,{0, 0, targetPixmap.width(), targetPixmap.height()});
+                logoScene->updateTexItemsPosition();
+
+                logoScene->update();
+
                 save(m_addLogoScene);
             }
             break;

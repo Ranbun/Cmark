@@ -37,7 +37,10 @@ namespace CM
 
             const QString filePath = m_FileSystemModel->filePath(index);
             emit previewImage(filePath);
+
+#if _DEBUG
             qDebug() << "Clicked file path: " << filePath;
+#endif
         });
 
 #if  _DEBUG
