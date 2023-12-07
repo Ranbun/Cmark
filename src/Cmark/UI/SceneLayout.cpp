@@ -37,4 +37,10 @@ namespace CM
         m_LogoSize = size;
     }
 
+    void SceneLayout::updateLeftTextOffset()
+    {
+        auto width = m_margin.left + m_showImageSize.w + m_margin.right;
+        m_leftTextOffset = (int)(static_cast<float>(width) * 0.1);
+    }
+
 } // CM

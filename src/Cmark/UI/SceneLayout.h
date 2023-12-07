@@ -2,6 +2,7 @@
 #define CAMERAMARK_SCENELAYOUT_H
 
 #include <Base/CSize.h>
+#include <Base/CPoint.h>
 
 namespace CM
 {
@@ -33,14 +34,17 @@ namespace CM
         void setLogoSize(int w,int h);
         void setLogoSize(const CSize & size);
 
+        void updateLeftTextOffset();   ///< 更新内部计算结果
+
     private:
+        CSize m_showImageSize;          ///< 显示的图片的大小
         Margin m_margin;                ///< scene margin{left right top bottom}
         int m_logoSpace {10};           ///< show image space with log
         CSize m_LogoSize{64,64};  ///< logo size
 
-        int leftTextOffset;   ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
-        // logo position      ///< (left + image.width() + right) / 3 * 2的位置的地方
-        // line width 7 pixel
+        int m_leftTextOffset;   ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
+        // CPoint m_LogoPosition;  ///< ((left + image.width() + right) - m_leftTextOffset - leftText.Width()) * 0.55 + m_leftTextOffset + leftText.Width() 的位置的地方
+        // line width 6 pixel
 
 
     };

@@ -10,8 +10,13 @@
 #include <string>
 #include <iostream>
 #include <unordered_map>
+#include <vector>
+#include <memory>
+#include <filesystem>
 
 #include <mutex>
 #include <thread>
+
+#include <functional>
 
 #endif

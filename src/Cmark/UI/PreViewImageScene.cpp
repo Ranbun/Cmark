@@ -9,7 +9,6 @@
 
 namespace CM
 {
-    static int textOffset = 5;
 
     PreViewImageScene::PreViewImageScene(QObject *parent)
     : QGraphicsScene(parent)
@@ -157,7 +156,30 @@ namespace CM
 
         for(const auto & info: m_showInfos)
         {
+
+#if  0
+
+            std::vector<std::vector<ImageInfoItemPack>::iterator> its;
+            for(auto k: key)
+            {
+                auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ImageInfoItemPack & info){
+                    return info.m_key == key;
+                });
+
+                if(it != m_infos.end())
+                {
+                    its.emplace_back(it);
+                }
+            }
+
+            if(its.empty())
+            {
+                throw std::runtime_error("No Key!");
+            }
+
+#endif
             auto & [layout,key] = info;
+
             auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ImageInfoItemPack & info){
                 return info.m_key == key;
             });

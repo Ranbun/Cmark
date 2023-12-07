@@ -1,10 +1,22 @@
 #include "EXIFResolver.h"
+#include "FileLoad.h"
+
 #include <UI/StatusBar.h>
 
 #include <tuple>
+#include <unordered_map>
+#include <mutex>
+#include <thread>
+#include <future>
 
 namespace CM
 {
+    static std::unordered_map<size_t,std::shared_ptr<EXIFInfo>> loadedInfos;
+    static std::unordered_map<size_t,std::promise<void>> threadFinishSignals;
+    static std::unordered_map<size_t,int> loadImageCheckCode;
+
+    std::mutex infoMutex;
+
     [[maybe_unused]] int EXIFResolver::resolver(const std::vector<unsigned char> &pictureData)
     {
         return m_EXIFResolver.parseFrom(pictureData.data(), pictureData.size());
@@ -75,4 +87,93 @@ namespace CM
         CM::StatusBar::showMessage(outputInfos.c_str());
         return {status,outputInfos};
     }
+
+    const easyexif::EXIFInfo &EXIFResolver::getInfos() const
+    {
+        return m_EXIFResolver;
+    }
+
+    size_t EXIFResolver::resolver(const std::filesystem::path &path)
+    {
+        assert(this);
+
+        std::hash<std::filesystem::path> Hasher;
+        size_t hashValue = Hasher(path);
+
+        /// load file
+        auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){
+            auto res = FileLoad::Load(path);
+
+            easyexif::EXIFInfo EXIFResolver;
+            auto exifCheckCode = EXIFResolver.parseFrom(res.data(),res.size());
+
+
+            auto outputExIFInfos = std::make_shared<EXIFInfo>();
+            {
+                const auto & in = outputExIFInfos;
+                const easyexif::EXIFInfo & out = EXIFResolver;
+
+                in->ImageDescription = out.ImageDescription;
+                in->Make = out.Make;
+                in->Model = out.Model;
+                in->Orientation = out.Orientation;
+                in->BitsPerSample = out.BitsPerSample;
+
+                in->DateTime = out.DateTime;
+                in->DateTimeOriginal = out.DateTimeOriginal;
+                in->DateTimeDigitized = out.DateTimeDigitized;
+                in->SubSecTimeOriginal = out.SubSecTimeOriginal;
+                in->Copyright = out.Copyright;
+
+                in->ExposureTime = out.ExposureTime;
+                in->FNumber = out.FNumber;
+                in->ExposureProgram = out.ExposureProgram;
+
+                in->ISOSpeedRatings = out.ISOSpeedRatings;
+                in->ShutterSpeedValue = out.ShutterSpeedValue;
+
+                in->ImageWidth = out.ImageWidth;
+                in->ImageHeight = out.ImageHeight;
+
+                in->LensInfo.Make = out.LensInfo.Make;
+                in->LensInfo.Model = out.LensInfo.Model;
+                /// TODO need add others
+            }
+
+            std::lock_guard<std::mutex> local(infoMutex);
+            loadedInfos.insert({fileHashValue,outputExIFInfos});
+            loadImageCheckCode.insert({fileHashValue,exifCheckCode});
+            exitSignal.set_value();
+        };
+
+        std::promise<void> exitSignal;
+        std::thread loading(loadImageFile,std::ref(exitSignal),std::ref(path),hashValue);
+
+        loading.detach();
+        threadFinishSignals.insert({hashValue,std::move(exitSignal)});
+
+        return hashValue;
+    }
+
+    std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(size_t index)
+    {
+        assert(this);  /// TODO: maybe remove it
+
+        auto & exitSignal = threadFinishSignals.at(index);
+        exitSignal.get_future().wait();   ///< 等待线程结束
+        threadFinishSignals.erase(index);
+        /// 获取图片结果
+        return loadedInfos.at(index);
+    }
+
+    int EXIFResolver::checkCode(size_t index)
+    {
+        assert(this);   /// TODO: maybe remove it
+
+        auto Code = loadImageCheckCode.at(index);
+        loadImageCheckCode.erase(index);
+        return Code;
+    }
+
+
 } // CM

@@ -72,6 +72,15 @@ namespace CM
         const auto &pictureData = CM::FileLoad::Load(path);
         /// TODO: need to define struct save exif infos
         EXIFResolver resolver;
+
+        auto loadFileIndex = resolver.resolver(path);
+        {
+            const auto & [res,message] = EXIFResolver::check(resolver.checkCode(loadFileIndex));
+        }
+        auto exifInfos = resolver.getExifInfo(loadFileIndex);
+
+        /// TODO:
+
         const auto & [res,message] = EXIFResolver::check(resolver.resolver(pictureData));
         if(!res)
         {
