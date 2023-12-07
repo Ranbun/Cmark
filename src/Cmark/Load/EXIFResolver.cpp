@@ -45,9 +45,38 @@ namespace CM
         /// TODO: we need resolver all info and write it to ExifMap and output it
         infoMaps.emplace_back(ExifPack{ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
 
+        return std::move(infoMaps);
+    }
+
+    ExifList EXIFResolver::resolverImageExif(std::weak_ptr<CM::EXIFInfo> infoPtr)
+    {
+        auto result = *infoPtr.lock();
+
+        ExifList infoMaps;
+        infoMaps.emplace_back(ExifPack{ExifKey::Camera_make,result.Make});
+        infoMaps.emplace_back(ExifPack{ExifKey::Camera_model,result.Model});
+        infoMaps.emplace_back(ExifPack{ExifKey::Image_width,std::to_string(result.ImageWidth)});
+        infoMaps.emplace_back(ExifPack{ExifKey::Image_height,std::to_string(result.ImageHeight)});
+        infoMaps.emplace_back(ExifPack{ExifKey::Image_date,result.DateTime});
+
+        /// Exposure Time
+        auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
+        infoMaps.emplace_back(ExifPack{ExifKey::Exposure_time,"1/" + std::to_string(inExposureTime) + " s"});
+
+        std::string f_stop = std::to_string(static_cast<int>(result.FNumber)) + "." +
+                             std::to_string(static_cast<int>(result.FNumber * 10) % 10) + "f";
+        infoMaps.emplace_back(ExifPack{ExifKey::F_stop,f_stop});
+
+        infoMaps.emplace_back(ExifPack{ExifKey::ISO_speed,std::to_string(result.ISOSpeedRatings)});
+        infoMaps.emplace_back(ExifPack{ExifKey::Lens_Model,result.LensInfo.Model});
+
+        /// TODO: we need resolver all info and write it to ExifMap and output it
+        infoMaps.emplace_back(ExifPack{ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
+
 
         return std::move(infoMaps);
     }
+
 
     std::tuple<bool, std::string> EXIFResolver::check(int resolverCode)
     {
@@ -147,10 +176,9 @@ namespace CM
         };
 
         std::promise<void> exitSignal;
-        std::thread loading(loadImageFile,std::ref(exitSignal),std::ref(path),hashValue);
-
-        loading.detach();
         threadFinishSignals.insert({hashValue,std::move(exitSignal)});
+        std::thread loading(loadImageFile,std::ref(threadFinishSignals.at(hashValue)),std::ref(path),hashValue);
+        loading.detach();
 
         return hashValue;
     }
@@ -159,9 +187,12 @@ namespace CM
     {
         assert(this);  /// TODO: maybe remove it
 
-        auto & exitSignal = threadFinishSignals.at(index);
-        exitSignal.get_future().wait();   ///< 等待线程结束
-        threadFinishSignals.erase(index);
+        if(threadFinishSignals.count(index))
+        {
+            auto & exitSignal = threadFinishSignals.at(index);
+            exitSignal.get_future().wait();   ///< 等待线程结束
+            threadFinishSignals.erase(index);
+        }
         /// 获取图片结果
         return loadedInfos.at(index);
     }
@@ -169,6 +200,13 @@ namespace CM
     int EXIFResolver::checkCode(size_t index)
     {
         assert(this);   /// TODO: maybe remove it
+
+        if(threadFinishSignals.count(index))
+        {
+            auto & exitSignal = threadFinishSignals.at(index);
+            exitSignal.get_future().wait();   ///< 等待线程结束
+            threadFinishSignals.erase(index);
+        }
 
         auto Code = loadImageCheckCode.at(index);
         loadImageCheckCode.erase(index);

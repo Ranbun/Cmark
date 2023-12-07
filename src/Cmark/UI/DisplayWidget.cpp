@@ -59,6 +59,10 @@ namespace CM
 
     void DisplayWidget::PreViewImage(const std::filesystem::path & path)
     {
+        /// TODO: need to define struct save exif infos
+        EXIFResolver resolver;
+        auto loadFileIndex = resolver.resolver(path);
+
         QImage readerFile;
         readerFile.fill(Qt::transparent);
         auto readFileToImage = [&readerFile](const std::filesystem::path & path)
@@ -69,39 +73,33 @@ namespace CM
         };
         std::thread readImage(readFileToImage, path);
 
-        const auto &pictureData = CM::FileLoad::Load(path);
-        /// TODO: need to define struct save exif infos
-        EXIFResolver resolver;
-
-        auto loadFileIndex = resolver.resolver(path);
         {
             const auto & [res,message] = EXIFResolver::check(resolver.checkCode(loadFileIndex));
+            if(!res)
+            {
+                QMessageBox::about(this,"Warning",message.c_str());
+                return ;
+            }
         }
+
         auto exifInfos = resolver.getExifInfo(loadFileIndex);
 
-        /// TODO:
-
-        const auto & [res,message] = EXIFResolver::check(resolver.resolver(pictureData));
-        if(!res)
-        {
-            QMessageBox::about(this,"Warning",message.c_str());
-            return ;
-        }
-        const auto &result = resolver.getInfos();
-
         /// 加载logo
-        auto cameraIndex = LogoManager::resolverCameraIndex(result.Make);
+        auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
         LogoManager::loadCameraLogo(cameraIndex);
         auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
         /// load image
-        readImage.join();
+        if(readImage.joinable())
+        {
+            readImage.join();
+        }
 
         /// convert to QPixmap
         QPixmap preViewImage = QPixmap::fromImage(readerFile);
 
         /// get enable exif item
-        auto infos = EXIFResolver::resolverImageExif(result);
+        auto infos = EXIFResolver::resolverImageExif(exifInfos);
 
         auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
         {

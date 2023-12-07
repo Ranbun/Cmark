@@ -107,13 +107,13 @@ namespace CM
          * @param pictureData 从文件中读取的数据
          * @return 解析码 用于判断是否错误以及错误的信息
          */
-        [[maybe_unused]] int resolver(const std::vector<unsigned  char > & pictureData);
+        [[maybe_unused]] [[deprecated("don't use this function")]] int resolver(const std::vector<unsigned  char > & pictureData);
 
         /**
          * @brief 获取解析完成的exif信息
          * @return exif 信息
          */
-        [[nodiscard]] const easyexif::EXIFInfo & getInfos() const;
+        [[nodiscard]] [[deprecated("don't use this function")]] const easyexif::EXIFInfo & getInfos() const;
 
         /**
          * @brief 解析错误码
@@ -127,7 +127,7 @@ namespace CM
          * @param result 解析的图片的exif信息
          * @return 转换完成的结果
          */
-        [[maybe_unused]] static ExifList resolverImageExif(const easyexif::EXIFInfo & result);
+        [[maybe_unused]] [[deprecated("don't use this function")]] static ExifList resolverImageExif(const easyexif::EXIFInfo & result);
 
         /// ---------------------------------new resolver interface --------------------------------------------------
 
@@ -142,10 +142,11 @@ namespace CM
 
         int checkCode(size_t index);
 
+        static ExifList resolverImageExif(std::weak_ptr<CM::EXIFInfo> infoPtr);
+
 
     private:
-        easyexif::EXIFInfo m_EXIFResolver;
-
+        [[deprecated]] easyexif::EXIFInfo m_EXIFResolver;
     };
 
 
