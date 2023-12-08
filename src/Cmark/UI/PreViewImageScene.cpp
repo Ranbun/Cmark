@@ -51,7 +51,7 @@ namespace CM
         m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::left_top, {ExifKey::Camera_model}});
         m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::left_bottom, {ExifKey::Image_date}});
         m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_top, {ExifKey::Lens_Model}});
-        m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_bottom, {ExifKey::F_stop, ExifKey::Exposure_time, ExifKey::ISO_speed}});   ///< TODO： 可以显示多条信息 需要做 || 处理
+        m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_bottom, {ExifKey::FocalLength,ExifKey::F_stop, ExifKey::Exposure_time, ExifKey::ISO_speed}});   ///< TODO： 可以显示多条信息 需要做 || 处理
 
         m_textItem.insert({showExifTexPositionIndex::left_top, addText("")});
         m_textItem.insert({showExifTexPositionIndex::left_bottom, addText("")});
@@ -392,7 +392,12 @@ namespace CM
             }
         }
 
+        const auto rightBottomItem = m_textItem.at(showExifTexPositionIndex::right_bottom);
+        const auto rightTopItem = m_textItem.at(showExifTexPositionIndex::right_top);
 
+        const auto closestLeft = rightBottomItem->pos().x() < rightTopItem->pos().x() ? rightBottomItem->pos().x():rightTopItem->pos().x();
+        rightBottomItem->setX(closestLeft);
+        rightTopItem->setX(closestLeft);
     }
 
     void PreViewImageScene::InitLogoItem()

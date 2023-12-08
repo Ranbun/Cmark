@@ -111,7 +111,7 @@ namespace CM
 #ifdef NDEBUG
 
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
-        logoScene->resetPreviewPixmap(preViewImage);
+        logoScene->resetPreviewImageTarget(preViewImage);
         logoScene->updateTexItems(infos);
         logoScene->resetLogoPixmap(*previewImageLogo);
 

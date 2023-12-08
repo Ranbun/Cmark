@@ -42,6 +42,9 @@ namespace CM
         /// TODO: we need resolver all info and write it to ExifMap and output it
         infoMaps.insert({ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
 
+        /// Focal Length
+        infoMaps.insert({ExifKey::FocalLength,std::to_string((int)result.FocalLength) + "mm"});
+
         return std::move(infoMaps);
     }
 
@@ -116,6 +119,8 @@ namespace CM
                 in->SubSecTimeOriginal = out.SubSecTimeOriginal;
                 in->Copyright = out.Copyright;
 
+                in->FocalLength = out.FocalLength;  ////< 焦距
+
                 in->ExposureTime = out.ExposureTime;
                 in->FNumber = out.FNumber;
                 in->ExposureProgram = out.ExposureProgram;
@@ -128,6 +133,7 @@ namespace CM
 
                 in->LensInfo.Make = out.LensInfo.Make;
                 in->LensInfo.Model = out.LensInfo.Model;
+
                 /// TODO need add others
             }
 

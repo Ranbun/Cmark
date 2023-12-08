@@ -19,6 +19,7 @@ namespace CM
         Image_date,
         Exposure_time,  /// 曝光时间
 
+        FocalLength, ///< 焦距
         F_stop,     ///< 光圈
         ISO_speed,  ///<感光度
         Shutter_speed,
