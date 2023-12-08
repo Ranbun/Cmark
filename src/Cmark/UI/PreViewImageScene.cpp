@@ -53,6 +53,12 @@ namespace CM
         m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_top, {ExifKey::Lens_Model}});
         m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_bottom, {ExifKey::F_stop, ExifKey::Exposure_time, ExifKey::ISO_speed}});   ///< TODO： 可以显示多条信息 需要做 || 处理
 
+        m_textItem.insert({showExifTexPositionIndex::left_top, addText("")});
+        m_textItem.insert({showExifTexPositionIndex::left_bottom, addText("")});
+        m_textItem.insert({showExifTexPositionIndex::right_top, addText("")});
+        m_textItem.insert({showExifTexPositionIndex::right_bottom, addText("")});
+
+#if  0
         {
             ExifInfoItemPack item;
             item.m_key = CM::ExifKey::Camera_make;
@@ -129,11 +135,13 @@ namespace CM
             item.m_field->setVisible(item.m_visible);
             addItem(item.m_field);
         }
+#endif
 
     }
 
-    void PreViewImageScene::updateTexItems(const ExifList &map)
+    void PreViewImageScene::updateTexItems(const ExifInfoMap &exifInfoMap)
     {
+#if 0
         for(const auto & item : map)
         {
             const auto & [key,text] = item;
@@ -221,10 +229,67 @@ namespace CM
                     break;
             }
         }
+
+#endif
+
+        m_targetImageExifInfoLists = exifInfoMap;  ///< copy infos
+
+        auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
+        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
+        const auto & logoSize = m_sceneLayout.LogoSize();
+        auto imageRect = m_showImageItem->boundingRect().toRect();
+
+        for(const auto & [layoutIndex, keys]: m_showInfos)
+        {
+            const auto item = m_textItem.at(layoutIndex);
+            std::vector<std::string> exifInfos;
+            std::for_each(keys.begin(),keys.end(),[&](const ExifKey & key)
+            {
+                exifInfos.emplace_back(m_targetImageExifInfoLists[key]);
+            });
+
+            auto res = std::accumulate(exifInfos.begin(), exifInfos.end(), std::string(), [](const std::string& a, const std::string& b){
+
+                auto tail = b.empty() ? std::string() : std::string(" ") + b;
+                return a + tail;
+            });
+
+            item->setPlainText(res.c_str());
+            const auto & itemRect = item->boundingRect().toRect();
+
+            switch (layoutIndex)
+            {
+                case showExifTexPositionIndex::left_top:
+                {
+                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
+                    item->setPos(position);
+                }
+                break;
+                case showExifTexPositionIndex::left_bottom:
+                {
+                    QPoint position(left, top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
+                    item->setPos(position);
+                }
+                    break;
+                case showExifTexPositionIndex::right_top:
+                {
+                    QPoint position(left + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
+                    item->setPos(position);
+                }
+                    break;
+                case showExifTexPositionIndex::right_bottom:
+                {
+                    QPoint position(left + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
+                    item->setPos(position);
+                }
+                break;
+            }
+        }
     }
 
     void PreViewImageScene::updateTexItemsPosition()
     {
+#if  0
         auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
         auto logoWithImageSpacing = m_sceneLayout.logoSpace();
         const auto & logoSize = m_sceneLayout.LogoSize();
@@ -287,6 +352,46 @@ namespace CM
                     break;
             }
         }
+#endif
+        auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
+        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
+        const auto & logoSize = m_sceneLayout.LogoSize();
+        auto imageRect = m_showImageItem->boundingRect().toRect();
+
+        for(const auto & [layoutIndex, keys]: m_showInfos)
+        {
+            const auto item = m_textItem.at(layoutIndex);
+            const auto & itemRect = item->boundingRect().toRect();
+
+            switch (layoutIndex)
+            {
+                case showExifTexPositionIndex::left_top:
+                {
+                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
+                    item->setPos(position);
+                }
+                    break;
+                case showExifTexPositionIndex::left_bottom:
+                {
+                    QPoint position(left, top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
+                    item->setPos(position);
+                }
+                    break;
+                case showExifTexPositionIndex::right_top:
+                {
+                    QPoint position(left + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
+                    item->setPos(position);
+                }
+                    break;
+                case showExifTexPositionIndex::right_bottom:
+                {
+                    QPoint position(left + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
+                    item->setPos(position);
+                }
+                break;
+            }
+        }
+
 
     }
 

@@ -2,6 +2,7 @@
 #define CAMERAMARK_TYPE_H_
 
 #include <string>
+#include <unordered_map>
 
 namespace CM
 {
@@ -34,7 +35,8 @@ namespace CM
         std::string text;
     };
 
-    using ExifList = std::vector<ExifPack>;
+    using ExifInfoMap = std::unordered_map<ExifKey,std::string>;
+
 }
 
 
