@@ -43,4 +43,25 @@ namespace CM
         m_leftTextOffset = (int)(static_cast<float>(width) * 0.1);
     }
 
+    void SceneLayout::setImageSize(const CSize &size)
+    {
+        m_showImageSize = size;
+    }
+
+    void SceneLayout::update()
+    {
+        /// finished image size
+        /// logo size
+        /// margin left & right & top & bottom
+
+        /// update some items
+        updateLeftTextOffset();
+
+    }
+
+    int SceneLayout::leftTextOffset() const
+    {
+        return m_leftTextOffset;
+    }
+
 } // CM

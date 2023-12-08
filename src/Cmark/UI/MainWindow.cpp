@@ -148,21 +148,5 @@ namespace CM
             });
         }
 
-        /// save loaded pixmap
-        {
-#if  _DEBUG
-            auto save = toolBar->addAction("loaded pixmap Save");
-            save->setToolTip("Save Loaded pixmap");
-            QPixmap previewSceneSaveIcon("./sources/icons/save_uploaded.png");
-            previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio,Qt::SmoothTransformation);
-            save->setIcon(previewSceneSaveIcon);
-
-            connect(save, &QAction::triggered, [this]() {
-                m_displayWidget->saveLoadedPixmap();
-            });
-#endif
-        }
-
-
     }
 } // CM

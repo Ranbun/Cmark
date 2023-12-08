@@ -23,6 +23,11 @@ namespace CM
         SceneLayout() = default;
         ~SceneLayout() = default;
 
+        /**
+         * @brief 计算一些布局使用的结果
+         */
+        void update();
+
         [[nodiscard]] const Margin & getMargin() const;
         void setMargin(int left,int right,int top,int bottom);
 
@@ -34,15 +39,21 @@ namespace CM
         void setLogoSize(int w,int h);
         void setLogoSize(const CSize & size);
 
+
+        [[maybe_unused]] void setImageSize(const CSize & size);
+
+        [[nodiscard]] [[maybe_unused]] int leftTextOffset() const;
+
+    private:
         void updateLeftTextOffset();   ///< 更新内部计算结果
 
     private:
-        CSize m_showImageSize;          ///< 显示的图片的大小
+        CSize m_showImageSize{1,1};          ///< 显示的图片的大小
         Margin m_margin;                ///< scene margin{left right top bottom}
         int m_logoSpace {10};           ///< show image space with log
         CSize m_LogoSize{64,64};  ///< logo size
 
-        int m_leftTextOffset;   ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
+        int m_leftTextOffset{m_margin.left};   ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
         // CPoint m_LogoPosition;  ///< ((left + image.width() + right) - m_leftTextOffset - leftText.Width()) * 0.55 + m_leftTextOffset + leftText.Width() 的位置的地方
         // line width 6 pixel
 

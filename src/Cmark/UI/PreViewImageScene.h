@@ -13,11 +13,11 @@
 
 namespace CM
 {
-    struct ImageInfoItemPack
+    struct ExifInfoItemPack
     {
         CM::ExifKey m_key;                   ///< info's index
         std::string m_title;                 ///< add it pre in info
-        QGraphicsTextItem * m_field;         ///< Items
+        QGraphicsTextItem * m_field;         ///< QGraphicsTextItem
         CPoint pos{-1, -1};            ///< position
         std::string m_infos{};               ///< show infos
         bool m_visible{false};               ///< item's visibility
@@ -84,19 +84,18 @@ namespace CM
          * @brief 更新预览显示的图片
          * @param pixmap 图片对象
          */
-        void resetPreviewPixmap(const QPixmap & pixmap);
+        void resetPreviewImageTarget(const QPixmap & pixmap);
 
         /**
-         * @brief 存储加载的图片
-         */
-        [[deprecated]] void saveLoadedPixmap();
-
-        /**
-         * @brief 更新margin rect的位置
+         * @brief 更新margin rect的位置与大小
          */
         void updateMarginItems();
 
-        const QPixmap & previewImageTarget();
+        /**
+         * @brief 获取预览显示的图片的原图
+         * @return 加载的图片的pixmap
+         */
+        const QPixmap & originalImageTarget();
 
     private:
         QGraphicsPixmapItem * m_showImageItem;  ///< 预览加载的图片
@@ -107,7 +106,7 @@ namespace CM
         QGraphicsRectItem * m_top{};
         QGraphicsRectItem * m_bottom{};
 
-        std::vector<ImageInfoItemPack> m_infos; ///< 场景中所有可能会显示的Exif信息
+        std::vector<ExifInfoItemPack> m_infos; ///< 场景中所有可能会显示的Exif信息
         std::vector<showExifInfo> m_showInfos;  ///< 最终显示到屏幕上的Exif信息
         SceneLayout m_sceneLayout;              ///< 记录场景的布局
 
@@ -125,13 +124,12 @@ namespace CM
         /**
          * @brief init preview image
          */
-        void InitPreviewImageItem();
+        void InitTargetImageItem();
 
         /**
          * @brief init scene margin
          */
         void InitMargin();
-
 
     };
 

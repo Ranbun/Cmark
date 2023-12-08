@@ -24,21 +24,23 @@ namespace CM
         auto createRect = [&rect](int offset)->QRect
         {
             return {0,0,rect.width() - offset,rect.height() - offset};
-        };   /// do nothing
+        };
 
         view ? setSceneRect(createRect(2)): setSceneRect(createRect(0));
 
         ((PreViewImageItem*)m_showImageItem)->update();
 
-        updateTexItemsPosition();
+        m_sceneLayout.update();
+
         updateLogoPosition();
+        updateTexItemsPosition();
         updateMarginItems();
     }
 
     void PreViewImageScene::Init()
     {
         InitMargin();
-        InitPreviewImageItem();
+        InitTargetImageItem();
         InitTexItems();
         InitLogoItem();
     }
@@ -52,7 +54,7 @@ namespace CM
         m_showInfos.emplace_back(showExifInfo{showExifTexPositionIndex::right_bottom, {ExifKey::F_stop, ExifKey::Exposure_time, ExifKey::ISO_speed}});   ///< TODO： 可以显示多条信息 需要做 || 处理
 
         {
-            ImageInfoItemPack item;
+            ExifInfoItemPack item;
             item.m_key = CM::ExifKey::Camera_make;
             item.m_title = "Camera Make: ";
             item.m_field = new QGraphicsTextItem;
@@ -63,7 +65,7 @@ namespace CM
         }
 
         {
-            ImageInfoItemPack item;
+            ExifInfoItemPack item;
             item.m_key = CM::ExifKey::Camera_model;
             item.m_title = "Camera Model: ";
             item.m_field = new QGraphicsTextItem;
@@ -74,7 +76,7 @@ namespace CM
         }
 
         {
-            ImageInfoItemPack item;
+            ExifInfoItemPack item;
             item.m_key = CM::ExifKey::Exposure_time;
             item.m_title = "Exposure Time: ";
             item.m_field = new QGraphicsTextItem;
@@ -85,7 +87,7 @@ namespace CM
         }
 
         {
-            ImageInfoItemPack item;
+            ExifInfoItemPack item;
             item.m_key = CM::ExifKey::F_stop;
             item.m_title = "F-Stop: ";
             item.m_field = new QGraphicsTextItem;
@@ -96,7 +98,7 @@ namespace CM
         }
 
         {
-            ImageInfoItemPack item;
+            ExifInfoItemPack item;
             item.m_key = CM::ExifKey::ISO_speed;
             item.m_title = "ISO Speed: ";
             item.m_field = new QGraphicsTextItem;
@@ -107,7 +109,7 @@ namespace CM
         }
 
         {
-            ImageInfoItemPack item;
+            ExifInfoItemPack item;
             item.m_key = CM::ExifKey::Lens_Model;
             item.m_title = "Lens model: ";
             item.m_field = new QGraphicsTextItem;
@@ -118,7 +120,7 @@ namespace CM
         }
 
         {
-            ImageInfoItemPack item;
+            ExifInfoItemPack item;
             item.m_key = CM::ExifKey::Image_date;
             item.m_title = "Image data: ";
             item.m_field = new QGraphicsTextItem;
@@ -135,14 +137,14 @@ namespace CM
         for(const auto & item : map)
         {
             const auto & [key,text] = item;
-            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = item.key](CM::ImageInfoItemPack & info){
+            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = item.key](CM::ExifInfoItemPack & info){
                 return info.m_key == key;
             });
 
             if(it != m_infos.end())
             {
                 it->m_infos = text;
-                it->m_visible = true;
+                it->m_visible = false;
                 auto pixmapItem = it->m_field;
                 pixmapItem->setPlainText((it->m_infos).c_str());
             }
@@ -156,31 +158,9 @@ namespace CM
 
         for(const auto & info: m_showInfos)
         {
-
-#if  0
-
-            std::vector<std::vector<ImageInfoItemPack>::iterator> its;
-            for(auto k: key)
-            {
-                auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ImageInfoItemPack & info){
-                    return info.m_key == key;
-                });
-
-                if(it != m_infos.end())
-                {
-                    its.emplace_back(it);
-                }
-            }
-
-            if(its.empty())
-            {
-                throw std::runtime_error("No Key!");
-            }
-
-#endif
             auto & [layout,key] = info;
 
-            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ImageInfoItemPack & info){
+            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ExifInfoItemPack & info){
                 return info.m_key == key;
             });
 
@@ -189,13 +169,17 @@ namespace CM
                 throw std::runtime_error("No Key!");
             }
 
+            it->m_visible = true;
+
             switch (layout)
             {
                 case showExifTexPositionIndex::left_top:
                 {
                     QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
                     it->pos = CM::CPoint{position.x(), position.y(), 0};
+
                     auto pixmapItem = it->m_field;
+
                     pixmapItem->setVisible(it->m_visible);
                     pixmapItem->setPos(position);
                 }
@@ -250,7 +234,7 @@ namespace CM
         for(auto & info: m_showInfos)
         {
             auto & [layout,key] = info;
-            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ImageInfoItemPack & info){
+            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ExifInfoItemPack & info){
                 return info.m_key == key;
             });
 
@@ -316,7 +300,8 @@ namespace CM
 
     void PreViewImageScene::resetLogoPixmap(const QPixmap &logo)
     {
-        m_logoItem->setPixmap(logo.scaled({64, 64}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        const auto & logoSize = m_sceneLayout.LogoSize();
+        m_logoItem->setPixmap(logo.scaled({logoSize.w, logoSize.h}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
         auto rect = m_showImageItem->boundingRect();
         auto pos = m_showImageItem->pos();
@@ -328,10 +313,12 @@ namespace CM
         auto rect = m_showImageItem->boundingRect();
         auto pos = m_showImageItem->pos();
         auto logoSpaceWithImage = m_sceneLayout.logoSpace();
+
+        /// TODO： calc logo position
         m_logoItem->setPos(pos.x() + rect.width() / 2.0, pos.y() + rect.height() + logoSpaceWithImage);
     }
 
-    void PreViewImageScene::InitPreviewImageItem()
+    void PreViewImageScene::InitTargetImageItem()
     {
         auto pixmap = QPixmap();
         pixmap.fill(Qt::TransparentMode);
@@ -339,19 +326,9 @@ namespace CM
         addItem(m_showImageItem);
     }
 
-    void PreViewImageScene::resetPreviewPixmap(const QPixmap &pixmap)
+    void PreViewImageScene::resetPreviewImageTarget(const QPixmap &pixmap)
     {
         ((PreViewImageItem*)(m_showImageItem))->resetPixmap(pixmap);
-    }
-
-    void PreViewImageScene::saveLoadedPixmap()
-    {
-        auto fileName = QFileDialog::getSaveFileName(nullptr,tr("Save File"),
-                                                     "./untitled.png",
-                                                     tr("Images (*.png *.xpm *.jpg)"));
-
-        auto res = m_showImageItem->pixmap().save(fileName);
-        std::cout <<"Save res:" << res<<std::endl;
     }
 
     void PreViewImageScene::InitMargin()
@@ -393,7 +370,7 @@ namespace CM
         m_bottom->setRect(0,top + imageRect.height() + logoSpaceWithShowImage + logoRect.height(),sceneBoundMarginRectW,bottom);
     }
 
-    const QPixmap &PreViewImageScene::previewImageTarget()
+    const QPixmap &PreViewImageScene::originalImageTarget()
     {
         return ((PreViewImageItem*)(m_showImageItem))->target();
     }

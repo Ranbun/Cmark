@@ -103,17 +103,18 @@ namespace CM
 
         auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
         {
-            scene->resetPreviewPixmap(preViewImage);
+            scene->resetPreviewImageTarget(preViewImage);
             scene->updateTexItems(infos);
             scene->resetLogoPixmap(*previewImageLogo);
         }
 
 #ifdef NDEBUG
+
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
-        // logoScene->setSceneRect(0,0,result.ImageWidth,result.ImageHeight);
         logoScene->resetPreviewPixmap(preViewImage);
         logoScene->updateTexItems(infos);
         logoScene->resetLogoPixmap(*previewImageLogo);
+
 #endif
         /// 构建一个resizeEvent make it to update all item
         auto revent = new QResizeEvent(this->size(),this->size());
@@ -127,7 +128,6 @@ namespace CM
         m_view->resize(windowSize);   ///< resize view
 
         ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view, {});
-        ((PreViewImageScene *) m_previewImageScene)->updateTexItemsPosition();
 
         {
             const auto bound = m_previewImageScene->itemsBoundingRect();
@@ -198,7 +198,7 @@ namespace CM
                 logoScene->updateLogoPosition();
                 logoScene->updateMarginItems();
 
-                const auto & targetPixmap = logoScene->previewImageTarget();
+                const auto & targetPixmap = logoScene->originalImageTarget();
                 logoScene->updateSceneRect(nullptr,{0, 0, targetPixmap.width(), targetPixmap.height()});
                 logoScene->updateTexItemsPosition();
 
@@ -210,11 +210,6 @@ namespace CM
             default:
                 break;
         }
-    }
-
-    void DisplayWidget::saveLoadedPixmap()
-    {
-        ((PreViewImageScene*)(m_previewImageScene))->saveLoadedPixmap();
     }
 
 

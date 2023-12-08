@@ -2,9 +2,7 @@
 #define CAMERAMARK_EXIFRESOLVER_H
 
 #include "exif.h"
-
 #include <CMark.h>
-
 #include "Base/Type.h"
 
 
@@ -97,40 +95,25 @@ namespace CM
         } LensInfo;
     };
 
-
     class EXIFResolver
     {
     public:
         EXIFResolver() =default;
-        /**
-         * @brief 解析图片中的信息
-         * @param pictureData 从文件中读取的数据
-         * @return 解析码 用于判断是否错误以及错误的信息
-         */
-        [[maybe_unused]] [[deprecated("don't use this function")]] int resolver(const std::vector<unsigned  char > & pictureData);
-
-        /**
-         * @brief 获取解析完成的exif信息
-         * @return exif 信息
-         */
-        [[nodiscard]] [[deprecated("don't use this function")]] const easyexif::EXIFInfo & getInfos() const;
 
         /**
          * @brief 解析错误码
-         * @param resolverCode resolver函数的返回值
+         * @param resolverCode checkCode函数的返回值
          * @return 结果和错误信息
          */
         static std::tuple<bool, std::string> check(int resolverCode);
 
-        /**
-         * @brief 转换解析的信息为内部可用信息
-         * @param result 解析的图片的exif信息
-         * @return 转换完成的结果
-         */
-        [[maybe_unused]] [[deprecated("don't use this function")]] static ExifList resolverImageExif(const easyexif::EXIFInfo & result);
-
         /// ---------------------------------new resolver interface --------------------------------------------------
 
+        /**
+         * @brief 加载图片并解析相应的exif信息
+         * @param path 图片路径
+         * @return 加载的图片的索引 可以通过此索引获取加载的exif信息
+         */
         size_t resolver(const std::filesystem::path & path);
 
         /**
@@ -140,13 +123,34 @@ namespace CM
          */
         std::weak_ptr<EXIFInfo> getExifInfo(size_t index);
 
+        /**
+         * @brief 获取加载的文件的加载的结果
+         * @param index 加载的文件的索引
+         * @return 返回对应的信息码
+         */
         int checkCode(size_t index);
 
-        static ExifList resolverImageExif(std::weak_ptr<CM::EXIFInfo> infoPtr);
+        /**
+         * @brief 解析加载完成的exif信息 返回可用的信息
+         * @param infoPtr 加载的对应的文件的exif信息
+         * @return
+         */
+        static ExifList resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
 
-
-    private:
-        [[deprecated]] easyexif::EXIFInfo m_EXIFResolver;
+    public:
+        /**
+         * @brief 生成对应的hashCode
+         * @tparam T hash的类型
+         * @param path hash的变量
+         * @return hash的结果
+         */
+        template<typename T>
+        size_t Hash(const T & path)
+        {
+            std::hash<T> Hasher;
+            size_t hashValue = Hasher(path);
+            return hashValue;
+        }
     };
 
 

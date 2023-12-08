@@ -11,6 +11,7 @@ namespace CM
 
     void PreViewImageItem::updatePixmapSize()
     {
+        /// TODO: image size should ......
         const auto currentScene = scene();
         if(!currentScene) return;
         const auto &  sceneRect = currentScene->sceneRect().toRect();
