@@ -135,7 +135,7 @@ namespace CM
          * @param infoPtr 加载的对应的文件的exif信息
          * @return
          */
-        static ExifList resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
+        static ExifInfoMap resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
 
     public:
         /**

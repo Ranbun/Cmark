@@ -60,9 +60,9 @@ namespace CM
 
         /**
          * @brief 当前显示的所有文字信息
-         * @param map 所有的文字信息
+         * @param exifInfoMap 所有的文字信息
          */
-        void updateTexItems(const CM::ExifList & map);
+        void updateTexItems(const CM::ExifInfoMap & exifInfoMap);
 
         /**
          * @brief 更新所有文字的位置
@@ -106,8 +106,13 @@ namespace CM
         QGraphicsRectItem * m_top{};
         QGraphicsRectItem * m_bottom{};
 
+        std::unordered_map<showExifTexPositionIndex,QGraphicsTextItem*> m_textItem;
+
         std::vector<ExifInfoItemPack> m_infos; ///< 场景中所有可能会显示的Exif信息
+
         std::vector<showExifInfo> m_showInfos;  ///< 最终显示到屏幕上的Exif信息
+        ExifInfoMap m_targetImageExifInfoLists;    ///< 解析的当前图片的所有Info信息
+
         SceneLayout m_sceneLayout;              ///< 记录场景的布局
 
     private:

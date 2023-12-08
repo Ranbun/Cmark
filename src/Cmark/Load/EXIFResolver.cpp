@@ -17,31 +17,30 @@ namespace CM
 
     static std::mutex infoMutex;
 
-    ExifList EXIFResolver::resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr)
+    ExifInfoMap EXIFResolver::resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr)
     {
         auto result = *infoPtr.lock();
 
-        ExifList infoMaps;
-        infoMaps.emplace_back(ExifPack{ExifKey::Camera_make,result.Make});
-        infoMaps.emplace_back(ExifPack{ExifKey::Camera_model,result.Model});
-        infoMaps.emplace_back(ExifPack{ExifKey::Image_width,std::to_string(result.ImageWidth)});
-        infoMaps.emplace_back(ExifPack{ExifKey::Image_height,std::to_string(result.ImageHeight)});
-        infoMaps.emplace_back(ExifPack{ExifKey::Image_date,result.DateTime});
+        ExifInfoMap infoMaps;
+        infoMaps.insert({ExifKey::Camera_make,result.Make});
+        infoMaps.insert({ExifKey::Camera_model,result.Model});
+        infoMaps.insert({ExifKey::Image_width,std::to_string(result.ImageWidth)});
+        infoMaps.insert({ExifKey::Image_height,std::to_string(result.ImageHeight)});
+        infoMaps.insert({ExifKey::Image_date,result.DateTime});
 
         /// Exposure Time
         auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
-        infoMaps.emplace_back(ExifPack{ExifKey::Exposure_time,"1/" + std::to_string(inExposureTime) + " s"});
+        infoMaps.insert({ExifKey::Exposure_time,std::string("1/") + std::to_string(inExposureTime)});
 
-        std::string f_stop = std::to_string(static_cast<int>(result.FNumber)) + "." +
-                             std::to_string(static_cast<int>(result.FNumber * 10) % 10) + "f";
-        infoMaps.emplace_back(ExifPack{ExifKey::F_stop,f_stop});
+        std::string f_stop = std::string("f/") + std::to_string(static_cast<int>(result.FNumber)) + std::string(".") +
+                             std::to_string(static_cast<int>(result.FNumber * 10) % 10);
+        infoMaps.insert({ExifKey::F_stop,f_stop});
 
-        infoMaps.emplace_back(ExifPack{ExifKey::ISO_speed,std::to_string(result.ISOSpeedRatings)});
-        infoMaps.emplace_back(ExifPack{ExifKey::Lens_Model,result.LensInfo.Model});
+        infoMaps.insert({ExifKey::ISO_speed,std::string("ISO") + std::to_string(result.ISOSpeedRatings)});
+        infoMaps.insert({ExifKey::Lens_Model,result.LensInfo.Model});
 
         /// TODO: we need resolver all info and write it to ExifMap and output it
-        infoMaps.emplace_back(ExifPack{ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
-
+        infoMaps.insert({ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
 
         return std::move(infoMaps);
     }
