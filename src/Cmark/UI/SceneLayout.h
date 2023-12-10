@@ -41,6 +41,7 @@ namespace CM
 
 
         [[maybe_unused]] void setImageSize(const CSize & size);
+        const CSize & previewImageSize() const;
 
         [[nodiscard]] [[maybe_unused]] int leftTextOffset() const;
 

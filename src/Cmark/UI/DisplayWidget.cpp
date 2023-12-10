@@ -59,7 +59,6 @@ namespace CM
 
     void DisplayWidget::PreViewImage(const std::filesystem::path & path)
     {
-        /// TODO: need to define struct save exif infos
         EXIFResolver resolver;
         auto loadFileIndex = resolver.resolver(path);
 
@@ -73,13 +72,11 @@ namespace CM
         };
         std::thread readImage(readFileToImage, path);
 
+        const auto & [res,message] = EXIFResolver::check(resolver.checkCode(loadFileIndex));
+        if(!res)
         {
-            const auto & [res,message] = EXIFResolver::check(resolver.checkCode(loadFileIndex));
-            if(!res)
-            {
-                QMessageBox::about(this,"Warning",message.c_str());
-                return ;
-            }
+            QMessageBox::about(this,"Warning",message.c_str());
+            return ;
         }
 
         auto exifInfos = resolver.getExifInfo(loadFileIndex);
@@ -89,7 +86,7 @@ namespace CM
         LogoManager::loadCameraLogo(cameraIndex);
         auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
-        /// load image
+        /// wait load image thread
         if(readImage.joinable())
         {
             readImage.join();
@@ -101,6 +98,7 @@ namespace CM
         /// get enable exif item
         auto infos = EXIFResolver::resolverImageExif(exifInfos);
 
+        /// 设置预览场景显示的资源
         auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
         {
             scene->resetPreviewImageTarget(preViewImage);
@@ -110,6 +108,7 @@ namespace CM
 
 #ifdef NDEBUG
 
+        /// 设置单张图片存储的显示资源
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
         logoScene->resetPreviewImageTarget(preViewImage);
         logoScene->updateTexItems(infos);
@@ -129,11 +128,14 @@ namespace CM
 
         ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view, {});
 
+        /// 设置视图显示的场景的大小
+        /// 设置视图观察的场景的观察点
         {
             const auto bound = m_previewImageScene->itemsBoundingRect();
             m_view->setSceneRect(bound); // 设置场景矩形
             m_view->centerOn(bound.center());
         }
+        /// make scene fit in view
         m_view->fitInView(m_previewImageScene->itemsBoundingRect(),Qt::KeepAspectRatio);
 
         QWidget::resizeEvent(event);

@@ -64,4 +64,9 @@ namespace CM
         return m_leftTextOffset;
     }
 
+    const CSize &SceneLayout::previewImageSize() const
+    {
+        return m_showImageSize;
+    }
+
 } // CM

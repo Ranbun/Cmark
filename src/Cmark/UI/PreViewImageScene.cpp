@@ -25,10 +25,19 @@ namespace CM
         {
             return {0,0,rect.width() - offset,rect.height() - offset};
         };
-
         view ? setSceneRect(createRect(2)): setSceneRect(createRect(0));
 
         ((PreViewImageItem*)m_showImageItem)->update();
+        auto imageTargetSize = m_showImageItem->boundingRect().size().toSize();
+
+        if(!view)
+        {
+            m_sceneLayout.setImageSize({newSceneRect.width(),newSceneRect.height()});
+        }
+        else
+        {
+            m_sceneLayout.setImageSize({imageTargetSize.width(),imageTargetSize.height()});
+        }
 
         m_sceneLayout.update();
 
@@ -57,181 +66,10 @@ namespace CM
         m_textItem.insert({showExifTexPositionIndex::left_bottom, addText("")});
         m_textItem.insert({showExifTexPositionIndex::right_top, addText("")});
         m_textItem.insert({showExifTexPositionIndex::right_bottom, addText("")});
-
-#if  0
-        {
-            ExifInfoItemPack item;
-            item.m_key = CM::ExifKey::Camera_make;
-            item.m_title = "Camera Make: ";
-            item.m_field = new QGraphicsTextItem;
-            m_infos.emplace_back(item);
-
-            item.m_field->setVisible(item.m_visible);
-            addItem(item.m_field);
-        }
-
-        {
-            ExifInfoItemPack item;
-            item.m_key = CM::ExifKey::Camera_model;
-            item.m_title = "Camera Model: ";
-            item.m_field = new QGraphicsTextItem;
-            m_infos.emplace_back(item);
-
-            item.m_field->setVisible(item.m_visible);
-            addItem(item.m_field);
-        }
-
-        {
-            ExifInfoItemPack item;
-            item.m_key = CM::ExifKey::Exposure_time;
-            item.m_title = "Exposure Time: ";
-            item.m_field = new QGraphicsTextItem;
-            m_infos.emplace_back(item);
-
-            item.m_field->setVisible(item.m_visible);
-            addItem(item.m_field);
-        }
-
-        {
-            ExifInfoItemPack item;
-            item.m_key = CM::ExifKey::F_stop;
-            item.m_title = "F-Stop: ";
-            item.m_field = new QGraphicsTextItem;
-            m_infos.emplace_back(item);
-
-            item.m_field->setVisible(item.m_visible);
-            addItem(item.m_field);
-        }
-
-        {
-            ExifInfoItemPack item;
-            item.m_key = CM::ExifKey::ISO_speed;
-            item.m_title = "ISO Speed: ";
-            item.m_field = new QGraphicsTextItem;
-            m_infos.emplace_back(item);
-
-            item.m_field->setVisible(item.m_visible);
-            addItem(item.m_field);
-        }
-
-        {
-            ExifInfoItemPack item;
-            item.m_key = CM::ExifKey::Lens_Model;
-            item.m_title = "Lens model: ";
-            item.m_field = new QGraphicsTextItem;
-            m_infos.emplace_back(item);
-
-            item.m_field->setVisible(item.m_visible);
-            addItem(item.m_field);
-        }
-
-        {
-            ExifInfoItemPack item;
-            item.m_key = CM::ExifKey::Image_date;
-            item.m_title = "Image data: ";
-            item.m_field = new QGraphicsTextItem;
-            m_infos.emplace_back(item);
-
-            item.m_field->setVisible(item.m_visible);
-            addItem(item.m_field);
-        }
-#endif
-
     }
 
     void PreViewImageScene::updateTexItems(const ExifInfoMap &exifInfoMap)
     {
-#if 0
-        for(const auto & item : map)
-        {
-            const auto & [key,text] = item;
-            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = item.key](CM::ExifInfoItemPack & info){
-                return info.m_key == key;
-            });
-
-            if(it != m_infos.end())
-            {
-                it->m_infos = text;
-                it->m_visible = false;
-                auto pixmapItem = it->m_field;
-                pixmapItem->setPlainText((it->m_infos).c_str());
-            }
-        }
-
-        auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
-        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
-        const auto & logoSize = m_sceneLayout.LogoSize();
-
-        auto imageRect = m_showImageItem->boundingRect().toRect();
-
-        for(const auto & info: m_showInfos)
-        {
-            auto & [layout,key] = info;
-
-            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ExifInfoItemPack & info){
-                return info.m_key == key;
-            });
-
-            if(it == m_infos.end())
-            {
-                throw std::runtime_error("No Key!");
-            }
-
-            it->m_visible = true;
-
-            switch (layout)
-            {
-                case showExifTexPositionIndex::left_top:
-                {
-                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-
-                    auto pixmapItem = it->m_field;
-
-                    pixmapItem->setVisible(it->m_visible);
-                    pixmapItem->setPos(position);
-                }
-                break;
-                case showExifTexPositionIndex::left_bottom:
-                {
-                    auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect().toRect();
-
-                    QPoint position(left, top + logoWithImageSpacing + logoSize.h - itemRect.height());
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    pixmapItem->setVisible(it->m_visible);
-                    pixmapItem->setPos(position);
-                }
-                break;
-                case showExifTexPositionIndex::right_top:
-                {
-                    auto Item = it->m_field;
-                    const auto & itemRect = Item->boundingRect().toRect();
-
-                    QPoint position(left + right + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    Item->setVisible(it->m_visible);
-                    Item->setPos(position);
-                }
-                break;
-                case showExifTexPositionIndex::right_bottom:
-                {
-                    auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect().toRect();
-
-                    QPoint position(left + right + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + logoSize.h - itemRect.height());
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    pixmapItem->setVisible(it->m_visible);
-                    pixmapItem->setPos(position);
-                }
-                break;
-                default:
-                    break;
-            }
-        }
-
-#endif
-
         m_targetImageExifInfoLists = exifInfoMap;  ///< copy infos
 
         auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
@@ -289,70 +127,6 @@ namespace CM
 
     void PreViewImageScene::updateTexItemsPosition()
     {
-#if  0
-        auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
-        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
-        const auto & logoSize = m_sceneLayout.LogoSize();
-
-        auto imageRect = m_showImageItem->boundingRect().toRect();
-
-        for(auto & info: m_showInfos)
-        {
-            auto & [layout,key] = info;
-            auto it = std::find_if(m_infos.begin(), m_infos.end(),[key = key[0]](CM::ExifInfoItemPack & info){
-                return info.m_key == key;
-            });
-
-            if(it == m_infos.end())
-            {
-                throw std::runtime_error("No Key!");
-            }
-
-            switch (layout)
-            {
-                case showExifTexPositionIndex::left_top:
-                {
-                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    auto pixmapItem = it->m_field;
-                    pixmapItem->setPos(position);
-                }
-                    break;
-                case showExifTexPositionIndex::left_bottom:
-                {
-                    auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect().toRect();
-                    QPoint position(left, top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
-
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    pixmapItem->setPos(position);
-                }
-                    break;
-                case showExifTexPositionIndex::right_top:
-                {
-                    auto Item = it->m_field;
-                    const auto & itemRect = Item->boundingRect().toRect();
-                    QPoint position(left + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
-
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    Item->setPos(position);
-                }
-                    break;
-                case showExifTexPositionIndex::right_bottom:
-                {
-                    auto pixmapItem = it->m_field;
-                    auto itemRect = pixmapItem->boundingRect().toRect();
-                    QPoint position(left + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
-
-                    it->pos = CM::CPoint{position.x(), position.y(), 0};
-                    pixmapItem->setPos(position);
-                }
-                break;
-                default:
-                    break;
-            }
-        }
-#endif
         auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
         auto logoWithImageSpacing = m_sceneLayout.logoSpace();
         const auto & logoSize = m_sceneLayout.LogoSize();
@@ -439,6 +213,7 @@ namespace CM
     void PreViewImageScene::resetPreviewImageTarget(const QPixmap &pixmap)
     {
         ((PreViewImageItem*)(m_showImageItem))->resetPixmap(pixmap);
+        m_sceneLayout.setImageSize({pixmap.width(),pixmap.height()});
     }
 
     void PreViewImageScene::InitMargin()
