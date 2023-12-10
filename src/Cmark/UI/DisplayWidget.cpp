@@ -143,7 +143,7 @@ namespace CM
     {
         auto saveAsFile = [](const std::shared_ptr<QImage>& image,const QString & filePath)
         {
-            bool res = image->save(filePath,nullptr,1);
+            bool res = image->save(filePath);
             if(!res)
             {
                 std::runtime_error("save scene failed!");
