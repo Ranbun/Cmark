@@ -41,7 +41,10 @@ namespace CM
 
         m_sceneLayout.update();
 
+        updateSplitRect();
+
         updateLogoPosition();
+
         updateTexItemsPosition();
         updateMarginItems();
     }
@@ -52,6 +55,7 @@ namespace CM
         InitTargetImageItem();
         InitTexItems();
         InitLogoItem();
+        InitSplitRect();
     }
 
     void PreViewImageScene::InitTexItems()
@@ -66,6 +70,27 @@ namespace CM
         m_textItem.insert({showExifTexPositionIndex::left_bottom, addText("")});
         m_textItem.insert({showExifTexPositionIndex::right_top, addText("")});
         m_textItem.insert({showExifTexPositionIndex::right_bottom, addText("")});
+
+        QFont font;
+        font.setFamily("Microsoft YaHei");
+        font.setPixelSize(13);
+
+        for(auto & [key,item]: m_textItem)
+        {
+            switch (key)
+            {
+                case showExifTexPositionIndex::left_top:
+                case showExifTexPositionIndex::right_top:
+                    font.setBold(true);
+                    item->setFont(font);
+                    font.setBold(false);
+                    break;
+                default:
+                    item->setFont(font);
+                break;
+            }
+
+        }
     }
 
     void PreViewImageScene::updateTexItems(const ExifInfoMap &exifInfoMap)
@@ -74,7 +99,7 @@ namespace CM
 
         auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
         auto logoWithImageSpacing = m_sceneLayout.logoSpace();
-        const auto & logoSize = m_sceneLayout.LogoSize();
+        const auto & logoSize = m_sceneLayout.logoSize();
         auto imageRect = m_showImageItem->boundingRect().toRect();
 
         for(const auto & [layoutIndex, keys]: m_showInfos)
@@ -123,13 +148,19 @@ namespace CM
                 break;
             }
         }
+
+        /// TODO: may be update it
+        auto rightTopTextRect = m_textItem.at(showExifTexPositionIndex::right_top)->boundingRect();
+        auto rightBottomTextRect = m_textItem.at(showExifTexPositionIndex::right_top)->boundingRect();
+        auto maxW = rightTopTextRect.width() > rightBottomTextRect.width() ? rightTopTextRect.width() : rightBottomTextRect.width();
+        m_sceneLayout.setRightMaxWidth(maxW);
     }
 
     void PreViewImageScene::updateTexItemsPosition()
     {
         auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
         auto logoWithImageSpacing = m_sceneLayout.logoSpace();
-        const auto & logoSize = m_sceneLayout.LogoSize();
+        const auto & logoSize = m_sceneLayout.logoSize();
         auto imageRect = m_showImageItem->boundingRect().toRect();
 
         for(const auto & [layoutIndex, keys]: m_showInfos)
@@ -153,25 +184,18 @@ namespace CM
                     break;
                 case showExifTexPositionIndex::right_top:
                 {
-                    QPoint position(left + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
+                    QPoint position(left + imageRect.width() + right - m_sceneLayout.rightMaxWidth() - m_sceneLayout.rightTextOffset(),top + imageRect.height() + logoWithImageSpacing);
                     item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::right_bottom:
                 {
-                    QPoint position(left + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
+                    QPoint position(left + imageRect.width() + right - m_sceneLayout.rightMaxWidth() - m_sceneLayout.rightTextOffset(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
                     item->setPos(position);
                 }
                 break;
             }
         }
-
-        const auto rightBottomItem = m_textItem.at(showExifTexPositionIndex::right_bottom);
-        const auto rightTopItem = m_textItem.at(showExifTexPositionIndex::right_top);
-
-        const auto closestLeft = rightBottomItem->pos().x() < rightTopItem->pos().x() ? rightBottomItem->pos().x():rightTopItem->pos().x();
-        rightBottomItem->setX(closestLeft);
-        rightTopItem->setX(closestLeft);
     }
 
     void PreViewImageScene::InitLogoItem()
@@ -184,7 +208,7 @@ namespace CM
 
     void PreViewImageScene::resetLogoPixmap(const QPixmap &logo)
     {
-        const auto & logoSize = m_sceneLayout.LogoSize();
+        const auto & logoSize = m_sceneLayout.logoSize();
         m_logoItem->setPixmap(logo.scaled({logoSize.w, logoSize.h}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
         auto rect = m_showImageItem->boundingRect();
@@ -198,14 +222,20 @@ namespace CM
         auto pos = m_showImageItem->pos();
         auto logoSpaceWithImage = m_sceneLayout.logoSpace();
 
+        auto imageSize = m_sceneLayout.previewImageSize();
+
+        const auto & [l,r,t,b] = m_sceneLayout.getMargin();
+
+        auto x = l + r + imageSize.w - m_sceneLayout.logoSplitLineSpace() * 2.0 - m_sceneLayout.logoSize().w - m_sceneLayout.rightMaxWidth() - m_sceneLayout.rightTextOffset() - m_sceneLayout.splitRectWidth();
+
         /// TODO： calc logo position
-        m_logoItem->setPos(pos.x() + rect.width() / 2.0, pos.y() + rect.height() + logoSpaceWithImage);
+        m_logoItem->setPos(x, pos.y() + rect.height() + logoSpaceWithImage);
     }
 
     void PreViewImageScene::InitTargetImageItem()
     {
         auto pixmap = QPixmap();
-        pixmap.fill(Qt::TransparentMode);
+        pixmap.fill(Qt::transparent);
         m_showImageItem->setPixmap(pixmap);
         addItem(m_showImageItem);
     }
@@ -258,5 +288,63 @@ namespace CM
     const QPixmap &PreViewImageScene::originalImageTarget()
     {
         return ((PreViewImageItem*)(m_showImageItem))->target();
+    }
+
+    void PreViewImageScene::InitSplitRect()
+    {
+        m_splitRectItem = new QGraphicsRectItem();
+
+        QPen pen;
+        pen.setWidth(1);
+        pen.setColor(Qt::transparent);
+
+        QBrush brush(Qt::SolidPattern);
+        brush.setColor(QColor(219,219,219));
+
+        QRadialGradient radialGradient(100, 100, 100, 0, 100);
+        radialGradient.setColorAt(0, QColor(253,253,253));
+        radialGradient.setColorAt(0.1, QColor(253,253,253));
+        radialGradient.setColorAt(0.2, QColor(216,216,216));
+        radialGradient.setColorAt(0.5, QColor(218,218,218));
+        radialGradient.setColorAt(0.6, QColor(217,217,217));
+        radialGradient.setColorAt(0.9, QColor(222,222,222));
+        radialGradient.setColorAt(1.0, QColor(241,241,241));
+
+        m_splitRectItem->setBrush(radialGradient);
+        m_splitRectItem->setPen(Qt::NoPen);
+
+        addItem(m_splitRectItem);
+    }
+
+    void PreViewImageScene::updateSplitRect()
+    {
+        const auto & logoSize = m_sceneLayout.logoSize();
+        const auto & logoPosition= m_logoItem->pos();
+        auto imageH = m_sceneLayout.previewImageSize().h;
+        auto imageW = m_sceneLayout.previewImageSize().w;
+        auto spacing = m_sceneLayout.logoSpace();
+
+        auto logoRect = m_logoItem->boundingRect().toRect();
+
+        const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
+
+        auto splitRectW = m_sceneLayout.splitRectWidth();
+        auto x = left + right + imageW - m_sceneLayout.rightTextOffset() - m_sceneLayout.rightMaxWidth()  - m_sceneLayout.logoSplitLineSpace() - splitRectW;
+
+        auto y = top + imageH + spacing;
+
+        m_splitRectItem->setRect(x, y, splitRectW, logoRect.height());
+
+        auto r = m_splitRectItem->rect();
+
+        QLinearGradient radialGradient(r.left(),r.top(),r.right(),r.top());
+        radialGradient.setColorAt(0, QColor(253,253,253));
+        radialGradient.setColorAt(0.2, QColor(216,216,216));
+        radialGradient.setColorAt(0.5, QColor(218,218,218));
+        radialGradient.setColorAt(0.6, QColor(217,217,217));
+        radialGradient.setColorAt(0.9, QColor(222,222,222));
+        radialGradient.setColorAt(1.0, QColor(241,241,241));
+
+        m_splitRectItem->setBrush(radialGradient);
     }
 } // CM

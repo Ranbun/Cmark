@@ -22,9 +22,9 @@ namespace CM
         return m_margin;
     }
 
-    const CSize &SceneLayout::LogoSize() const
+    const CSize &SceneLayout::logoSize() const
     {
-        return m_LogoSize;
+        return m_logoSize;
     }
 
     void SceneLayout::setLogoSize(int w, int h)
@@ -34,7 +34,7 @@ namespace CM
 
     void SceneLayout::setLogoSize(const CSize &size)
     {
-        m_LogoSize = size;
+        m_logoSize = size;
     }
 
     void SceneLayout::updateLeftTextOffset()
@@ -56,6 +56,15 @@ namespace CM
 
         /// update some items
         updateLeftTextOffset();
+        updateRightTextOffset();
+        updateLogoSplitSpace();
+
+        updateSplitRectWidth();
+
+        /// logo position
+
+
+        /// line position
 
     }
 
@@ -67,6 +76,35 @@ namespace CM
     const CSize &SceneLayout::previewImageSize() const
     {
         return m_showImageSize;
+    }
+
+    int SceneLayout::logoSplitLineSpace() const
+    {
+        return m_logoSplitLineSpace;
+    }
+
+    void SceneLayout::updateRightTextOffset()
+    {
+        m_rightTextOffset = static_cast<int>(m_logoSize.w * 1.45);
+        if(m_rightTextOffset < m_margin.right)
+        {
+            m_rightTextOffset =  m_margin.right;
+        }
+    }
+
+    void SceneLayout::updateLogoSplitSpace()
+    {
+        m_logoSplitLineSpace = static_cast<int>(m_logoSize.w * 0.3);
+    }
+
+    int SceneLayout::rightTextOffset() const
+    {
+        return m_rightTextOffset;
+    }
+
+    void SceneLayout::updateSplitRectWidth()
+    {
+        m_splitRectWidth = (int)(m_logoSize.w * 0.05 + 0.5);
     }
 
 } // CM

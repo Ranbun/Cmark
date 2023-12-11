@@ -13,15 +13,6 @@
 
 namespace CM
 {
-    struct ExifInfoItemPack
-    {
-        CM::ExifKey m_key;                   ///< info's index
-        std::string m_title;                 ///< add it pre in info
-        QGraphicsTextItem * m_field;         ///< QGraphicsTextItem
-        CPoint pos{-1, -1};            ///< position
-        std::string m_infos{};               ///< show infos
-        bool m_visible{false};               ///< item's visibility
-    };
 
     enum class showExifTexPositionIndex
     {
@@ -91,6 +82,8 @@ namespace CM
          */
         void updateMarginItems();
 
+        void updateSplitRect();
+
         /**
          * @brief 获取预览显示的图片的原图
          * @return 加载的图片的pixmap
@@ -106,9 +99,9 @@ namespace CM
         QGraphicsRectItem * m_top{};
         QGraphicsRectItem * m_bottom{};
 
-        std::unordered_map<showExifTexPositionIndex,QGraphicsTextItem*> m_textItem;
+        QGraphicsRectItem * m_splitRectItem{};
 
-        std::vector<ExifInfoItemPack> m_infos; ///< 场景中所有可能会显示的Exif信息
+        std::unordered_map<showExifTexPositionIndex,QGraphicsTextItem*> m_textItem;
 
         std::vector<showExifInfo> m_showInfos;  ///< 最终显示到屏幕上的Exif信息
         ExifInfoMap m_targetImageExifInfoLists;    ///< 解析的当前图片的所有Info信息
@@ -135,6 +128,11 @@ namespace CM
          * @brief init scene margin
          */
         void InitMargin();
+
+        /**
+         * @brief  分割线
+         */
+        void InitSplitRect();
 
     };
 
