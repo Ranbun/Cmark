@@ -157,7 +157,7 @@ int main(int argc,char ** argv)
     CM::LogoManager::Init();
 
     manApp.resize(720,560);
-    manApp.setWindowTitle("Window App");
+    manApp.setWindowTitle("Camera Mark");
     manApp.show();
 
 #endif
