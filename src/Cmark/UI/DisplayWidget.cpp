@@ -1,6 +1,6 @@
 #include "DisplayWidget.h"
-#include "../Load/FileLoad.h"
-#include "../Load/EXIFResolver.h"
+#include "Loader/FileLoad.h"
+#include "Loader/EXIFResolver.h"
 
 #include <filesystem>
 #include <mutex>
@@ -12,8 +12,8 @@
 #include <QMessageBox>
 
 #include <QGraphicsView>
-#include "PreViewImageScene.h"
-#include "PreViewImageItem.h"
+#include "Scene/PreViewImageScene.h"
+#include "Scene/PreViewImageItem.h"
 
 #include <QVBoxLayout>
 #include <QResizeEvent>
@@ -101,20 +101,19 @@ namespace CM
         /// 设置预览场景显示的资源
         auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
         {
+            scene->resetCameraLogoIndex(cameraIndex);
             scene->resetPreviewImageTarget(preViewImage);
             scene->updateTexItems(infos);
             scene->resetLogoPixmap(*previewImageLogo);
         }
 
-#ifdef NDEBUG
-
         /// 设置单张图片存储的显示资源
         auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
+        logoScene->resetCameraLogoIndex(cameraIndex);
         logoScene->resetPreviewImageTarget(preViewImage);
         logoScene->updateTexItems(infos);
         logoScene->resetLogoPixmap(*previewImageLogo);
 
-#endif
         /// 构建一个resizeEvent make it to update all item
         auto revent = new QResizeEvent(this->size(),this->size());
         this->resizeEvent(revent);
@@ -197,13 +196,18 @@ namespace CM
             case SceneIndex::GENERATELOGO_SCENE:
             {
                 auto logoScene = dynamic_cast<PreViewImageScene*>(m_addLogoScene);
+
+                logoScene->updateLayout();
+
+                auto imageItem = logoScene->preViewImageItem();
+                imageItem->updatePixmapPosition();
+                const auto & pixmap = imageItem->target();
+                imageItem->setPixmap(pixmap);
+
                 logoScene->updateLogoPosition();
                 logoScene->updateMarginItems();
-
-                const auto & targetPixmap = logoScene->originalImageTarget();
-                logoScene->updateSceneRect(nullptr,{0, 0, targetPixmap.width(), targetPixmap.height()});
                 logoScene->updateTexItemsPosition();
-
+                logoScene->updateSplitRect();
                 logoScene->update();
 
                 save(m_addLogoScene);

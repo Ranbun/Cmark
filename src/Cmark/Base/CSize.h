@@ -15,6 +15,8 @@ namespace CM
             int w;
             int h;
         };
+        [[nodiscard]] [[maybe_unused]] int width() const{return w;}
+        [[nodiscard]] [[maybe_unused]] int height() const{return h;}
     };
 
     using CSize = Size;

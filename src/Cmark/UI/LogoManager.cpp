@@ -10,13 +10,19 @@ namespace CM
 
     CameraIndex LogoManager::resolverCameraIndex(const std::string &cameraMake)
     {
+#if  0
         if(cameraMake.empty())
         {
             ///TODO： 考虑使用别的信息替代
             throw std::runtime_error("Camera Make empty!");
         }
+#endif
 
         QString Make = cameraMake.c_str();
+        if(Make.isEmpty())
+        {
+            Make = QString("empty");
+        }
 
         /// TODO : 需要更兼容的获取camera maker的方法
 
@@ -41,6 +47,11 @@ namespace CM
             auto logo = std::make_shared<QPixmap>(path.c_str());
             return {index,logo};
         };
+
+        if(m_logos.count(cameraIndex))  ///< the logo loaded
+        {
+            return ;
+        }
 
         switch (cameraIndex)
         {
@@ -68,6 +79,13 @@ namespace CM
             case CameraIndex::Fujifilm:
                 m_logos.insert(loadLogo(CameraIndex::Fujifilm,"./sources/logos/fujifilm.png"));
                 break;
+            case CameraIndex::None:
+            {
+                auto logo = std::make_shared<QPixmap>(64,64);
+                logo->fill(Qt::transparent);
+                m_logos.insert({CameraIndex::None,logo});
+            }
+            break;
             /// TODO: need add others......
             default:
                 throw std::runtime_error("Can't support current camera, add logo");
@@ -76,10 +94,11 @@ namespace CM
 
     std::shared_ptr<QPixmap> LogoManager::getCameraMakerLogo(const CameraIndex &cameraIndex)
     {
-        auto res = m_logos.find(cameraIndex);
-        if(res != m_logos.end())
+        loadCameraLogo(cameraIndex);  ///< load logo again
+
+        if(m_logos.count(cameraIndex)) ///< get loaded logo
         {
-            return res->second;
+            return m_logos.at(cameraIndex);
         }
 
         throw std::runtime_error("Can't found Camera Maker Logo!");
@@ -96,9 +115,8 @@ namespace CM
             cameraMakerMap.insert({"hassel",CameraIndex::Hasselblad});
             cameraMakerMap.insert({"leica",CameraIndex::Leica});
             cameraMakerMap.insert({"fujifilm",CameraIndex::Fujifilm});
-
+            cameraMakerMap.insert({"empty",CameraIndex::None});
         });
-
     }
 } // CM
 

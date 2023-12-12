@@ -16,6 +16,8 @@
 #include <filesystem>
 #include <numeric>
 
+#include <cmath>
+
 #include <mutex>
 #include <thread>
 

@@ -25,7 +25,17 @@ namespace CM
     public:
         explicit DisplayWidget(QWidget * parent = nullptr);
     public:
+
+        /**
+         * @brief 打开空的工程
+         * @param path 路径
+         */
         void Open(const std::filesystem::path& path) const;
+
+        /**
+         * @brief 预览文件路径下的图片
+         * @param path 文件路径
+         */
         void PreViewImage(const std::filesystem::path & path);
 
         /**
@@ -38,12 +48,26 @@ namespace CM
         void resizeEvent(QResizeEvent *event) override;
 
     private:
+        /**
+         * @brief 预览使用的场景
+         */
         QGraphicsScene * m_previewImageScene{nullptr};
+
+        /**
+         * @brief 存储源尺寸大小的带logo的图片的场景
+         */
         QGraphicsScene * m_addLogoScene{nullptr};
+
+        /**
+         * @brief 当前显示的视图
+         */
         QGraphicsView * m_view{nullptr};
 
     signals:
         void Created();
+
+        /// TODO: define signal to adjust Scene Layout
+
 
     };
 

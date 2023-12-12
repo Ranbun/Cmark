@@ -1,3 +1,5 @@
+#include "CMark.h"
+
 #include "SceneLayout.h"
 
 namespace CM
@@ -9,12 +11,12 @@ namespace CM
 
     void SceneLayout::setLogoSpace(int space)
     {
-        m_logoSpace = space;
+        m_logoSpaceWithImage = space;
     }
 
     int SceneLayout::logoSpace() const
     {
-        return m_logoSpace;
+        return m_logoSpaceWithImage;
     }
 
     const Margin &SceneLayout::getMargin() const
@@ -58,11 +60,10 @@ namespace CM
         updateLeftTextOffset();
         updateRightTextOffset();
         updateLogoSplitSpace();
-
         updateSplitRectWidth();
 
         /// logo position
-
+        updateLogoPosition();
 
         /// line position
 
@@ -80,12 +81,13 @@ namespace CM
 
     int SceneLayout::logoSplitLineSpace() const
     {
-        return m_logoSplitLineSpace;
+        return m_logoSplitRectSpace;
     }
 
     void SceneLayout::updateRightTextOffset()
     {
         m_rightTextOffset = static_cast<int>(m_logoSize.w * 1.45);
+        m_rightTextOffset = (m_margin.left + m_margin.right + m_showImageSize.width()) * 0.1f;
         if(m_rightTextOffset < m_margin.right)
         {
             m_rightTextOffset =  m_margin.right;
@@ -94,7 +96,7 @@ namespace CM
 
     void SceneLayout::updateLogoSplitSpace()
     {
-        m_logoSplitLineSpace = static_cast<int>(m_logoSize.w * 0.3);
+        m_logoSplitRectSpace = static_cast<int>(m_logoSize.w * 0.3);
     }
 
     int SceneLayout::rightTextOffset() const
@@ -104,7 +106,19 @@ namespace CM
 
     void SceneLayout::updateSplitRectWidth()
     {
-        m_splitRectWidth = (int)(m_logoSize.w * 0.05 + 0.5);
+        m_splitRectWidth = (int)std::round(static_cast<float>(m_logoSize.w) * 0.05f);
+    }
+
+    int SceneLayout::rightTextMaxWidth() const
+    {
+        return m_rightMaxWidth;
+    }
+
+    void SceneLayout::updateLogoPosition()
+    {
+        auto sceneW = m_margin.left + m_margin.right + m_showImageSize.w;
+        m_logoPosition.setX(sceneW - m_rightTextOffset - m_rightMaxWidth - m_splitRectWidth - 2 * m_logoSplitRectSpace - m_logoSize.w);
+        m_logoPosition.setY(m_margin.top + m_showImageSize.h + m_logoSpaceWithImage);
     }
 
 } // CM

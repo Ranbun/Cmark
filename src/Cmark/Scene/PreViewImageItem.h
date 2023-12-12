@@ -2,8 +2,8 @@
 #define CAMERAMARK_PREVIEWIMAGEITEM_H
 
 #include <QGraphicsPixmapItem>
-#include "PreViewImageScene.h"
-#include "SceneLayout.h"
+#include "Scene/PreViewImageScene.h"
+#include "Scene/SceneLayout.h"
 
 namespace CM
 {

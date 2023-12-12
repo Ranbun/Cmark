@@ -36,6 +36,9 @@ namespace CM
         std::string text;
     };
 
+    /**
+     * @brief Exif信息条目与实际存储的信息的映射
+     */
     using ExifInfoMap = std::unordered_map<ExifKey,std::string>;
 
 }

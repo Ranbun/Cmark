@@ -5,7 +5,7 @@
 #include <iostream>
 #include <filesystem>
 
-#include "Load/EXIFResolver.h"
+#include "Loader/EXIFResolver.h"
 #include "UI/MainWindow.h"
 #include "UI/LogoManager.h"
 

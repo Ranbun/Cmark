@@ -153,7 +153,6 @@ namespace CM
         }
     };
 
-
 } // CM
 
 #endif //CAMERAMARK_EXIFRESOLVER_H

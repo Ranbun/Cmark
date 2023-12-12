@@ -5,7 +5,7 @@
 #include <QFileDialog>
 #include <iostream>
 
-#include <CMark.h>
+#include "CMark.h"
 
 namespace CM
 {
@@ -14,6 +14,7 @@ namespace CM
     : QGraphicsScene(parent)
     , m_showImageItem(new PreViewImageItem(nullptr, m_sceneLayout))
     , m_logoItem(new QGraphicsPixmapItem)
+    , m_splitRectItem(nullptr)
     {
         Init();
     }
@@ -27,14 +28,15 @@ namespace CM
         };
         view ? setSceneRect(createRect(2)): setSceneRect(createRect(0));
 
-        ((PreViewImageItem*)m_showImageItem)->update();
-        auto imageTargetSize = m_showImageItem->boundingRect().size().toSize();
-
-        if(!view)
+        auto pixmapItem = dynamic_cast<CM::PreViewImageItem*>(m_showImageItem);
+        if(pixmapItem)
         {
-            m_sceneLayout.setImageSize({newSceneRect.width(),newSceneRect.height()});
+            pixmapItem->update();
         }
-        else
+
+        auto imageTargetSize = m_showImageItem->pixmap().size();
+
+        if(view)
         {
             m_sceneLayout.setImageSize({imageTargetSize.width(),imageTargetSize.height()});
         }
@@ -42,11 +44,26 @@ namespace CM
         m_sceneLayout.update();
 
         updateSplitRect();
-
         updateLogoPosition();
-
         updateTexItemsPosition();
         updateMarginItems();
+
+        {
+            auto r = m_splitRectItem->boundingRect();
+            auto c = sceneRect().contains(r);
+            m_splitRectItem->setVisible(c);
+        }
+
+
+        {
+            auto vis = m_cameraIndex != CameraIndex::None;
+            m_splitRectItem->setVisible(vis);
+            m_logoItem->setVisible(vis);
+            for(auto & [key,item]: m_textItem)
+            {
+                item->setVisible(vis);
+            }
+        }
     }
 
     void PreViewImageScene::Init()
@@ -73,6 +90,7 @@ namespace CM
 
         QFont font;
         font.setFamily("Microsoft YaHei");
+        font.setPointSize(11);
         font.setPixelSize(13);
 
         for(auto & [key,item]: m_textItem)
@@ -100,7 +118,7 @@ namespace CM
         auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
         auto logoWithImageSpacing = m_sceneLayout.logoSpace();
         const auto & logoSize = m_sceneLayout.logoSize();
-        auto imageRect = m_showImageItem->boundingRect().toRect();
+        auto imageRect = m_showImageItem->boundingRect().toRect(); ///TODO: update it
 
         for(const auto & [layoutIndex, keys]: m_showInfos)
         {
@@ -151,9 +169,9 @@ namespace CM
 
         /// TODO: may be update it
         auto rightTopTextRect = m_textItem.at(showExifTexPositionIndex::right_top)->boundingRect();
-        auto rightBottomTextRect = m_textItem.at(showExifTexPositionIndex::right_top)->boundingRect();
+        auto rightBottomTextRect = m_textItem.at(showExifTexPositionIndex::right_bottom)->boundingRect();
         auto maxW = rightTopTextRect.width() > rightBottomTextRect.width() ? rightTopTextRect.width() : rightBottomTextRect.width();
-        m_sceneLayout.setRightMaxWidth(maxW);
+        m_sceneLayout.setRightMaxWidth(static_cast<int>(maxW));
     }
 
     void PreViewImageScene::updateTexItemsPosition()
@@ -162,6 +180,7 @@ namespace CM
         auto logoWithImageSpacing = m_sceneLayout.logoSpace();
         const auto & logoSize = m_sceneLayout.logoSize();
         auto imageRect = m_showImageItem->boundingRect().toRect();
+        const auto & imageSize = m_sceneLayout.previewImageSize();
 
         for(const auto & [layoutIndex, keys]: m_showInfos)
         {
@@ -172,25 +191,25 @@ namespace CM
             {
                 case showExifTexPositionIndex::left_top:
                 {
-                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
+                    QPoint position(m_sceneLayout.leftTextOffset(), top + imageSize.height() + logoWithImageSpacing);
                     item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::left_bottom:
                 {
-                    QPoint position(left, top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
+                    QPoint position(m_sceneLayout.leftTextOffset(), top + logoWithImageSpacing + imageSize.height() + logoSize.h - itemRect.height());
                     item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::right_top:
                 {
-                    QPoint position(left + imageRect.width() + right - m_sceneLayout.rightMaxWidth() - m_sceneLayout.rightTextOffset(),top + imageRect.height() + logoWithImageSpacing);
+                    QPoint position(left + imageSize.width() + right - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset(), top + imageSize.height() + logoWithImageSpacing);
                     item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::right_bottom:
                 {
-                    QPoint position(left + imageRect.width() + right - m_sceneLayout.rightMaxWidth() - m_sceneLayout.rightTextOffset(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
+                    QPoint position(left + imageSize.width() + right - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset(), top + logoWithImageSpacing + imageSize.height() + logoSize.h - itemRect.height());
                     item->setPos(position);
                 }
                 break;
@@ -209,7 +228,13 @@ namespace CM
     void PreViewImageScene::resetLogoPixmap(const QPixmap &logo)
     {
         const auto & logoSize = m_sceneLayout.logoSize();
-        m_logoItem->setPixmap(logo.scaled({logoSize.w, logoSize.h}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+        auto h = static_cast<float>(logoSize.h);
+        auto ratio = static_cast<float>(logo.height()) / static_cast<float>(logo.width());
+        auto newW = (int)(std::round(h / ratio));
+
+        m_sceneLayout.setLogoSize(newW,logoSize.height());
+        m_logoItem->setPixmap(logo.scaled({newW,logoSize.height()}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
         auto rect = m_showImageItem->boundingRect();
         auto pos = m_showImageItem->pos();
@@ -218,18 +243,19 @@ namespace CM
 
     void PreViewImageScene::updateLogoPosition()
     {
-        auto rect = m_showImageItem->boundingRect();
-        auto pos = m_showImageItem->pos();
         auto logoSpaceWithImage = m_sceneLayout.logoSpace();
-
         auto imageSize = m_sceneLayout.previewImageSize();
-
         const auto & [l,r,t,b] = m_sceneLayout.getMargin();
 
-        auto x = l + r + imageSize.w - m_sceneLayout.logoSplitLineSpace() * 2.0 - m_sceneLayout.logoSize().w - m_sceneLayout.rightMaxWidth() - m_sceneLayout.rightTextOffset() - m_sceneLayout.splitRectWidth();
+        auto x = l + r + imageSize.w - m_sceneLayout.logoSplitLineSpace() * 2.0 - m_sceneLayout.logoSize().w -
+                m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset() - m_sceneLayout.splitRectWidth();
+
+        auto y = t + imageSize.height() + logoSpaceWithImage;
+
+        auto logopos = m_sceneLayout.logoPosition();
 
         /// TODO： calc logo position
-        m_logoItem->setPos(x, pos.y() + rect.height() + logoSpaceWithImage);
+        m_logoItem->setPos(x, y);
     }
 
     void PreViewImageScene::InitTargetImageItem()
@@ -242,7 +268,15 @@ namespace CM
 
     void PreViewImageScene::resetPreviewImageTarget(const QPixmap &pixmap)
     {
-        ((PreViewImageItem*)(m_showImageItem))->resetPixmap(pixmap);
+        if(auto item = dynamic_cast<CM::PreViewImageItem*>(m_showImageItem);
+           item)
+        {
+            item->resetPixmap(pixmap);
+        }
+
+#if _DEBUG
+        qDebug()<<"preView Image Size: "<<pixmap.size();
+#endif
         m_sceneLayout.setImageSize({pixmap.width(),pixmap.height()});
     }
 
@@ -272,8 +306,8 @@ namespace CM
     {
         const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
         auto logoSpaceWithShowImage = m_sceneLayout.logoSpace();
-        const auto & imageRect = m_showImageItem->sceneBoundingRect().toRect();
-        const auto & logoRect = m_logoItem->sceneBoundingRect().toRect();
+        const auto & imageRect = m_sceneLayout.previewImageSize();
+        const auto & logoRect = m_sceneLayout.logoSize();
 
         auto sceneBoundMarginRectH = top + imageRect.height() + logoSpaceWithShowImage + logoRect.height() + bottom;
         auto sceneBoundMarginRectW = left + imageRect.width() + right;
@@ -292,8 +326,7 @@ namespace CM
 
     void PreViewImageScene::InitSplitRect()
     {
-        m_splitRectItem = new QGraphicsRectItem();
-
+        m_splitRectItem = new QGraphicsRectItem;
         QPen pen;
         pen.setWidth(1);
         pen.setColor(Qt::transparent);
@@ -319,21 +352,17 @@ namespace CM
     void PreViewImageScene::updateSplitRect()
     {
         const auto & logoSize = m_sceneLayout.logoSize();
-        const auto & logoPosition= m_logoItem->pos();
         auto imageH = m_sceneLayout.previewImageSize().h;
         auto imageW = m_sceneLayout.previewImageSize().w;
         auto spacing = m_sceneLayout.logoSpace();
-
-        auto logoRect = m_logoItem->boundingRect().toRect();
-
         const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
 
         auto splitRectW = m_sceneLayout.splitRectWidth();
-        auto x = left + right + imageW - m_sceneLayout.rightTextOffset() - m_sceneLayout.rightMaxWidth()  - m_sceneLayout.logoSplitLineSpace() - splitRectW;
 
+        auto x = left + right + imageW - m_sceneLayout.rightTextOffset() - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.logoSplitLineSpace() - splitRectW;
         auto y = top + imageH + spacing;
 
-        m_splitRectItem->setRect(x, y, splitRectW, logoRect.height());
+        m_splitRectItem->setRect(x, y, splitRectW, logoSize.h);
 
         auto r = m_splitRectItem->rect();
 
@@ -344,7 +373,17 @@ namespace CM
         radialGradient.setColorAt(0.6, QColor(217,217,217));
         radialGradient.setColorAt(0.9, QColor(222,222,222));
         radialGradient.setColorAt(1.0, QColor(241,241,241));
-
         m_splitRectItem->setBrush(radialGradient);
     }
+
+    void PreViewImageScene::resetCameraLogoIndex(const CameraIndex &index)
+    {
+        m_cameraIndex = index;
+    }
+
+    PreViewImageItem * PreViewImageScene::preViewImageItem() const
+    {
+        return dynamic_cast<PreViewImageItem*>(m_showImageItem);
+    }
+
 } // CM
