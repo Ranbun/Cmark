@@ -1,19 +1,19 @@
+#include <CMark.h>
+
 #include "MainWindow.h"
-
-#include "DisplayWidget.h"
-
-#include <QMenuBar>
-#include <QStatusBar>
-#include <QToolBar>
-#include <QFileDialog>
-#include <QAction>
 
 #include "FileTreeDockWidget.h"
 #include "ImagePropertyDockWidget.h"
 #include "StatusBar.h"
+#include "DisplayWidget.h"
+
+#include <QMenuBar>
+#include <QToolBar>
+#include <QFileDialog>
+#include <QAction>
 
 #if _DEBUG
-#include <QDebug>
+    #include <QDebug>
 #endif
 
 namespace CM

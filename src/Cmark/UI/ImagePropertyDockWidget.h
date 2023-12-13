@@ -10,7 +10,6 @@ namespace CM
     public:
         ImagePropertyDockWidget(QWidget *parent = nullptr);
         ~ImagePropertyDockWidget() override = default;
-
     };
 
 } // CM

@@ -30,12 +30,6 @@ namespace CM
         GPS = None
     };
 
-    struct ExifPack
-    {
-        ExifKey key;
-        std::string text;
-    };
-
     /**
      * @brief Exif信息条目与实际存储的信息的映射
      */

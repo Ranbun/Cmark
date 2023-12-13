@@ -18,11 +18,8 @@ namespace CM
     class PreViewImageItem;
 }
 
-
-
 namespace CM
 {
-
     enum class showExifTexPositionIndex
     {
         left_top,
@@ -40,7 +37,6 @@ namespace CM
         std::vector<ExifKey> m_keys;                ///< 显示的信息 - 某一个位置可以有多条信息
         /// TODO: make it editor in widget
     };
-
 
     class CScene : public QGraphicsScene
     {
@@ -118,6 +114,9 @@ namespace CM
         [[nodiscard]] PreViewImageItem * preViewImageItem() const;
 
 
+        /**
+         * @brief update scene  layout
+         */
         void updateLayout(){m_sceneLayout.update();}
 
         /**

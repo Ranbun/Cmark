@@ -1,5 +1,5 @@
-#ifndef CAMERAMARK_PREVIEWIMAGESCENE_H
-#define CAMERAMARK_PREVIEWIMAGESCENE_H
+#ifndef CAMERAMARK_PREVIEWIMAGESCENE_H_
+#define CAMERAMARK_PREVIEWIMAGESCENE_H_
 
 #include "CScene.h"
 
@@ -11,11 +11,14 @@ namespace CM
     {
     public:
         explicit PreViewImageScene(QObject * parent = nullptr)
-        : CScene(parent){}
-        ~PreViewImageScene() override = default;
+        : CScene(parent)
+        {
 
+        }
+
+        ~PreViewImageScene() override = default;
     };
 
 } // CM
 
-#endif //CAMERAMARK_PREVIEWIMAGESCENE_H
+#endif //CAMERAMARK_PREVIEWIMAGESCENE_H_

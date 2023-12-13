@@ -1,10 +1,5 @@
-#ifndef CAMERAMARK_FILELOAD_H
-#define CAMERAMARK_FILELOAD_H
-
-#include <iostream>
-#include <vector>
-#include <tuple>
-#include <filesystem>
+#ifndef CAMERAMARK_FILELOAD_H_
+#define CAMERAMARK_FILELOAD_H_
 
 namespace CM
 {
@@ -16,8 +11,7 @@ namespace CM
     public:
         FileLoad() = default;
         [[maybe_unused]] static std::vector<unsigned char> Load(const std::filesystem::path &path); ///< just read signal file
-
     };
 }
 
-#endif //CAMERAMARK_FILELOAD_H
+#endif //CAMERAMARK_FILELOAD_H_

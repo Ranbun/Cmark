@@ -1,14 +1,14 @@
 #ifndef CAMERAMARK_STATUSBAR_H
 #define CAMERAMARK_STATUSBAR_H
 
-#include <QStatusBar>
+class QString;
+class QStatusBar;
 
 namespace CM
 {
     class StatusBar
     {
     public:
-
         static void showMessage(const QString &message);
         static void showMessage(const QString &message,int timeout);
         static void Init(QStatusBar * bar);
@@ -19,9 +19,7 @@ namespace CM
 
     private:
         static QStatusBar * m_statusBar;
-
         static void check();
-
     };
 
 } // CM

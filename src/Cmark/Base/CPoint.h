@@ -8,7 +8,8 @@ namespace CM
     struct Point
     {
         Point() = default;;
-        Point(std::initializer_list<int> list)
+
+        [[maybe_unused]] Point(std::initializer_list<int> list)
         {
             std::copy(list.begin(), list.end(),m_points.begin());
         }
@@ -21,7 +22,7 @@ namespace CM
         [[maybe_unused]] void setY(int y) { m_points[1] = y;}
         [[maybe_unused]] void setZ(int z) { m_points[2] = z;}
 
-        void setPosition(std::initializer_list<int> list)
+        [[maybe_unused]] void setPosition(std::initializer_list<int> list)
         {
             std::copy(list.begin(), list.end(),m_points.begin());
         }

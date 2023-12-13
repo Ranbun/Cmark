@@ -1,9 +1,10 @@
-#ifndef CAMERAMARK_PREVIEWIMAGEITEM_H
-#define CAMERAMARK_PREVIEWIMAGEITEM_H
+#ifndef CAMERAMARK_PREVIEWIMAGEITEM_H_
+#define CAMERAMARK_PREVIEWIMAGEITEM_H_
 
-#include <QGraphicsPixmapItem>
 #include "Scene/PreViewImageScene.h"
 #include "Scene/SceneLayout.h"
+
+#include <QGraphicsPixmapItem>
 
 namespace CM
 {
@@ -46,4 +47,4 @@ namespace CM
 
 } // CM
 
-#endif //CAMERAMARK_PREVIEWIMAGEITEM_H
+#endif //CAMERAMARK_PREVIEWIMAGEITEM_H_

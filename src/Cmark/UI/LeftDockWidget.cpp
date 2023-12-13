@@ -1,3 +1,5 @@
+#include <CMark.h>
+
 #include "FileTreeDockWidget.h"
 
 #include <QTextEdit>

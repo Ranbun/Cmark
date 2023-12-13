@@ -1,13 +1,11 @@
-#include "EXIFResolver.h"
-#include "FileLoad.h"
+#include <CMark.h>
 
 #include <UI/StatusBar.h>
 
-#include <tuple>
-#include <unordered_map>
-#include <mutex>
-#include <thread>
-#include <future>
+#include "EXIFResolver.h"
+#include "FileLoad.h"
+
+#include <QString>
 
 namespace CM
 {
@@ -48,7 +46,6 @@ namespace CM
         return std::move(infoMaps);
     }
 
-
     std::tuple<bool, std::string> EXIFResolver::check(int resolverCode)
     {
         bool status = false;
@@ -84,7 +81,7 @@ namespace CM
                 break;
         }
 
-        CM::StatusBar::showMessage(outputInfos.c_str());
+        StatusBar::showMessage(QString(outputInfos.c_str()));
         return {status,outputInfos};
     }
 
@@ -92,9 +89,7 @@ namespace CM
     {
         assert(this);
 
-        std::hash<std::filesystem::path> Hasher;
-        size_t hashValue = Hasher(path);
-
+        auto hashValue = this->Hash(path.string());
         /// load file
         auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){
             auto res = FileLoad::Load(path);

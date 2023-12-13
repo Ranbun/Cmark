@@ -5,12 +5,9 @@
 
 #include <QGraphicsView>
 #include <QFileDialog>
-#include <iostream>
-
 
 namespace CM
 {
-
     CScene::CScene(QObject *parent)
             : QGraphicsScene(parent)
             , m_showImageItem(new PreViewImageItem(nullptr, m_sceneLayout))
