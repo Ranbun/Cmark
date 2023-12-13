@@ -34,8 +34,13 @@
 # directory
 .idea
 out
+
 /src/vendor/easyexif
 .vs
 
 Folder.DotSettings.user
 src/Cmark/sources/pictures
+
+.vscode/
+
+

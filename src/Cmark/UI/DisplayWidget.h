@@ -1,10 +1,9 @@
 #ifndef CAMERAMARK_DISPLAYWIDGET_H
 #define CAMERAMARK_DISPLAYWIDGET_H
 
-#include <filesystem>
 #include <QWidget>
-
 #include <iostream>
+#include <filesystem>
 
 class QGraphicsView;
 class QGraphicsScene;
@@ -12,6 +11,8 @@ class QGraphicsPixmapItem;
 
 namespace CM
 {
+    class PreViewImageScene;
+
     enum SceneIndex
     {
         NONE,

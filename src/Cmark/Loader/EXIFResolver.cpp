@@ -92,8 +92,8 @@ namespace CM
     {
         assert(this);
 
-        std::hash<std::filesystem::path> Hasher;
-        size_t hashValue = Hasher(path);
+        std::hash<std::string> hasher;
+        size_t hashValue = hasher(path.string());
 
         /// load file
         auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){

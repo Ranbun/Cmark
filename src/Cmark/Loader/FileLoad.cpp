@@ -4,14 +4,18 @@
 #include <locale>
 #include <codecvt>
 
-std::vector<unsigned char> CM::FileLoad::Load(const std::filesystem::path &path)
+namespace CM
+{
+
+std::vector<unsigned char> FileLoad::Load(const std::filesystem::path &path)
 {
     std::locale::global(std::locale(""));
 
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::wstring filePath = converter.from_bytes(path.string());
 
-    std::ifstream picture(filePath,std::ios::binary);
+    std::ifstream picture(path,std::ios::binary);
+    
     if(!picture.is_open())
     {
         std::cerr << "Could not open file: " << path << std::endl;
@@ -32,3 +36,5 @@ std::vector<unsigned char> CM::FileLoad::Load(const std::filesystem::path &path)
 
     return std::move(result);
 }
+
+};

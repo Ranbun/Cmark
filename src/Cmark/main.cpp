@@ -1,9 +1,6 @@
+#include <QApplication>
 
 #include <CMark.h>
-
-#include <QApplication>
-#include <iostream>
-#include <filesystem>
 
 #include "Loader/EXIFResolver.h"
 #include "UI/MainWindow.h"
