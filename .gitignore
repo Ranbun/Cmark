@@ -38,7 +38,4 @@ out
 .vs
 
 Folder.DotSettings.user
-src/Cmark/sources/pictures/Canon/test.jpg
-src/Cmark/sources/pictures/Nikon/DSC_1218.JPG
-src/Cmark/sources/pictures/Nikon/DSC_1222.JPG
-src/Cmark/sources/pictures/Nikon/DSC_1225.JPG
+src/Cmark/sources/pictures
