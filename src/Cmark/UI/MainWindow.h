@@ -2,8 +2,6 @@
 #define CAMERAMARK_MAINWINDOW_H
 
 #include <QMainWindow>
-#include <memory>
-#include <filesystem>
 
 namespace CM
 {

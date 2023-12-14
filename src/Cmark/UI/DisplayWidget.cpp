@@ -1,29 +1,22 @@
+#include <CMark.h>
+
 #include "DisplayWidget.h"
 
 #include "Loader/FileLoad.h"
 #include "Loader/EXIFResolver.h"
-
-#include <filesystem>
-#include <mutex>
+#include "Scene/PreViewImageScene.h"
+#include "Scene/PreViewImageItem.h"
+#include "LogoManager.h"
 
 #include <QImage>
 #include <QPixmap>
 #include <QFileDialog>
 #include <QImageReader>
 #include <QMessageBox>
-#include <QWidget>
-
 #include <QGraphicsView>
-#include "Scene/PreViewImageScene.h"
-#include "Scene/PreViewImageItem.h"
-
 #include <QVBoxLayout>
 #include <QResizeEvent>
 #include <QImageReader>
-
-#include "LogoManager.h"
-
-#include <thread>
 
 namespace CM
 {

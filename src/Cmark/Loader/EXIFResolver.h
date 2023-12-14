@@ -2,9 +2,9 @@
 #define CAMERAMARK_EXIFRESOLVER_H
 
 #include "exif.h"
-#include <CMark.h>
 #include "Base/Type.h"
 
+#include <filesystem>
 
 namespace CM
 {
@@ -151,6 +151,15 @@ namespace CM
             size_t hashValue = Hasher(path);
             return hashValue;
         }
+
+        template<>
+        size_t Hash(const std::string & path)
+        {
+            std::hash<std::string> Hasher;
+            size_t hashValue = Hasher(path);
+            return hashValue;
+        }
+
     };
 
 } // CM

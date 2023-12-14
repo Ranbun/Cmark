@@ -1,5 +1,4 @@
 #include "CMark.h"
-
 #include "SceneLayout.h"
 
 namespace CM

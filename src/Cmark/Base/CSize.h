@@ -7,8 +7,8 @@ namespace CM
     {
         struct
         {
-            int x;
-            int y;
+            [[maybe_unused]] int x;
+            [[maybe_unused]] int y;
         };
         struct
         {

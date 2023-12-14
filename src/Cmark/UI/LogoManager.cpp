@@ -1,6 +1,9 @@
+#include <CMark.h>
+
 #include "LogoManager.h"
 
 #include <QMessageBox>
+#include <QPixmap>
 
 namespace CM
 {
@@ -10,14 +13,6 @@ namespace CM
 
     CameraIndex LogoManager::resolverCameraIndex(const std::string &cameraMake)
     {
-#if  0
-        if(cameraMake.empty())
-        {
-            ///TODO： 考虑使用别的信息替代
-            throw std::runtime_error("Camera Make empty!");
-        }
-#endif
-
         QString Make = cameraMake.c_str();
         if(Make.isEmpty())
         {

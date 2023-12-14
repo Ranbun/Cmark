@@ -2,7 +2,6 @@
 #define CAMERAMARK_DISPLAYWIDGET_H
 
 #include <QWidget>
-#include <iostream>
 #include <filesystem>
 
 class QGraphicsView;
@@ -31,7 +30,7 @@ namespace CM
          * @brief 打开空的工程
          * @param path 路径
          */
-        void Open(const std::filesystem::path& path) const;
+        void Open(const std::filesystem::path & path) const;
 
         /**
          * @brief 预览文件路径下的图片
@@ -68,7 +67,6 @@ namespace CM
         void Created();
 
         /// TODO: define signal to adjust Scene Layout
-
 
     };
 

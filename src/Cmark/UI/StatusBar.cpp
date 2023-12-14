@@ -1,5 +1,8 @@
 #include "StatusBar.h"
 
+#include <QStatusBar>
+#include <QString>
+
 namespace CM
 {
     QStatusBar * StatusBar::m_statusBar = nullptr;

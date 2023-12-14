@@ -1,6 +1,6 @@
-#include <QApplication>
-
 #include <CMark.h>
+
+#include <QApplication>
 
 #include "Loader/EXIFResolver.h"
 #include "UI/MainWindow.h"
@@ -160,7 +160,6 @@ int main(int argc,char ** argv)
 #endif
 
 #if  _DEBUG
-
     auto path = std::filesystem::path("./sources/pictures/Nikon/DSC_3.jpg");
     manApp.PreViewImage(path);
 
