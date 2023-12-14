@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 7.0.0, 2023-12-13T09:13:14. -->
+<!-- Written by QtCreator 4.11.0, 2023-12-13T20:23:32. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
-  <value type="QByteArray">{53dcf359-e9b5-4377-b093-114fc35d9868}</value>
+  <value type="QByteArray">{dc2031b6-7c29-4d20-b948-37de17fc2edd}</value>
  </data>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
-  <value type="qlonglong">0</value>
+  <value type="int">0</value>
  </data>
  <data>
   <variable>ProjectExplorer.Project.EditorSettings</variable>

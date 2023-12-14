@@ -20,28 +20,27 @@
 
 namespace CM
 {
-    DisplayWidget::DisplayWidget(QWidget *parent)
-    : QWidget(parent)
-    , m_previewImageScene(new PreViewImageScene)
-    , m_addLogoScene(new PreViewImageScene)
-    , m_view (new QGraphicsView)
-    {
-        m_view->setScene(m_previewImageScene);
-        connect(this,&DisplayWidget::Created,this, [ parent= this, view = m_view ]()
+    DisplayWidget::DisplayWidget(QWidget * parent)
+            : QWidget(parent)
+            , m_previewImageScene(new PreViewImageScene)
+            , m_addLogoScene(new PreViewImageScene)
+            , m_view (new QGraphicsView)
         {
-            view->setParent(parent);
-        });
+            m_view->setScene(m_previewImageScene);
+            connect(this,&DisplayWidget::Created,this, [ parent= this, view = m_view ]()
+            {
+                view->setParent(parent);
+            });
 
-        m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-        m_view->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-        m_view->setAlignment(Qt::AlignCenter);
+            m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+            m_view->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+            m_view->setAlignment(Qt::AlignCenter);
 
-        m_view->resize(640,480);
-        m_previewImageScene->setSceneRect(0,0,m_view->rect().width(),m_view->rect().height());
+            m_view->resize(640,480);
+            m_previewImageScene->setSceneRect(0,0,m_view->rect().width(),m_view->rect().height());
 
-        emit Created();
-    }
-
+            emit Created();
+        }
     void DisplayWidget::Open(const std::filesystem::path& path) const
     {
         assert(this);

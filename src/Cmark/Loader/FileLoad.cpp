@@ -7,10 +7,15 @@ namespace  CM
     {
         std::locale::global(std::locale(""));
 
+#ifdef _WIN32
         std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
         std::wstring filePath = converter.from_bytes(path.string());
-
         std::ifstream picture(filePath, std::ios::binary);
+#endif
+#ifdef __linux__
+        std::ifstream picture(path.string(), std::ios::binary);
+#endif
+
         if (!picture.is_open())
         {
             std::cerr << "Could not open file: " << path << std::endl;

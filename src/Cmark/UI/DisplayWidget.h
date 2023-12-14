@@ -10,6 +10,8 @@ class QGraphicsPixmapItem;
 
 namespace CM
 {
+    class PreViewImageScene;
+
     enum SceneIndex
     {
         NONE,
