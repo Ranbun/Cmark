@@ -12,9 +12,15 @@ namespace  CM
         std::wstring filePath = converter.from_bytes(path.string());
         std::ifstream picture(filePath, std::ios::binary);
 #endif
+
 #ifdef __linux__
         std::ifstream picture(path.string(), std::ios::binary);
 #endif
+
+#ifdef __APPLE__
+    std::ifstream picture(path.string(), std::ios::binary);
+#endif 
+
 
         if (!picture.is_open())
         {
