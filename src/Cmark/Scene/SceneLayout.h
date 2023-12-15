@@ -32,17 +32,18 @@ namespace CM
         void setMargin(int left,int right,int top,int bottom);
 
         /// logo
-        void setLogoSpace(int space);
-        [[nodiscard]] int logoSplitLineSpace() const;
-        [[nodiscard]] int logoSpace() const;
+        [[maybe_unused]] void setLogoWithImageSpace(int space);
 
-        [[nodiscard]] const CSize & logoSize()const;
+        [[nodiscard]] int logoWithImageSpace() const;
+        [[nodiscard]] int logoWithSplitLineSpace() const;
+
+        [[nodiscard]] const CSize & LogoSize()const;
         void setLogoSize(int w,int h);
         void setLogoSize(const CSize & size);
 
 
         [[maybe_unused]] void setImageSize(const CSize & size);
-        [[nodiscard]] const CSize & previewImageSize() const;
+        [[nodiscard]] const CSize & ImageSize() const;
 
         [[nodiscard]] [[maybe_unused]] int leftTextOffset() const;
         [[nodiscard]] [[maybe_unused]] int rightTextOffset() const;
@@ -99,7 +100,7 @@ namespace CM
         CPoint m_logoPosition{-1,-1};
 
         int m_leftTextOffset{m_margin.left};      ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
-        int m_rightTextOffset{m_margin.right};    ///< 左边部分文字的偏移长度 (logoSize.w) * 1.45 right in it
+        int m_rightTextOffset{m_margin.right};    ///< 左边部分文字的偏移长度 (LogoSize.w) * 1.45 right in it
         int m_logoSplitRectSpace{15};             ///< logo & 显示的文字和分割线之间的距离
 
         int m_splitRectWidth{0};    ///< 文字与图标分割线(rect & fill)的宽度

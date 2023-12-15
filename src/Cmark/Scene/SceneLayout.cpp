@@ -8,12 +8,12 @@ namespace CM
         m_margin = Margin{left,right,top,bottom};
     }
 
-    void SceneLayout::setLogoSpace(int space)
+    void SceneLayout::setLogoWithImageSpace(int space)
     {
         m_logoSpaceWithImage = space;
     }
 
-    int SceneLayout::logoSpace() const
+    int SceneLayout::logoWithImageSpace() const
     {
         return m_logoSpaceWithImage;
     }
@@ -23,7 +23,7 @@ namespace CM
         return m_margin;
     }
 
-    const CSize &SceneLayout::logoSize() const
+    const CSize &SceneLayout::LogoSize() const
     {
         return m_logoSize;
     }
@@ -55,7 +55,7 @@ namespace CM
         /// logo size
         /// margin left & right & top & bottom
 
-        /// update some items
+        /// applyLayout some items
         updateLeftTextOffset();
         updateRightTextOffset();
         updateLogoSplitSpace();
@@ -63,9 +63,6 @@ namespace CM
 
         /// logo position
         updateLogoPosition();
-
-        /// line position
-
     }
 
     int SceneLayout::leftTextOffset() const
@@ -73,12 +70,12 @@ namespace CM
         return m_leftTextOffset;
     }
 
-    const CSize &SceneLayout::previewImageSize() const
+    const CSize &SceneLayout::ImageSize() const
     {
         return m_showImageSize;
     }
 
-    int SceneLayout::logoSplitLineSpace() const
+    int SceneLayout::logoWithSplitLineSpace() const
     {
         return m_logoSplitRectSpace;
     }

@@ -6,6 +6,8 @@
 #include "Loader/EXIFResolver.h"
 #include "Scene/PreViewImageScene.h"
 #include "Scene/PreViewImageItem.h"
+#include "Scene/LifeSizeImageScene.h"
+
 #include "LogoManager.h"
 
 #include <QImage>
@@ -16,14 +18,13 @@
 #include <QGraphicsView>
 #include <QVBoxLayout>
 #include <QResizeEvent>
-#include <QImageReader>
 
 namespace CM
 {
     DisplayWidget::DisplayWidget(QWidget * parent)
             : QWidget(parent)
             , m_previewImageScene(new PreViewImageScene)
-            , m_addLogoScene(new PreViewImageScene)
+            , m_addLogoScene(new LifeSizeImageScene)
             , m_view (new QGraphicsView)
         {
             m_view->setScene(m_previewImageScene);
@@ -95,20 +96,18 @@ namespace CM
         /// 设置预览场景显示的资源
         auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
         {
-            scene->resetCameraLogoIndex(cameraIndex);
             scene->resetPreviewImageTarget(preViewImage);
-            scene->updateTexItems(infos);
-            scene->resetLogoPixmap(*previewImageLogo);
+            scene->resetTexItemsPlainText(infos);
+            scene->resetLogoPixmap(previewImageLogo, Nikon);
         }
 
         /// 设置单张图片存储的显示资源
-        auto logoScene = dynamic_cast<PreViewImageScene *>(m_addLogoScene);
-        logoScene->resetCameraLogoIndex(cameraIndex);
+        auto logoScene = dynamic_cast<LifeSizeImageScene *>(m_addLogoScene);
         logoScene->resetPreviewImageTarget(preViewImage);
-        logoScene->updateTexItems(infos);
-        logoScene->resetLogoPixmap(*previewImageLogo);
+        logoScene->resetTexItemsPlainText(infos);
+        logoScene->resetLogoPixmap(previewImageLogo, Nikon);
 
-        /// 构建一个resizeEvent make it to update all item
+        /// 构建一个resizeEvent make it to applyLayout all item
         auto revent = new QResizeEvent(this->size(),this->size());
         this->resizeEvent(revent);
         delete revent;
@@ -189,22 +188,8 @@ namespace CM
             break;
             case SceneIndex::GENERATELOGO_SCENE:
             {
-                auto logoScene = dynamic_cast<PreViewImageScene*>(m_addLogoScene);
-
-                logoScene->updateLayout();
-
-                auto imageItem = logoScene->preViewImageItem();
-                imageItem->updatePixmapPosition();
-                const auto & pixmap = imageItem->target();
-                imageItem->setPixmap(pixmap);
-
-                logoScene->updateLogoPosition();
-                logoScene->updateMarginItems();
-                logoScene->updateTexItemsPosition();
-                logoScene->updateSplitRect();
-                logoScene->update();
-
-                save(m_addLogoScene);
+                auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_addLogoScene);
+                logoScene->saveSceneAsImage(save);
             }
             break;
             default:

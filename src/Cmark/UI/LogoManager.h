@@ -7,7 +7,7 @@ namespace CM
 {
     enum CameraIndex : uint8_t
     {
-        None,   ///< empty
+        None = 0,   ///< empty
         Nikon,
         Sony,
         Canon,

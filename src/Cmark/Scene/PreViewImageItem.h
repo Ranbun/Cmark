@@ -23,7 +23,7 @@ namespace CM
         /**
          * @brief 更新当前的pixmap item(更新pixmap的大小和在场景中的位置)
          */
-        void update();
+        void applyLayout();
 
         /**
          * @brief 更新显示pixmap的大小
@@ -35,6 +35,8 @@ namespace CM
          */
         void updatePixmapPosition();
 
+        const float & ImageRatio(){return m_ImageRatio;}
+
         [[nodiscard]] const QPixmap & target() const {return m_pixmap;}
 
     private:
@@ -43,6 +45,7 @@ namespace CM
     private:
         QPixmap m_pixmap;
         const SceneLayout & m_sceneLayout;
+        float m_ImageRatio{3.0/4.0f};
     };
 
 } // CM
