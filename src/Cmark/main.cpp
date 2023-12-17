@@ -159,12 +159,12 @@ int main(int argc,char ** argv)
 
 #endif
 
-#if  _DEBUG >> 1
-    auto path = std::filesystem::path("./sources/pictures/Nikon/DSC_3.jpg");
+#if  _DEBUG
+    auto path = std::filesystem::path("./sources/pictures/Nikon/DSC_1218.jpg");
     manApp.PreViewImage(path);
 
     CM::EXIFResolver resolver;
-    auto code = resolver.Hash<std::filesystem::path>(path);
+    auto code = resolver.Hash<std::string>(path.string());
     const auto & [checkRes,infos] = CM::EXIFResolver::check(resolver.checkCode(code));
     if(checkRes)
     {

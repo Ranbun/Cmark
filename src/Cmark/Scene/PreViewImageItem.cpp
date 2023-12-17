@@ -11,20 +11,9 @@ namespace CM
 
     void PreViewImageItem::updatePixmapSize()
     {
-        /// TODO: image size should ......
-        const auto currentScene = scene();
-        if(!currentScene) return;
-        const auto &  sceneRect = currentScene->sceneRect().toRect();
-
-        const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
-
-        auto newWidth = sceneRect.width() - left - right;
-        auto ImageRatio = static_cast<float>(m_pixmap.height()) / static_cast<float>(m_pixmap.width());
-        auto newHeight = static_cast<int>(ImageRatio * static_cast<float>(newWidth));
-
         if(m_pixmap.isNull()) return;
-
-        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap,newWidth,newHeight));
+        auto w = m_sceneLayout.ImageSize();
+        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap,w.width(),w.height()));
     }
 
     void PreViewImageItem::resetPixmap(const QPixmap & previewPixmap)
@@ -37,9 +26,12 @@ namespace CM
 
         auto rect = sceneBoundingRect().toRect();
         setPixmap(PreViewImageItem::scaledPixmap(m_pixmap, rect.width(),rect.height()));
+
+        auto pixSize = QSizeF(m_pixmap.size());
+        m_ImageRatio = pixSize.height() / pixSize.width();
     }
 
-    void PreViewImageItem::update()
+    void PreViewImageItem::applyLayout()
     {
         updatePixmapSize();
         updatePixmapPosition();

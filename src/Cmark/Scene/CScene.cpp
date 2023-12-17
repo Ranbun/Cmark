@@ -17,53 +17,6 @@ namespace CM
         Init();
     }
 
-    void CScene::updateSceneRect(QGraphicsView *view, const QRect &newSceneRect)
-    {
-        QRect rect = view ? view->geometry() : newSceneRect;
-        auto createRect = [&rect](int offset)->QRect
-        {
-            return {0,0,rect.width() - offset,rect.height() - offset};
-        };
-        view ? setSceneRect(createRect(2)): setSceneRect(createRect(0));
-
-        auto pixmapItem = dynamic_cast<CM::PreViewImageItem*>(m_showImageItem);
-        if(pixmapItem)
-        {
-            pixmapItem->update();
-        }
-
-        auto imageTargetSize = m_showImageItem->pixmap().size();
-
-        if(view)
-        {
-            m_sceneLayout.setImageSize({imageTargetSize.width(),imageTargetSize.height()});
-        }
-
-        m_sceneLayout.update();
-
-        updateSplitRect();
-        updateLogoPosition();
-        updateTexItemsPosition();
-        updateMarginItems();
-
-        {
-            auto r = m_splitRectItem->boundingRect();
-            auto c = sceneRect().contains(r);
-            m_splitRectItem->setVisible(c);
-        }
-
-
-        {
-            auto vis = m_cameraIndex != CameraIndex::None;
-            m_splitRectItem->setVisible(vis);
-            m_logoItem->setVisible(vis);
-            for(auto & [key,item]: m_textItem)
-            {
-                item->setVisible(vis);
-            }
-        }
-    }
-
     void CScene::Init()
     {
         InitMargin();
@@ -109,14 +62,9 @@ namespace CM
         }
     }
 
-    void CScene::updateTexItems(const ExifInfoMap &exifInfoMap)
+    void CScene::resetTexItemsPlainText(const ExifInfoMap &exifInfoMap)
     {
         m_targetImageExifInfoLists = exifInfoMap;  ///< copy infos
-
-        auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
-        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
-        const auto & logoSize = m_sceneLayout.logoSize();
-        auto imageRect = m_showImageItem->boundingRect().toRect(); ///TODO: update it
 
         for(const auto & [layoutIndex, keys]: m_showInfos)
         {
@@ -135,50 +83,23 @@ namespace CM
 
             item->setPlainText(res.c_str());
             const auto & itemRect = item->boundingRect().toRect();
-
-            switch (layoutIndex)
-            {
-                case showExifTexPositionIndex::left_top:
-                {
-                    QPoint position(left, top + imageRect.height() + logoWithImageSpacing);
-                    item->setPos(position);
-                }
-                    break;
-                case showExifTexPositionIndex::left_bottom:
-                {
-                    QPoint position(left, top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
-                    item->setPos(position);
-                }
-                    break;
-                case showExifTexPositionIndex::right_top:
-                {
-                    QPoint position(left + imageRect.width() - itemRect.width(),top + imageRect.height() + logoWithImageSpacing);
-                    item->setPos(position);
-                }
-                    break;
-                case showExifTexPositionIndex::right_bottom:
-                {
-                    QPoint position(left + imageRect.width() - itemRect.width(),top + logoWithImageSpacing + imageRect.height() + logoSize.h - itemRect.height());
-                    item->setPos(position);
-                }
-                    break;
-            }
         }
 
-        /// TODO: may be update it
+        /// TODO: may be applyLayout it
         auto rightTopTextRect = m_textItem.at(showExifTexPositionIndex::right_top)->boundingRect();
         auto rightBottomTextRect = m_textItem.at(showExifTexPositionIndex::right_bottom)->boundingRect();
         auto maxW = rightTopTextRect.width() > rightBottomTextRect.width() ? rightTopTextRect.width() : rightBottomTextRect.width();
         m_sceneLayout.setRightMaxWidth(static_cast<int>(maxW));
+
+        updateTexItemsPosition();
     }
 
     void CScene::updateTexItemsPosition()
     {
         auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
-        auto logoWithImageSpacing = m_sceneLayout.logoSpace();
-        const auto & logoSize = m_sceneLayout.logoSize();
-        auto imageRect = m_showImageItem->boundingRect().toRect();
-        const auto & imageSize = m_sceneLayout.previewImageSize();
+        auto logoWithImageSpacing = m_sceneLayout.logoWithImageSpace();
+        const auto & logoSize = m_sceneLayout.LogoSize();
+        const auto & imageSize = m_sceneLayout.ImageSize();
 
         for(const auto & [layoutIndex, keys]: m_showInfos)
         {
@@ -223,36 +144,30 @@ namespace CM
         addItem(m_logoItem);
     }
 
-    void CScene::resetLogoPixmap(const QPixmap &logo)
+    void CScene::resetLogoPixmap(std::shared_ptr<QPixmap> logo, CameraIndex cameraIndex)
     {
-        const auto & logoSize = m_sceneLayout.logoSize();
+        const auto & logoSize = m_sceneLayout.LogoSize();
 
         auto h = static_cast<float>(logoSize.h);
-        auto ratio = static_cast<float>(logo.height()) / static_cast<float>(logo.width());
+        auto ratio = static_cast<float>(logo->height()) / static_cast<float>(logo->width());
         auto newW = (int)(std::round(h / ratio));
 
         m_sceneLayout.setLogoSize(newW,logoSize.height());
-        m_logoItem->setPixmap(logo.scaled({newW,logoSize.height()}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        m_logoItem->setPixmap(logo->scaled({newW,logoSize.height()}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        m_logoItem->setData(static_cast<int>(GraphicsItemDataIndex::CameraIndex),cameraIndex);
 
-        auto rect = m_showImageItem->boundingRect();
-        auto pos = m_showImageItem->pos();
-        m_logoItem->setPos(pos.x() + rect.width() / 2.0, pos.y() + rect.height() + 20);
+        updateLogoPosition();
     }
 
     void CScene::updateLogoPosition()
     {
-        auto logoSpaceWithImage = m_sceneLayout.logoSpace();
-        auto imageSize = m_sceneLayout.previewImageSize();
+        auto logoSpaceWithImage = m_sceneLayout.logoWithImageSpace();
+        auto imageSize = m_sceneLayout.ImageSize();
         const auto & [l,r,t,b] = m_sceneLayout.getMargin();
 
-        auto x = l + r + imageSize.w - m_sceneLayout.logoSplitLineSpace() * 2.0 - m_sceneLayout.logoSize().w -
+        auto x = l + r + imageSize.w - m_sceneLayout.logoWithSplitLineSpace() * 2.0 - m_sceneLayout.LogoSize().w -
                  m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset() - m_sceneLayout.splitRectWidth();
-
         auto y = t + imageSize.height() + logoSpaceWithImage;
-
-        auto logopos = m_sceneLayout.logoPosition();
-
-        /// TODO： calc logo position
         m_logoItem->setPos(x, y);
     }
 
@@ -271,10 +186,6 @@ namespace CM
         {
             item->resetPixmap(pixmap);
         }
-
-#if _DEBUG
-        qDebug()<<"preView Image Size: "<<pixmap.size();
-#endif
         m_sceneLayout.setImageSize({pixmap.width(),pixmap.height()});
     }
 
@@ -303,9 +214,9 @@ namespace CM
     void CScene::updateMarginItems()
     {
         const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
-        auto logoSpaceWithShowImage = m_sceneLayout.logoSpace();
-        const auto & imageRect = m_sceneLayout.previewImageSize();
-        const auto & logoRect = m_sceneLayout.logoSize();
+        auto logoSpaceWithShowImage = m_sceneLayout.logoWithImageSpace();
+        const auto & imageRect = m_sceneLayout.ImageSize();
+        const auto & logoRect = m_sceneLayout.LogoSize();
 
         auto sceneBoundMarginRectH = top + imageRect.height() + logoSpaceWithShowImage + logoRect.height() + bottom;
         auto sceneBoundMarginRectW = left + imageRect.width() + right;
@@ -315,11 +226,6 @@ namespace CM
         m_top->setRect(0,0,sceneBoundMarginRectW,top);
 
         m_bottom->setRect(0,top + imageRect.height() + logoSpaceWithShowImage + logoRect.height(),sceneBoundMarginRectW,bottom);
-    }
-
-    const QPixmap &CScene::originalImageTarget()
-    {
-        return ((PreViewImageItem*)(m_showImageItem))->target();
     }
 
     void CScene::InitSplitRect()
@@ -349,15 +255,16 @@ namespace CM
 
     void CScene::updateSplitRect()
     {
-        const auto & logoSize = m_sceneLayout.logoSize();
-        auto imageH = m_sceneLayout.previewImageSize().h;
-        auto imageW = m_sceneLayout.previewImageSize().w;
-        auto spacing = m_sceneLayout.logoSpace();
+        const auto & logoSize = m_sceneLayout.LogoSize();
+        auto imageH = m_sceneLayout.ImageSize().h;
+        auto imageW = m_sceneLayout.ImageSize().w;
+        auto spacing = m_sceneLayout.logoWithImageSpace();
         const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
 
         auto splitRectW = m_sceneLayout.splitRectWidth();
 
-        auto x = left + right + imageW - m_sceneLayout.rightTextOffset() - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.logoSplitLineSpace() - splitRectW;
+        auto x = left + right + imageW - m_sceneLayout.rightTextOffset() - m_sceneLayout.rightTextMaxWidth() -
+                m_sceneLayout.logoWithSplitLineSpace() - splitRectW;
         auto y = top + imageH + spacing;
 
         m_splitRectItem->setRect(x, y, splitRectW, logoSize.h);
@@ -374,14 +281,23 @@ namespace CM
         m_splitRectItem->setBrush(radialGradient);
     }
 
-    void CScene::resetCameraLogoIndex(const CameraIndex &index)
+    void CScene::applyLayout()
     {
-        m_cameraIndex = index;
+        updateShowImage();
+        updateTexItemsPosition();
+        updateLogoPosition();
+        updateSplitRect();
+        updateMarginItems();
     }
 
-    PreViewImageItem * CScene::preViewImageItem() const
+    void CScene::updateLayout()
     {
-        return dynamic_cast<PreViewImageItem*>(m_showImageItem);
+        m_sceneLayout.update();
+    }
+
+    void CScene::updateShowImage()
+    {
+        m_showImageItem->applyLayout();
     }
 
 } // CM

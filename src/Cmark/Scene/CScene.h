@@ -1,7 +1,6 @@
 #ifndef CAMERAMARK_CSCENE_H
 #define CAMERAMARK_CSCENE_H
 
-
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
 
@@ -38,6 +37,11 @@ namespace CM
         /// TODO: make it editor in widget
     };
 
+    enum class GraphicsItemDataIndex : uint8_t
+    {
+        CameraIndex
+    };
+
     class CScene : public QGraphicsScene
     {
     public:
@@ -45,48 +49,16 @@ namespace CM
         ~CScene() override = default;
 
         /**
-         * @brief 初始化场景显示的Item
-         */
-        void Init();
-
-        /**
-         * @brief 根据当前使用的视图更新场景的大小(此时场景和视图具有1对一关系)
-         * @param view 当前使用的视图
-         */
-        void updateSceneRect(QGraphicsView *view, const QRect &newSceneRect);
-
-        /**
          * @brief 当前显示的所有文字信息
          * @param exifInfoMap 所有的文字信息
          */
-        void updateTexItems(const CM::ExifInfoMap & exifInfoMap);
+        void resetTexItemsPlainText(const CM::ExifInfoMap & exifInfoMap);
 
-        /**
-         * @brief 更新logo的位置
-         */
-        void updateLogoPosition();
-
-        /**
-         * @brief 更新所有文字的位置
-         */
-        void updateTexItemsPosition();
-
-        /**
-         * @brief 更新右侧显示的文本与logo之间的分割线
-         */
-        void updateSplitRect();
-
-        /**
-         * @brief 更新margin rect的位置与大小
-         */
-        void updateMarginItems();
-
-    public:
         /**
          * @brief 更新logo
          * @param logo logo的pixmap对象
          */
-        void resetLogoPixmap(const QPixmap & logo);
+        void resetLogoPixmap(std::shared_ptr<QPixmap> logo, CameraIndex cameraIndex = CameraIndex::None);
 
         /**
          * @brief 更新预览显示的图片
@@ -95,57 +67,49 @@ namespace CM
         void resetPreviewImageTarget(const QPixmap & pixmap);
 
         /**
-         * @brief 记录照片显示的logo
-         * @param index logo的索引
+         * @brief 根据布局更新场景中所有item
          */
-        void resetCameraLogoIndex(const CameraIndex & index);
-
-    public:
-        /**
-         * @brief 获取预览显示的图片的原图
-         * @return 加载的图片的pixmap
-         */
-        const QPixmap & originalImageTarget();
+        void applyLayout();
 
         /**
-         * @brief 获取当前显示的 image item
-         * @return
+         * @brief applyLayout scene  layout
          */
-        [[nodiscard]] PreViewImageItem * preViewImageItem() const;
+        virtual void updateLayout();
 
-
-        /**
-         * @brief update scene  layout
-         */
-        void updateLayout(){m_sceneLayout.update();}
+    protected:
 
         /**
-         * @brief save as file
+         * @brief 更新显示的图片的信息
          */
-        /// TODO: save it as file
-        // void saveAsFile(std::filesystem::path & path);
+        virtual void updateShowImage();
+
+        /**
+         * @brief 更新logo的位置
+         */
+        virtual void updateLogoPosition();
+
+        /**
+         * @brief 更新所有文字的位置
+         */
+        virtual void updateTexItemsPosition();
+
+        /**
+         * @brief 更新右侧显示的文本与logo之间的分割线
+         */
+        virtual void updateSplitRect();
+
+        /**
+         * @brief 更新margin rect的位置与大小
+         */
+        virtual void updateMarginItems();
 
     private:
-        QGraphicsPixmapItem * m_showImageItem{};  ///< 预览加载的图片Item对象
-        QGraphicsPixmapItem * m_logoItem{};       ///< 加载的logo Item对象
 
-        QGraphicsRectItem * m_left{};      ///< 左边框Rect对象 画笔为transparent
-        QGraphicsRectItem * m_right{};     ///< 右边框Rect对象 画笔为transparent
-        QGraphicsRectItem * m_top{};       ///< 上边框Rect对象 画笔为transparent
-        QGraphicsRectItem * m_bottom{};    ///< 下边框Rect对象 画笔为transparent
+        /**
+     * @brief 初始化场景显示的Item
+     */
+        void Init();
 
-        QGraphicsRectItem * m_splitRectItem{};  ///< logo与右侧文字之间的分割线对象
-
-        std::unordered_map<showExifTexPositionIndex,QGraphicsTextItem*> m_textItem;   ///< 所有显示的Exif信息对应的GraphicsTextItem
-
-        std::vector<showExifInfo> m_showInfos;     ///< 最终显示到屏幕上的Exif信息
-        ExifInfoMap m_targetImageExifInfoLists;    ///< 解析的当前图片的所有Info信息
-
-        SceneLayout m_sceneLayout;              ///< 记录场景的布局
-
-        CameraIndex m_cameraIndex{CM::CameraIndex::None};
-
-    private:
         /**
          * @brief init text item
          */
@@ -170,6 +134,24 @@ namespace CM
          * @brief  分割线
          */
         void InitSplitRect();
+
+    protected:
+        PreViewImageItem * m_showImageItem{};  ///< 预览加载的图片Item对象
+        QGraphicsPixmapItem * m_logoItem{};       ///< 加载的logo Item对象
+
+        QGraphicsRectItem * m_left{};      ///< 左边框Rect对象 画笔为transparent
+        QGraphicsRectItem * m_right{};     ///< 右边框Rect对象 画笔为transparent
+        QGraphicsRectItem * m_top{};       ///< 上边框Rect对象 画笔为transparent
+        QGraphicsRectItem * m_bottom{};    ///< 下边框Rect对象 画笔为transparent
+
+        QGraphicsRectItem * m_splitRectItem{};  ///< logo与右侧文字之间的分割线对象
+
+        std::unordered_map<showExifTexPositionIndex,QGraphicsTextItem*> m_textItem;   ///< 所有显示的Exif信息对应的GraphicsTextItem
+
+        std::vector<showExifInfo> m_showInfos;     ///< 最终显示到屏幕上的Exif信息
+        ExifInfoMap m_targetImageExifInfoLists;    ///< 解析的当前图片的所有Info信息
+
+        SceneLayout m_sceneLayout;              ///< 记录场景的布局
 
     };
 } // CM
