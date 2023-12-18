@@ -5,6 +5,19 @@ Camera Log
 
 - 目前支持 尼康，佳能, 索尼，松下
 
+### Build
+
+#### Build it in Windows
+- Open folder in VS or Other IDE(must support CMake project)
+- build it & run
+
+
+#### Build it in Linux
+- need `Qt5 , CMake , Clang Complier , ninja-build`(please install them)
+- Run build.sh
+
+
+### Run 
 
 #### 操作介绍
 
