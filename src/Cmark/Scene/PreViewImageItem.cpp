@@ -2,7 +2,7 @@
 
 namespace CM
 {
-    PreViewImageItem::PreViewImageItem(QGraphicsItem *parent, const SceneLayout & layout)
+    PreViewImageItem::PreViewImageItem(QGraphicsItem *parent, const SceneLayoutSettings & layout)
     : QGraphicsPixmapItem(parent)
     , m_sceneLayout(layout)
     {
@@ -12,8 +12,8 @@ namespace CM
     void PreViewImageItem::updatePixmapSize()
     {
         if(m_pixmap.isNull()) return;
-        auto w = m_sceneLayout.ImageSize();
-        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap,w.width(),w.height()));
+        auto imageSize = m_sceneLayout.ImageSize();
+        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap, imageSize.w, imageSize.h));
     }
 
     void PreViewImageItem::resetPixmap(const QPixmap & previewPixmap)

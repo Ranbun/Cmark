@@ -4,9 +4,12 @@
 #include <QWidget>
 #include <filesystem>
 
+
 class QGraphicsView;
 class QGraphicsScene;
 class QGraphicsPixmapItem;
+
+class SceneLayoutEditor;
 
 namespace CM
 {
@@ -43,11 +46,19 @@ namespace CM
          */
         void saveScene(SceneIndex sceneIndex);
 
+        /**
+         * @brief 显示当前场景的布局信息 & 编辑当前场景的布局信息
+         */
+        void preViewSceneLayoutSetting();
+
     protected:
         void paintEvent(QPaintEvent * event) override;
         void resizeEvent(QResizeEvent *event) override;
 
     private:
+
+        std::shared_ptr<SceneLayoutEditor> m_previewSceneLayoutSettingPanel;
+
         /**
          * @brief 预览使用的场景
          */

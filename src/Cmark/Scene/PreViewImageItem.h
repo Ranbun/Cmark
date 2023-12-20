@@ -2,7 +2,7 @@
 #define CAMERAMARK_PREVIEWIMAGEITEM_H_
 
 #include "Scene/PreViewImageScene.h"
-#include "Scene/SceneLayout.h"
+#include "SceneLayoutSettings.h"
 
 #include <QGraphicsPixmapItem>
 
@@ -11,7 +11,7 @@ namespace CM
     class PreViewImageItem : public QGraphicsPixmapItem
     {
     public:
-        explicit PreViewImageItem(QGraphicsItem *parent , const SceneLayout & layout);
+        explicit PreViewImageItem(QGraphicsItem *parent , const SceneLayoutSettings & layout);
         ~PreViewImageItem()  override;
 
         /**
@@ -44,7 +44,7 @@ namespace CM
 
     private:
         QPixmap m_pixmap;
-        const SceneLayout & m_sceneLayout;
+        const SceneLayoutSettings & m_sceneLayout;
         float m_ImageRatio{3.0/4.0f};
     };
 

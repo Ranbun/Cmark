@@ -35,6 +35,10 @@ namespace CM
         /// File Actions
         QAction* newAction{nullptr};
         QAction* openDirectoryAction{nullptr};   ///< 打开文件夹
+
+        /// Edit
+        QAction * editPreviewSceneLayoutAction{nullptr};
+
     };
 
 } // CM

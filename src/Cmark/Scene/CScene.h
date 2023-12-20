@@ -8,7 +8,7 @@
 
 #include "Base/Type.h"
 #include "Base/CPoint.h"
-#include "Scene/SceneLayout.h"
+#include "SceneLayoutSettings.h"
 
 #include "UI/LogoManager.h"
 
@@ -151,7 +151,7 @@ namespace CM
         std::vector<showExifInfo> m_showInfos;     ///< 最终显示到屏幕上的Exif信息
         ExifInfoMap m_targetImageExifInfoLists;    ///< 解析的当前图片的所有Info信息
 
-        SceneLayout m_sceneLayout;              ///< 记录场景的布局
+        SceneLayoutSettings m_sceneLayout;              ///< 记录场景的布局
 
     };
 } // CM

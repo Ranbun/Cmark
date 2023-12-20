@@ -110,25 +110,25 @@ namespace CM
             {
                 case showExifTexPositionIndex::left_top:
                 {
-                    QPoint position(m_sceneLayout.leftTextOffset(), top + imageSize.height() + logoWithImageSpacing);
+                    QPoint position(m_sceneLayout.leftTextOffset(), top + imageSize.h + logoWithImageSpacing);
                     item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::left_bottom:
                 {
-                    QPoint position(m_sceneLayout.leftTextOffset(), top + logoWithImageSpacing + imageSize.height() + logoSize.h - itemRect.height());
+                    QPoint position(m_sceneLayout.leftTextOffset(), top + logoWithImageSpacing + imageSize.h + logoSize.h - itemRect.height());
                     item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::right_top:
                 {
-                    QPoint position(left + imageSize.width() + right - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset(), top + imageSize.height() + logoWithImageSpacing);
+                    QPoint position(left + imageSize.w + right - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset(), top + imageSize.h + logoWithImageSpacing);
                     item->setPos(position);
                 }
                     break;
                 case showExifTexPositionIndex::right_bottom:
                 {
-                    QPoint position(left + imageSize.width() + right - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset(), top + logoWithImageSpacing + imageSize.height() + logoSize.h - itemRect.height());
+                    QPoint position(left + imageSize.w + right - m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset(), top + logoWithImageSpacing + imageSize.h + logoSize.h - itemRect.height());
                     item->setPos(position);
                 }
                     break;
@@ -152,8 +152,8 @@ namespace CM
         auto ratio = static_cast<float>(logo->height()) / static_cast<float>(logo->width());
         auto newW = (int)(std::round(h / ratio));
 
-        m_sceneLayout.setLogoSize(newW,logoSize.height());
-        m_logoItem->setPixmap(logo->scaled({newW,logoSize.height()}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        m_sceneLayout.setLogoSize(newW,logoSize.h);
+        m_logoItem->setPixmap(logo->scaled({newW,logoSize.h}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         m_logoItem->setData(static_cast<int>(GraphicsItemDataIndex::CameraIndex),cameraIndex);
 
         updateLogoPosition();
@@ -167,7 +167,7 @@ namespace CM
 
         auto x = l + r + imageSize.w - m_sceneLayout.logoWithSplitLineSpace() * 2.0 - m_sceneLayout.LogoSize().w -
                  m_sceneLayout.rightTextMaxWidth() - m_sceneLayout.rightTextOffset() - m_sceneLayout.splitRectWidth();
-        auto y = t + imageSize.height() + logoSpaceWithImage;
+        auto y = t + imageSize.h + logoSpaceWithImage;
         m_logoItem->setPos(x, y);
     }
 
@@ -218,14 +218,14 @@ namespace CM
         const auto & imageRect = m_sceneLayout.ImageSize();
         const auto & logoRect = m_sceneLayout.LogoSize();
 
-        auto sceneBoundMarginRectH = top + imageRect.height() + logoSpaceWithShowImage + logoRect.height() + bottom;
-        auto sceneBoundMarginRectW = left + imageRect.width() + right;
+        auto sceneBoundMarginRectH = top + imageRect.h + logoSpaceWithShowImage + logoRect.h + bottom;
+        auto sceneBoundMarginRectW = left + imageRect.w + right;
 
         m_left->setRect(0, 0, left, sceneBoundMarginRectH);
-        m_right->setRect(left + imageRect.width(), 0, right, sceneBoundMarginRectH);
+        m_right->setRect(left + imageRect.w, 0, right, sceneBoundMarginRectH);
         m_top->setRect(0,0,sceneBoundMarginRectW,top);
 
-        m_bottom->setRect(0,top + imageRect.height() + logoSpaceWithShowImage + logoRect.height(),sceneBoundMarginRectW,bottom);
+        m_bottom->setRect(0,top + imageRect.h + logoSpaceWithShowImage + logoRect.h,sceneBoundMarginRectW,bottom);
     }
 
     void CScene::InitSplitRect()

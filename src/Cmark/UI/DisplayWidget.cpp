@@ -9,6 +9,7 @@
 #include "Scene/LifeSizeImageScene.h"
 
 #include "LogoManager.h"
+#include <SceneLayoutEditor.h>
 
 #include <QImage>
 #include <QPixmap>
@@ -26,7 +27,10 @@ namespace CM
             , m_previewImageScene(new PreViewImageScene)
             , m_addLogoScene(new LifeSizeImageScene)
             , m_view (new QGraphicsView)
+            , m_previewSceneLayoutSettingPanel(std::make_shared<SceneLayoutEditor>())
         {
+            m_previewSceneLayoutSettingPanel->setHidden(true);
+
             m_view->setScene(m_previewImageScene);
             connect(this,&DisplayWidget::Created,this, [ parent= this, view = m_view ]()
             {
@@ -195,6 +199,11 @@ namespace CM
             default:
                 break;
         }
+    }
+
+    void DisplayWidget::preViewSceneLayoutSetting()
+    {
+        m_previewSceneLayoutSettingPanel->show();
     }
 
 

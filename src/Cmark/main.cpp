@@ -6,6 +6,8 @@
 #include "UI/MainWindow.h"
 #include "UI/LogoManager.h"
 
+#include <SceneLayoutEditor.h>
+
 namespace Tools
 {
 #if _DEBUG

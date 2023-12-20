@@ -84,6 +84,12 @@ namespace CM
             PreViewImage(imagePath);
         });
 
+        QObject::connect(editPreviewSceneLayoutAction, &QAction::triggered, [this]()
+        {
+            m_displayWidget->preViewSceneLayoutSetting();
+        });
+
+
     }
 
     void MainWindow::InitMenu()
@@ -107,6 +113,15 @@ namespace CM
         openDirectoryAction->setShortcut({ "Ctrl+P" });
         openDirectoryAction->setIcon(QIcon("./sources/icons/open.png"));
         file->addAction(openDirectoryAction);
+
+        const auto Edit = new QMenu("Edit(&E)");
+        MenuBar->addMenu(Edit);
+        editPreviewSceneLayoutAction = new QAction("Layout Setting");
+        editPreviewSceneLayoutAction->setToolTip(tr("Preview Scene Layout Setting"));
+        editPreviewSceneLayoutAction->setShortcut({ "Ctrl+E" });
+        editPreviewSceneLayoutAction->setIcon(QIcon("./sources/icons/previewSceneLayoutsettings.png"));
+        Edit->addAction(editPreviewSceneLayoutAction);
+
     }
 
     void MainWindow::PreViewImage(const std::filesystem::path & path) const
