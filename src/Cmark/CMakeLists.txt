@@ -2,9 +2,13 @@ SET(target_ Cmark)
 
 FILE(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h
         ${third_party}/easyexif/exif.cpp ${third_party}/easyexif/exif.h
+        ${third_party}/sceneLayout/SceneLayoutEditor.cpp ${third_party}/sceneLayout/SceneLayoutEditor.h
+        ${third_party}/sceneLayout/dialog.ui
 )
 
 SET(CMAKE_AUTOMOC ON)
+SET(CMAKE_AUTORCC ON)
+SET(CMAKE_AUTOUIC ON)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 FIND_PACKAGE(Qt5Widgets CONFIG REQUIRED)
@@ -14,6 +18,7 @@ ADD_EXECUTABLE(${target_} ${SOURCE_FILES})
 
 TARGET_INCLUDE_DIRECTORIES(${target_} PRIVATE
         ${third_party}/easyexif
+        ${third_party}/sceneLayout
         ${CMAKE_CURRENT_SOURCE_DIR})
 
 SET(LIBRARIES Qt5::Widgets Qt5::Gui)

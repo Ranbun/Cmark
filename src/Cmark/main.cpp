@@ -159,7 +159,7 @@ int main(int argc,char ** argv)
 
 #endif
 
-#if  _DEBUG
+#if  _DEBUG >> 1
     auto path = std::filesystem::path("./sources/pictures/Nikon/DSC_1218.jpg");
     manApp.PreViewImage(path);
 
