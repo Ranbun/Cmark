@@ -12,7 +12,7 @@ namespace CM
     void PreViewImageItem::updatePixmapSize()
     {
         if(m_pixmap.isNull()) return;
-        auto imageSize = m_sceneLayout.ImageSize();
+        const auto imageSize = m_sceneLayout.ImageSize();
         setPixmap(PreViewImageItem::scaledPixmap(m_pixmap, imageSize.w, imageSize.h));
     }
 
@@ -24,10 +24,10 @@ namespace CM
             throw std::runtime_error("Pixmap is Null!");
         }
 
-        auto rect = sceneBoundingRect().toRect();
+        const auto rect = sceneBoundingRect().toRect();
         setPixmap(PreViewImageItem::scaledPixmap(m_pixmap, rect.width(),rect.height()));
 
-        auto pixSize = QSizeF(m_pixmap.size());
+        const auto pixSize = QSizeF(m_pixmap.size());
         m_ImageRatio = pixSize.height() / pixSize.width();
     }
 
@@ -42,8 +42,8 @@ namespace CM
         const auto currentScene = scene();
         if(!currentScene) return;
 
-        auto posX = m_sceneLayout.getMargin().left;
-        auto posY = m_sceneLayout.getMargin().right;
+        const auto posX = m_sceneLayout.getMargin().left;
+        const auto posY = m_sceneLayout.getMargin().top;
         setPos(posX, posY);
     }
 

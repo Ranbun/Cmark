@@ -84,17 +84,13 @@ namespace CM
             PreViewImage(imagePath);
         });
 
-        QObject::connect(editPreviewSceneLayoutAction, &QAction::triggered, [this]()
-        {
-            m_displayWidget->preViewSceneLayoutSetting();
-        });
-
+        QObject::connect(editPreviewSceneLayoutAction, &QAction::triggered, m_displayWidget.get(), &DisplayWidget::PreViewLayoutSettingsPanel);
 
     }
 
     void MainWindow::InitMenu()
     {
-        auto status = statusBar();  ///< 使用内置方法创建 status bar
+        const auto status = statusBar();  ///< 使用内置方法创建 status bar
         CM::StatusBar::Init(status);
 
         const auto MenuBar = menuBar();
@@ -131,7 +127,7 @@ namespace CM
 
     void MainWindow::InitTool()
     {
-        auto toolBar = addToolBar("toolbar");
+        const auto toolBar = addToolBar("toolbar");
 
         toolBar->setFloatable(false);
         toolBar->setMovable(false);
@@ -139,7 +135,7 @@ namespace CM
 
         /// save preview image
         {
-            auto savePreviewImageAction = toolBar->addAction("Save preview");
+            const auto savePreviewImageAction = toolBar->addAction("Save preview");
             savePreviewImageAction->setToolTip("Save preview Image");
             QPixmap previewSceneSaveIcon("./sources/icons/previewSceneSave.png");
             previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio);
@@ -152,7 +148,7 @@ namespace CM
 
         /// save it
         {
-            auto save = toolBar->addAction("Add Logo Save");
+            const auto save = toolBar->addAction("Add Logo Save");
             save->setToolTip("Save as Image with logo");
             QPixmap previewSceneSaveIcon("./sources/icons/save.png");
             previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio,Qt::SmoothTransformation);

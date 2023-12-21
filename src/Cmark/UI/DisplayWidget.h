@@ -14,21 +14,27 @@ class SceneLayoutEditor;
 namespace CM
 {
     class PreViewImageScene;
+}
 
+namespace  CM
+{
     enum SceneIndex
     {
         NONE,
         PREVIEW_SCENE,
         GENERATELOGO_SCENE
     };
+}
 
+namespace CM
+{
     class DisplayWidget : public QWidget
     {
         Q_OBJECT
     public:
         explicit DisplayWidget(QWidget * parent = nullptr);
-    public:
 
+    public:
         /**
          * @brief 打开空的工程
          * @param path 路径
@@ -43,13 +49,9 @@ namespace CM
 
         /**
          * @brief save scene as Image
+         * @param sceneIndex 要存储的场景的索引
          */
         void saveScene(SceneIndex sceneIndex);
-
-        /**
-         * @brief 显示当前场景的布局信息 & 编辑当前场景的布局信息
-         */
-        void preViewSceneLayoutSetting();
 
     protected:
         void paintEvent(QPaintEvent * event) override;
@@ -76,8 +78,10 @@ namespace CM
 
     signals:
         void Created();
+        void PreViewLayoutSettingsPanel();
 
-        /// TODO: define signal to adjust Scene Layout
+    private:
+        void InitConnect();
 
     };
 

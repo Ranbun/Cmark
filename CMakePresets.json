@@ -28,7 +28,8 @@
                 "strategy": "external"
             },
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "WITH_TEST": false
             }
         },
         {
@@ -42,7 +43,8 @@
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "WITH_TEST": true
+                "WITH_TEST": false,
+                "CMAKE_PREFIX_PATH": "D:\\Apps\\Qt\\5.15.2\\msvc2019_64"
             },
             "vendor": {
                 "jetbrains.com/clion": {

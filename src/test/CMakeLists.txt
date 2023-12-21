@@ -5,6 +5,7 @@ project(${target_name})
 
 add_executable(${target_name} test.cpp)
 
-include(CTest)
-add_test(NAME ${target_name}_test COMMAND ${target_name})
-set_property(TEST ${target_name}_test PROPERTY WILL_PAIL true)
+IF(WITH_TEST)
+    add_test(NAME ${target_name}_test COMMAND ${target_name})
+    set_property(TEST ${target_name}_test PROPERTY WILL_PAIL true)
+ENDIF(WITH_TEST)

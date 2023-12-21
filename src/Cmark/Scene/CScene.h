@@ -4,10 +4,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
 
-#include "CMark.h"
-
 #include "Base/Type.h"
-#include "Base/CPoint.h"
 #include "SceneLayoutSettings.h"
 
 #include "UI/LogoManager.h"
@@ -75,6 +72,8 @@ namespace CM
          * @brief applyLayout scene  layout
          */
         virtual void updateLayout();
+
+        SceneLayoutSettings & layoutSettings(){return m_sceneLayout;}
 
     protected:
 

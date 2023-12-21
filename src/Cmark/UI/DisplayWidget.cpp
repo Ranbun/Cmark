@@ -24,10 +24,10 @@ namespace CM
 {
     DisplayWidget::DisplayWidget(QWidget * parent)
             : QWidget(parent)
+            , m_previewSceneLayoutSettingPanel(std::make_shared<SceneLayoutEditor>())
             , m_previewImageScene(new PreViewImageScene)
             , m_addLogoScene(new LifeSizeImageScene)
             , m_view (new QGraphicsView)
-            , m_previewSceneLayoutSettingPanel(std::make_shared<SceneLayoutEditor>())
         {
             m_previewSceneLayoutSettingPanel->setHidden(true);
 
@@ -45,6 +45,10 @@ namespace CM
             m_previewImageScene->setSceneRect(0,0,m_view->rect().width(),m_view->rect().height());
 
             emit Created();
+
+            InitConnect();
+
+
         }
     void DisplayWidget::Open(const std::filesystem::path& path) const
     {
@@ -59,7 +63,7 @@ namespace CM
     void DisplayWidget::PreViewImage(const std::filesystem::path & path)
     {
         EXIFResolver resolver;
-        auto loadFileIndex = resolver.resolver(path);
+        const auto loadFileIndex = resolver.resolver(path);
 
         QImage readerFile;
         readerFile.fill(Qt::transparent);
@@ -78,12 +82,12 @@ namespace CM
             return ;
         }
 
-        auto exifInfos = resolver.getExifInfo(loadFileIndex);
+        const auto exifInfos = resolver.getExifInfo(loadFileIndex);
 
         /// 加载logo
-        auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
+        const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
         LogoManager::loadCameraLogo(cameraIndex);
-        auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
+        const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
         /// wait load image thread
         if(readImage.joinable())
@@ -92,29 +96,29 @@ namespace CM
         }
 
         /// convert to QPixmap
-        QPixmap preViewImage = QPixmap::fromImage(readerFile);
+        const QPixmap preViewImage = QPixmap::fromImage(readerFile);
 
         /// get enable exif item
-        auto infos = EXIFResolver::resolverImageExif(exifInfos);
+        const auto infos = EXIFResolver::resolverImageExif(exifInfos);
 
         /// 设置预览场景显示的资源
-        auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
         {
+            const auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
             scene->resetPreviewImageTarget(preViewImage);
             scene->resetTexItemsPlainText(infos);
             scene->resetLogoPixmap(previewImageLogo, Nikon);
         }
 
         /// 设置单张图片存储的显示资源
-        auto logoScene = dynamic_cast<LifeSizeImageScene *>(m_addLogoScene);
+        const auto logoScene = dynamic_cast<LifeSizeImageScene *>(m_addLogoScene);
         logoScene->resetPreviewImageTarget(preViewImage);
         logoScene->resetTexItemsPlainText(infos);
         logoScene->resetLogoPixmap(previewImageLogo, Nikon);
 
         /// 构建一个resizeEvent make it to applyLayout all item
-        auto revent = new QResizeEvent(this->size(),this->size());
-        this->resizeEvent(revent);
-        delete revent;
+        const auto rEvent = new QResizeEvent(this->size(),this->size());
+        this->resizeEvent(rEvent);
+        delete rEvent;
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent *event)
@@ -122,7 +126,7 @@ namespace CM
         const auto windowSize = event->size();
         m_view->resize(windowSize);   ///< resize view
 
-        ((PreViewImageScene *) m_previewImageScene)->updateSceneRect(m_view, {});
+        dynamic_cast<PreViewImageScene*>(m_previewImageScene)->updateSceneRect(m_view, {});
 
         /// 设置视图显示的场景的大小
         /// 设置视图观察的场景的观察点
@@ -141,10 +145,10 @@ namespace CM
     {
         auto saveAsFile = [](const std::shared_ptr<QImage>& image,const QString & filePath)
         {
-            bool res = image->save(filePath);
+            const bool res = image->save(filePath);
             if(!res)
             {
-                std::runtime_error("save scene failed!");
+                throw std::runtime_error("save scene failed!");
             }
             else
             {
@@ -192,7 +196,7 @@ namespace CM
             break;
             case SceneIndex::GENERATELOGO_SCENE:
             {
-                auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_addLogoScene);
+                const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_addLogoScene);
                 logoScene->saveSceneAsImage(save);
             }
             break;
@@ -201,9 +205,19 @@ namespace CM
         }
     }
 
-    void DisplayWidget::preViewSceneLayoutSetting()
+    void DisplayWidget::InitConnect()
     {
-        m_previewSceneLayoutSettingPanel->show();
+        /// TODO: maybe remove it
+        connect(m_previewSceneLayoutSettingPanel.get(), &SceneLayoutEditor::updatedScene, [this]()
+        {
+            const auto scene = dynamic_cast<CScene*>(m_previewImageScene);
+            scene->applyLayout();
+        });
+
+        connect(this,&DisplayWidget::PreViewLayoutSettingsPanel,[this]()
+        {
+            m_previewSceneLayoutSettingPanel->show(dynamic_cast<PreViewImageScene*>(m_previewImageScene)->layoutSettings());
+        });
     }
 
 
