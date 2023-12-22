@@ -16,36 +16,38 @@ namespace CM
     class PreViewImageScene;
 }
 
-namespace  CM
+namespace CM
 {
     enum SceneIndex
     {
-        NONE,
-        PREVIEW_SCENE,
-        GENERATELOGO_SCENE
+        None,
+        PreviewScene,
+        GenerateLogoScene
     };
 }
 
 namespace CM
 {
-    class DisplayWidget : public QWidget
+    class DisplayWidget final : public QWidget
     {
         Q_OBJECT
+
     public:
-        explicit DisplayWidget(QWidget * parent = nullptr);
+        explicit DisplayWidget(QWidget* parent = nullptr);
 
     public:
         /**
          * @brief 打开空的工程
          * @param path 路径
+         * @note connect with sigOpen
          */
-        void Open(const std::filesystem::path & path) const;
+        void open(const std::filesystem::path& path) const;
 
         /**
          * @brief 预览文件路径下的图片
          * @param path 文件路径
          */
-        void PreViewImage(const std::filesystem::path & path);
+        void preViewImage(const std::filesystem::path& path);
 
         /**
          * @brief save scene as Image
@@ -54,37 +56,31 @@ namespace CM
         void saveScene(SceneIndex sceneIndex);
 
     protected:
-        void paintEvent(QPaintEvent * event) override;
-        void resizeEvent(QResizeEvent *event) override;
+        void paintEvent(QPaintEvent* event) override;
+        void resizeEvent(QResizeEvent* event) override;
 
     private:
+        std::shared_ptr<SceneLayoutEditor> m_PreviewSceneLayoutSettingPanel;  ///< 布局编辑面板
 
-        std::shared_ptr<SceneLayoutEditor> m_previewSceneLayoutSettingPanel;
+        QGraphicsScene* m_PreviewImageScene{nullptr}; ///< 预览使用的场景
 
-        /**
-         * @brief 预览使用的场景
-         */
-        QGraphicsScene * m_previewImageScene{nullptr};
-
-        /**
-         * @brief 存储源尺寸大小的带logo的图片的场景
-         */
-        QGraphicsScene * m_addLogoScene{nullptr};
+        QGraphicsScene* m_AddLogoScene{nullptr};  ///< 存储源尺寸大小的带logo的图片的场景
 
         /**
          * @brief 当前显示的视图
          */
-        QGraphicsView * m_view{nullptr};
+        QGraphicsView* m_View{nullptr};
 
     signals:
-        void Created();
-        void PreViewLayoutSettingsPanel();
+        void sigOpen(const std::string & path);
+        void sigCreated();
+        void sigPreViewImage(const std::string& filePath);
+        void sigPreViewLayoutSettingsPanel();
 
     private:
         void InitConnect();
 
     };
-
 } // CM
 
 #endif //CAMERAMARK_DISPLAYWIDGET_H

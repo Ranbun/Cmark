@@ -13,20 +13,20 @@ SceneLayoutEditor::~SceneLayoutEditor()
     delete ui;
 }
 
-void SceneLayoutEditor::show(CM::SceneLayoutSettings& setting)
+void SceneLayoutEditor::show(const std::shared_ptr<CM::SceneLayoutSettings>& setting)
 {
-    /// TODO: update show info
+    m_SceneLayout = setting;
 
-    sceneLayout = &setting;
-    QWidget::show();
     update(setting);
+
+    QWidget::show();
 }
 
-void SceneLayoutEditor::update(CM::SceneLayoutSettings& setting)
+void SceneLayoutEditor::update(const std::shared_ptr<CM::SceneLayoutSettings>& setting)
 {
-    sceneLayout = &setting;
+    m_SceneLayout = setting;
 
-    const auto& [l, r, t, b] = sceneLayout->getMargin();
+    const auto& [l, r, t, b] = m_SceneLayout->getMargin();
     {
         /// left
         ui->m_LeftMarginSlider->setValue(l);
@@ -51,9 +51,9 @@ void SceneLayoutEditor::update(CM::SceneLayoutSettings& setting)
 void SceneLayoutEditor::on_m_LeftMarginSlider_valueChanged(const int value)
 {
     ui->m_leftMarginValueLabel->setText(QString::number(value));
-    auto& [l,r,t,b] = sceneLayout->getMargin();
+    auto& [l,r,t,b] = m_SceneLayout->getMargin();
     l = ui->m_LeftMarginSlider->value();
-    sceneLayout->update();
+    m_SceneLayout->update();
     emit updatedScene();
 }
 
@@ -61,9 +61,9 @@ void SceneLayoutEditor::on_m_LeftMarginSlider_valueChanged(const int value)
 void SceneLayoutEditor::on_m_rightMarginSlider_valueChanged(const int value)
 {
     ui->m_rightMargibValueLabel->setText(QString::number(value));
-    auto& [l, r, t, b] = sceneLayout->getMargin();
+    auto& [l, r, t, b] = m_SceneLayout->getMargin();
     r = ui->m_rightMarginSlider->value();
-    sceneLayout->update();
+    m_SceneLayout->update();
     emit updatedScene();
 }
 
@@ -71,9 +71,9 @@ void SceneLayoutEditor::on_m_rightMarginSlider_valueChanged(const int value)
 void SceneLayoutEditor::on_m_topMarginSlider_valueChanged(const int value)
 {
     ui->m_topMarginValueLabel->setText(QString::number(value));
-    auto& [l, r, t, b] = sceneLayout->getMargin();
+    auto& [l, r, t, b] = m_SceneLayout->getMargin();
     t = ui->m_topMarginSlider->value();
-    sceneLayout->update();
+    m_SceneLayout->update();
     emit updatedScene();
 }
 
@@ -81,16 +81,16 @@ void SceneLayoutEditor::on_m_topMarginSlider_valueChanged(const int value)
 void SceneLayoutEditor::on_m_bottomMarginSlider_valueChanged(const int value)
 {
     ui->m_bottomMarginValueLabel->setText(QString::number(value));
-    auto& [l, r, t, b] = sceneLayout->getMargin();
+    auto& [l, r, t, b] = m_SceneLayout->getMargin();
     b = ui->m_bottomMarginSlider->value();
-    sceneLayout->update();
+    m_SceneLayout->update();
     emit updatedScene();
 }
 
 void SceneLayoutEditor::on_m_resetDefaultLayoutButton_clicked()
 {
-    sceneLayout->resetLayout();
-    update(*sceneLayout);
+    m_SceneLayout->resetLayout();
+    update(m_SceneLayout);
     emit updatedScene();
 }
 

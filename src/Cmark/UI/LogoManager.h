@@ -5,7 +5,7 @@ class QPixmap;
 
 namespace CM
 {
-    enum CameraIndex : uint8_t
+    enum class CameraIndex : uint8_t
     {
         None = 0,   ///< empty
         Nikon,

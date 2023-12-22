@@ -12,12 +12,12 @@ namespace CM
 
 namespace CM
 {
-    class MainWindow :public  QMainWindow
+    class MainWindow final :public  QMainWindow
     {
         Q_OBJECT
     public:
         MainWindow();
-        void PreViewImage(const std::filesystem::path & path) const;
+        void preViewImage(const std::filesystem::path & path) const;
 
     private:
         void InitWindowLayout();
@@ -26,18 +26,19 @@ namespace CM
         void InitTool();
         void InitConnect();
 
-    private:
+    protected:
+
         /// widget
-        std::shared_ptr<DisplayWidget> m_displayWidget{nullptr};
-        std::shared_ptr<FileTreeDockWidget> m_leftDockWidget{nullptr};
-        std::shared_ptr<ImagePropertyDockWidget> m_rightDockWidget{nullptr};
+        std::shared_ptr<DisplayWidget> m_DisplayWidget{nullptr};
+        std::shared_ptr<FileTreeDockWidget> m_LeftDockWidget{nullptr};
+        std::shared_ptr<ImagePropertyDockWidget> m_RightDockWidget{nullptr};
 
         /// File Actions
-        QAction* newAction{nullptr};
-        QAction* openDirectoryAction{nullptr};   ///< 打开文件夹
+        QAction* m_NewAction{nullptr};
+        QAction* m_OpenDirectoryAction{nullptr};   ///< 打开文件夹
 
         /// Edit
-        QAction * editPreviewSceneLayoutAction{nullptr};
+        QAction * m_EditPreviewSceneLayoutAction{nullptr};
 
     };
 

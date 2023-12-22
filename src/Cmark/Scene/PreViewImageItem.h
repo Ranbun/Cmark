@@ -8,17 +8,24 @@
 
 namespace CM
 {
-    class PreViewImageItem : public QGraphicsPixmapItem
+    class PreViewImageItem final : public QGraphicsPixmapItem
     {
     public:
-        explicit PreViewImageItem(QGraphicsItem *parent , const SceneLayoutSettings & layout);
-        ~PreViewImageItem()  override;
+        explicit PreViewImageItem(QGraphicsItem* parent, const std::shared_ptr<SceneLayoutSettings>& layout);
+
+        PreViewImageItem(const PreViewImageItem& other) = delete;
+        PreViewImageItem(const PreViewImageItem&& other) = delete;
+
+        PreViewImageItem & operator=(const PreViewImageItem& other) = delete;
+        PreViewImageItem& operator=(const PreViewImageItem&& other) = delete;
+
+        ~PreViewImageItem() override;
 
         /**
          * @brief 重新设置显示的图片
          * @param previewPixmap 显示的图片
          */
-        void resetPixmap(const QPixmap & previewPixmap);
+        void resetPixmap(const QPixmap& previewPixmap);
 
         /**
          * @brief 更新当前的pixmap item(更新pixmap的大小和在场景中的位置)
@@ -35,19 +42,26 @@ namespace CM
          */
         void updatePixmapPosition();
 
-        const float & ImageRatio(){return m_ImageRatio;}
+        /**
+         * @brief 图片的宽高比
+         * @return float
+         */
+        [[nodiscard]] const float& imageRatio() const;
 
-        [[nodiscard]] const QPixmap & target() const {return m_pixmap;}
+        /**
+         * @brief 当前显示的目标 记录预览图片的元数据大小
+         * @return QPixmap
+         */
+        [[nodiscard]] const QPixmap& target() const;
 
     private:
-        static QPixmap scaledPixmap(const QPixmap &image, int w, int h);
+        static QPixmap scaledPixmap(const QPixmap& image, int w, int h);
 
     private:
-        QPixmap m_pixmap;
-        const SceneLayoutSettings & m_sceneLayout;
-        float m_ImageRatio{3.0/4.0f};
+        QPixmap m_Pixmap;
+        std::weak_ptr<SceneLayoutSettings> m_SceneLayout;
+        float m_ImageRatio{3.0 / 4.0f};
     };
-
 } // CM
 
 #endif //CAMERAMARK_PREVIEWIMAGEITEM_H_
