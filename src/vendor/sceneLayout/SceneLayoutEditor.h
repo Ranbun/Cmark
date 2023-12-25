@@ -32,6 +32,11 @@ public:
 
     ~SceneLayoutEditor() override;
 
+protected:
+
+    void InitConnect();
+
+
 private slots:
     void on_m_rightMarginSlider_valueChanged(int value);
     void on_m_LeftMarginSlider_valueChanged(int value);
@@ -42,6 +47,7 @@ private slots:
 
 signals:  
     void updatedScene();
+    void sigShowLayoutSettingPanel(const std::shared_ptr<CM::SceneLayoutSettings>& setting);
 
 private:
     Ui::SceneLayout* ui;

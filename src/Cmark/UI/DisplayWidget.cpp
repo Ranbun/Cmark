@@ -115,9 +115,11 @@ namespace CM
         logoScene->resetLogoPixmap(previewImageLogo, CameraIndex::Nikon);
 
         /// 构建一个resizeEvent make it to applyLayout all item
+        /// TODO: we need update scene in here
         const auto rEvent = new QResizeEvent(this->size(), this->size());
         this->resizeEvent(rEvent);
         delete rEvent;
+
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent* event)
@@ -214,8 +216,8 @@ namespace CM
 
         connect(this, &DisplayWidget::sigPreViewLayoutSettingsPanel, [this]()
         {
-            m_PreviewSceneLayoutSettingPanel->show(
-                dynamic_cast<PreViewImageScene*>(m_PreviewImageScene)->layoutSettings());
+            const auto layoutSettings = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene)->layoutSettings();
+            emit m_PreviewSceneLayoutSettingPanel->sigShowLayoutSettingPanel(layoutSettings);
         });
 
         connect(this, &DisplayWidget::sigOpen, this, [this](const std::string& path)
@@ -224,9 +226,9 @@ namespace CM
         }, Qt::QueuedConnection);
 
 
-        connect(this, &DisplayWidget::sigPreViewImage, this, [this](const std::string& filePath)
+        connect(this, &DisplayWidget::sigPreViewImage, [this](const std::string& filePath)
         {
             preViewImage(filePath);
-        }, Qt::QueuedConnection);
+        });
     }
 } // CM

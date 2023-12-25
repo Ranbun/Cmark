@@ -31,8 +31,7 @@ namespace CM
 
         connect(m_TreeView, &QTreeView::clicked, this, [this](const QModelIndex& index)
         {
-            auto isDir = m_FileSystemModel->isDir(index);
-            if(isDir)
+            if(auto isDir = m_FileSystemModel->isDir(index))
             {
                 return ;
             }
@@ -45,13 +44,26 @@ namespace CM
 #endif
         });
 
-        auto lTitleBar = this->titleBarWidget();
-        auto lEmptyWidget = new QWidget();
+        const auto lTitleBar = this->titleBarWidget();
+        const auto lEmptyWidget = new QWidget();
         setTitleBarWidget(lEmptyWidget);
         delete lTitleBar;
 
         layout()->setContentsMargins(0,0,0,0);
         layout()->setSpacing(0);
+
+
+        m_FileSystemModel = new QFileSystemModel;
+        m_TreeView->setModel(m_FileSystemModel);
+
+        m_FileSystemModel->setRootPath(QDir::currentPath());
+
+        QStringList filter;
+        filter << "*.jpg";
+        m_FileSystemModel->setNameFilters(filter);
+        m_FileSystemModel->setNameFilterDisables(false);
+
+        m_TreeView->setRootIndex(m_FileSystemModel->index("./sources/pictures/"));
 
     }
 

@@ -6,11 +6,24 @@ SceneLayoutEditor::SceneLayoutEditor(QWidget* parent)
       , ui(new Ui::SceneLayout)
 {
     ui->setupUi(this);
+
+    InitConnect();
+
 }
 
 SceneLayoutEditor::~SceneLayoutEditor()
 {
     delete ui;
+}
+
+void SceneLayoutEditor::InitConnect()
+{
+
+    connect(this, &SceneLayoutEditor::sigShowLayoutSettingPanel, [this](const std::shared_ptr<CM::SceneLayoutSettings>& settings)
+    {
+        show(settings);
+    });
+
 }
 
 void SceneLayoutEditor::show(const std::shared_ptr<CM::SceneLayoutSettings>& setting)

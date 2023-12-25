@@ -90,7 +90,6 @@ namespace CM
             StatusBar::showMessage("preview image: " + path);
             StatusBar::repaint();
             emit m_DisplayWidget->sigPreViewImage(path.toStdString());
-            preViewImage(imagePath);
         });
 
         connect(m_EditPreviewSceneLayoutAction, &QAction::triggered, m_DisplayWidget.get(),
