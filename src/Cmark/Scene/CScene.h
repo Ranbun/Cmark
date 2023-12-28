@@ -36,7 +36,8 @@ namespace CM
 
     enum class GraphicsItemDataIndex : uint8_t
     {
-        CameraIndex
+        CameraIndex,
+        PixmapIndex
     };
 
     class CScene : public QGraphicsScene
@@ -70,8 +71,9 @@ namespace CM
         /**
          * @brief 更新预览显示的图片
          * @param pixmap 图片对象
+         * @param imageIndexCode 设置的图片的索引 通过索引可以获取图片
          */
-        void resetPreviewImageTarget(const QPixmap& pixmap) const;
+        void resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode) const;
 
         /**
          * @brief 根据布局更新场景中所有item

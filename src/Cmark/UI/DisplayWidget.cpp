@@ -8,6 +8,8 @@
 #include "Scene/PreViewImageItem.h"
 #include "Scene/LifeSizeImageScene.h"
 
+#include "Core/PictureManager.h"
+
 #include "LogoManager.h"
 #include <SceneLayoutEditor.h>
 
@@ -95,7 +97,13 @@ namespace CM
         }
 
         /// convert to QPixmap
-        const QPixmap preViewImage = QPixmap::fromImage(readerFile);
+        const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readerFile)));
+
+
+        constexpr std::hash<std::shared_ptr<QPixmap>> hasher;
+        const auto imageIndexCode = hasher(preViewImage);
+
+        PictureManager::insert(std::pair<size_t,std::shared_ptr<QPixmap>>{ imageIndexCode,preViewImage });
 
         /// get enable exif item
         const auto infos = EXIFResolver::resolverImageExif(exifInfos);
@@ -103,14 +111,14 @@ namespace CM
         /// 设置预览场景显示的资源
         {
             const auto scene = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene);
-            scene->resetPreviewImageTarget(preViewImage);
+            scene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
             scene->resetTexItemsPlainText(infos);
             scene->resetLogoPixmap(previewImageLogo, CameraIndex::Nikon);
         }
 
         /// 设置单张图片存储的显示资源
         const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
-        logoScene->resetPreviewImageTarget(preViewImage);
+        logoScene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
         logoScene->resetTexItemsPlainText(infos);
         logoScene->resetLogoPixmap(previewImageLogo, CameraIndex::Nikon);
 

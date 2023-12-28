@@ -46,6 +46,14 @@ namespace CM
         return std::move(infoMaps);
     }
 
+    template <>
+    size_t EXIFResolver::hash<std::string>(const std::string& path)
+    {
+        constexpr std::hash<std::string> Hasher;
+        const size_t hashValue = Hasher(path);
+        return hashValue;
+    }
+
     std::tuple<bool, std::string> EXIFResolver::check(int resolverCode)
     {
         bool status = false;
@@ -89,10 +97,10 @@ namespace CM
     {
         assert(this);
 
-        auto hashValue = this->Hash(path.string());
+        auto hashValue = this->hash(path.string());
         /// load file
         auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){
-            auto res = FileLoad::Load(path);
+            const auto res = FileLoad::Load(path);
 
             easyexif::EXIFInfo EXIFResolver;
             auto exifCheckCode = EXIFResolver.parseFrom(res.data(),res.size());
@@ -146,7 +154,7 @@ namespace CM
         return hashValue;
     }
 
-    std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(size_t index)
+    std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(size_t index) const
     {
         assert(this);  /// TODO: maybe remove it
 
@@ -160,7 +168,7 @@ namespace CM
         return loadedInfos.at(index);
     }
 
-    int EXIFResolver::checkCode(size_t index)
+    int EXIFResolver::checkCode(const size_t index) const
     {
         assert(this);   /// TODO: maybe remove it
 
@@ -173,7 +181,7 @@ namespace CM
 
         if(loadImageCheckCode.count(index))
         {
-            auto Code = loadImageCheckCode.at(index);
+            const auto Code = loadImageCheckCode.at(index);
             loadImageCheckCode.erase(index);
             return Code;
         }

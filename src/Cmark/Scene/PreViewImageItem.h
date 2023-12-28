@@ -54,13 +54,17 @@ namespace CM
          */
         [[nodiscard]] const QPixmap& target() const;
 
-    private:
+    protected:
         static QPixmap scaledPixmap(const QPixmap& image, int w, int h);
 
     private:
-        QPixmap m_Pixmap;
-        std::weak_ptr<SceneLayoutSettings> m_SceneLayout;
-        float m_ImageRatio{3.0 / 4.0f};
+
+
+        QPixmap m_Pixmap;   ///< 显示的图片的原图
+
+        std::weak_ptr<SceneLayoutSettings> m_SceneLayout;///< 当前的场景布局
+
+        float m_ImageRatio{3.0 / 4.0f};  ///< 显示的图片的宽高比
     };
 } // CM
 

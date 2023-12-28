@@ -194,10 +194,11 @@ namespace CM
         addItem(m_ShowImageItem);
     }
 
-    void CScene::resetPreviewImageTarget(const QPixmap& pixmap) const
+    void CScene::resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode) const
     {
         m_ShowImageItem->resetPixmap(pixmap);
         m_SceneLayout->setImageSize({pixmap.width(), pixmap.height()});
+        m_ShowImageItem->setData(static_cast<int>(GraphicsItemDataIndex::PixmapIndex), QVariant(imageIndexCode));
     }
 
     void CScene::InitMargin()
