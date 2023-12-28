@@ -17,8 +17,8 @@ namespace CM
         FixMap() = default;
         ~FixMap() { m_maps.clear(); }
 
-        FixMap(const FixMap&) = default;
-        FixMap(const FixMap&&) = default;
+        FixMap(const FixMap&) = delete;
+        FixMap(const FixMap&&) = delete;
 
         FixMap & operator=(const FixMap &) = delete;
         FixMap & operator=(const FixMap &&) = delete;
@@ -39,8 +39,8 @@ namespace CM
             m_Maps.clear();
         }
 
-        FixMap(const FixMap&) = default;
-        FixMap(const FixMap&&) = default;
+        FixMap(const FixMap&) = delete;
+        FixMap(const FixMap&&) = delete;
 
         FixMap& operator=(const FixMap&) = delete;
         FixMap& operator=(const FixMap&&) = delete;
@@ -114,21 +114,13 @@ namespace CM
             m_Maps.insert(d);
         }
 
-        static void insert(const size_t key, const std::shared_ptr<QPixmap>& value)
-        {
-            m_Maps.insert(key,value);
-        }
+        static void insert(const size_t key, const std::shared_ptr<QPixmap>& value);
 
-        static std::shared_ptr<QPixmap> getImage(const size_t key)
-        {
-            return m_Maps.getPixmap(key);
-        }
+        static std::shared_ptr<QPixmap> getImage(const size_t key);
 
-        static void remove(const size_t index)
-        {
-            m_Maps.remove(index);
-            
-        }
+        static void remove(const size_t index);
+
+        static size_t loadImage(const std::string& path);
 
     private:
         static FixMap<size_t,std::shared_ptr<QPixmap>> m_Maps;
