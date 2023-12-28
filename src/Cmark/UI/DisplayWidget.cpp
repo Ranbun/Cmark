@@ -14,9 +14,7 @@
 #include <SceneLayoutEditor.h>
 
 #include <QImage>
-#include <QPixmap>
 #include <QFileDialog>
-#include <QImageReader>
 #include <QMessageBox>
 #include <QGraphicsView>
 #include <QVBoxLayout>
@@ -63,47 +61,31 @@ namespace CM
 
     void DisplayWidget::preViewImage(const std::filesystem::path& path)
     {
+        using PictureManagerInterFace = CM::PictureManager;
         EXIFResolver resolver;
-        const auto loadFileIndex = resolver.resolver(path);
 
-        QImage readerFile;
-        readerFile.fill(Qt::transparent);
-        auto readFileToImage = [&readerFile](const std::filesystem::path& path)
-        {
-            QImageReader reader(path.string().c_str());
-            reader.setAutoTransform(true);
-            readerFile = reader.read();
-        };
-        std::thread readImage(readFileToImage, path);
+        /// load image
+        const auto imageIndexCode = PictureManagerInterFace::loadImage(path.string());
 
-        const auto& [res,message] = EXIFResolver::check(resolver.checkCode(loadFileIndex));
+        const auto imageExifInfoIndex = resolver.resolver(path);
+        /// check resolver result
+        const auto& [res,message] = EXIFResolver::check(resolver.checkCode(imageExifInfoIndex));
         if (!res)
         {
             QMessageBox::about(this, "Warning", message.c_str());
             return;
         }
 
-        const auto exifInfos = resolver.getExifInfo(loadFileIndex);
+        /// get resolved image infos
+        const auto exifInfos = resolver.getExifInfo(imageExifInfoIndex);
 
         /// 加载logo
         const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
         LogoManager::loadCameraLogo(cameraIndex);
         const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
-        /// wait load image thread
-        if (readImage.joinable())
-        {
-            readImage.join();
-        }
-
-        /// convert to QPixmap
-        const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readerFile)));
-
-
-        constexpr std::hash<std::shared_ptr<QPixmap>> hasher;
-        const auto imageIndexCode = hasher(preViewImage);
-
-        PictureManager::insert(std::pair<size_t,std::shared_ptr<QPixmap>>{ imageIndexCode,preViewImage });
+        /// get loaded image
+        const auto preViewImage = PictureManager::getImage(imageIndexCode);
 
         /// get enable exif item
         const auto infos = EXIFResolver::resolverImageExif(exifInfos);

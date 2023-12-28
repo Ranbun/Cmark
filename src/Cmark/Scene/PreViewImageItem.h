@@ -23,47 +23,51 @@ namespace CM
 
         /**
          * @brief 重新设置显示的图片
-         * @param previewPixmap 显示的图片
+         * @param imageIndex 图片的索引
          */
-        void resetPixmap(const QPixmap& previewPixmap);
+        void resetPixmap(size_t imageIndex);
 
         /**
          * @brief 更新当前的pixmap item(更新pixmap的大小和在场景中的位置)
          */
-        void applyLayout();
+        void applyLayout(const std::shared_ptr<SceneLayoutSettings>& layout);
 
         /**
          * @brief 更新显示pixmap的大小
          */
-        void updatePixmapSize();
-
-        /**
-         * @brief 更新pixmap的位置
-         */
-        void updatePixmapPosition();
+        void resizeImage(int w, int h);
 
         /**
          * @brief 图片的宽高比
          * @return float
          */
-        [[nodiscard]] const float& imageRatio() const;
+        [[nodiscard]] [[maybe_unused]]  const float& imageRatio() const;
 
-        /**
-         * @brief 当前显示的目标 记录预览图片的元数据大小
-         * @return QPixmap
-         */
-        [[nodiscard]] const QPixmap& target() const;
+
+        bool showSplitLine();
+
+    signals:
+        void sigShowSplitLine(bool val);
+
 
     protected:
         static QPixmap scaledPixmap(const QPixmap& image, int w, int h);
+        static QPixmap scaledPixmap(const std::shared_ptr<QPixmap>& image, int w, int h);
+
+        /**
+         * @brief 获取当前显示的图片的QPixmap对象
+         * @return QPixmap
+         */
+        [[nodiscard]] [[maybe_unused]] std::shared_ptr<QPixmap> target() const;
+
+        /**
+         * @brief 更新记录的图片的宽高比
+         * @param tar 显示的图片
+         */
+        [[maybe_unused]] void updateImageRatio(const std::shared_ptr<QPixmap>& tar);
 
     private:
-
-
-        QPixmap m_Pixmap;   ///< 显示的图片的原图
-
         std::weak_ptr<SceneLayoutSettings> m_SceneLayout;///< 当前的场景布局
-
         float m_ImageRatio{3.0 / 4.0f};  ///< 显示的图片的宽高比
     };
 } // CM

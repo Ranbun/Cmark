@@ -9,11 +9,15 @@
 
 namespace CM
 {
-    static std::unordered_map<size_t,std::shared_ptr<EXIFInfo>> loadedInfos;
-    static std::unordered_map<size_t,std::promise<void>> threadFinishSignals;
-    static std::unordered_map<size_t,int> loadImageCheckCode;
+    namespace 
+    {
+        std::unordered_map<size_t, std::shared_ptr<EXIFInfo>> g_LoadedInfos;
+        std::unordered_map<size_t, std::promise<void>> g_ThreadFinishSignals;
+        std::unordered_map<size_t, int> g_LoadImageCheckCode;
 
-    static std::mutex infoMutex;
+        std::mutex g_InfoMutex;
+
+    }
 
     ExifInfoMap EXIFResolver::resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr)
     {
@@ -27,7 +31,7 @@ namespace CM
         infoMaps.insert({ExifKey::Image_date,result.DateTime});
 
         /// Exposure Time
-        auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
+        const auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
         infoMaps.insert({ExifKey::Exposure_time,std::string("1/") + std::to_string(inExposureTime)});
 
         std::string f_stop = std::string("f/") + std::to_string(static_cast<int>(result.FNumber)) + std::string(".") +
@@ -140,15 +144,15 @@ namespace CM
                 /// TODO need add others
             }
 
-            std::lock_guard<std::mutex> local(infoMutex);
-            loadedInfos.insert({fileHashValue,outputExIFInfos});
-            loadImageCheckCode.insert({fileHashValue,exifCheckCode});
+            std::lock_guard<std::mutex> local(g_InfoMutex);
+            g_LoadedInfos.insert({fileHashValue,outputExIFInfos});
+            g_LoadImageCheckCode.insert({fileHashValue,exifCheckCode});
             exitSignal.set_value();
         };
 
         std::promise<void> exitSignal;
-        threadFinishSignals.insert({hashValue,std::move(exitSignal)});
-        std::thread loading(loadImageFile,std::ref(threadFinishSignals.at(hashValue)),std::ref(path),hashValue);
+        g_ThreadFinishSignals.insert({hashValue,std::move(exitSignal)});
+        std::thread loading(loadImageFile,std::ref(g_ThreadFinishSignals.at(hashValue)),std::ref(path),hashValue);
         loading.detach();
 
         return hashValue;
@@ -158,31 +162,31 @@ namespace CM
     {
         assert(this);  /// TODO: maybe remove it
 
-        if(threadFinishSignals.count(index))
+        if(g_ThreadFinishSignals.count(index))
         {
-            auto & exitSignal = threadFinishSignals.at(index);
+            auto & exitSignal = g_ThreadFinishSignals.at(index);
             exitSignal.get_future().wait();   ///< 等待线程结束
-            threadFinishSignals.erase(index);
+            g_ThreadFinishSignals.erase(index);
         }
         /// 获取图片结果
-        return loadedInfos.at(index);
+        return g_LoadedInfos.at(index);
     }
 
     int EXIFResolver::checkCode(const size_t index) const
     {
         assert(this);   /// TODO: maybe remove it
 
-        if(threadFinishSignals.count(index))
+        if(g_ThreadFinishSignals.count(index))
         {
-            auto & exitSignal = threadFinishSignals.at(index);
+            auto & exitSignal = g_ThreadFinishSignals.at(index);
             exitSignal.get_future().wait();   ///< 等待线程结束
-            threadFinishSignals.erase(index);
+            g_ThreadFinishSignals.erase(index);
         }
 
-        if(loadImageCheckCode.count(index))
+        if(g_LoadImageCheckCode.count(index))
         {
-            const auto Code = loadImageCheckCode.at(index);
-            loadImageCheckCode.erase(index);
+            const auto Code = g_LoadImageCheckCode.at(index);
+            g_LoadImageCheckCode.erase(index);
             return Code;
         }
 

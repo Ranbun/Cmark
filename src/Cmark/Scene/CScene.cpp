@@ -1,6 +1,8 @@
 #include "CMark.h"
 
 #include "CScene.h"
+
+#include "SceneDef.h"
 #include "PreViewImageItem.h"
 
 #include <QGraphicsView>
@@ -14,8 +16,6 @@ namespace CM
           , m_SceneLayout(std::make_shared<SceneLayoutSettings>())
     {
         m_ShowImageItem = new PreViewImageItem(nullptr, m_SceneLayout);
-
-
         Init();
     }
 
@@ -28,6 +28,11 @@ namespace CM
         InitTexItems();
         InitLogoItem();
         InitSplitRect();
+
+         QObject::connect(this,&CScene::sigNoScenes, [this](bool val)
+         {
+             m_SplitRectItem->setVisible(val);
+         });
     }
 
     void CScene::InitTexItems()
@@ -196,8 +201,8 @@ namespace CM
 
     void CScene::resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode) const
     {
-        m_ShowImageItem->resetPixmap(pixmap);
-        m_SceneLayout->setImageSize({pixmap.width(), pixmap.height()});
+        m_SceneLayout->setImageSize({ pixmap.width(), pixmap.height() });
+        m_ShowImageItem->resetPixmap(imageIndexCode);
         m_ShowImageItem->setData(static_cast<int>(GraphicsItemDataIndex::PixmapIndex), QVariant(imageIndexCode));
     }
 
@@ -299,12 +304,12 @@ namespace CM
         {
             *m_SceneLayout = *layout;
         }
-
         updateShowImage();
         updateTexItemsPosition();
         updateLogoPosition();
         updateSplitRect();
         updateMarginItems();
+        emit sigNoScenes(m_ShowImageItem->showSplitLine());
     }
 
     void CScene::updateLayout()
@@ -319,6 +324,6 @@ namespace CM
 
     void CScene::updateShowImage()
     {
-        m_ShowImageItem->applyLayout();
+        m_ShowImageItem->applyLayout(m_SceneLayout);
     }
 } // CM

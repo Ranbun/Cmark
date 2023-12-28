@@ -34,25 +34,17 @@ namespace CM
         /// TODO: make it editor in widget
     };
 
-    enum class GraphicsItemDataIndex : uint8_t
-    {
-        CameraIndex,
-        PixmapIndex
-    };
-
     class CScene : public QGraphicsScene
     {
+        Q_OBJECT
     public:
         explicit CScene(QObject* parent = nullptr);
 
         CScene(const CScene& scene) = delete;
         CScene(const CScene&& scene) = delete;
-
         CScene & operator=(const CScene& scene) = delete;
         CScene& operator=(const CScene&& scene) = delete;
-
         CScene(CScene&& scene) = delete;
-
         ~CScene() override;
 
         /**
@@ -166,6 +158,10 @@ namespace CM
         ExifInfoMap m_TargetImageExifInfoLists; ///< 解析的当前图片的所有Info信息
 
         std::shared_ptr<SceneLayoutSettings> m_SceneLayout{nullptr}; ///< 记录场景的布局
+
+        signals:
+        void sigNoScenes(bool val);
+
     };
 } // CM
 
