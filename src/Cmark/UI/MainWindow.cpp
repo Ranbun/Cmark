@@ -6,6 +6,8 @@
 #include "ImagePropertyDockWidget.h"
 #include "StatusBar.h"
 #include "DisplayWidget.h"
+#include "sources/ResourcesTool.h"
+
 
 #include <QMenuBar>
 #include <QToolBar>
@@ -74,6 +76,7 @@ namespace CM
         connect(m_NewAction, &QAction::triggered, [this]()
         {
             m_LeftDockWidget->New();
+            Tools::ResourcesTools::destory();
         });
 
         connect(m_OpenDirectoryAction, &QAction::triggered, [this]()

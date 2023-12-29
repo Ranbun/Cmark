@@ -58,6 +58,13 @@ namespace CM
         return hashValue;
     }
 
+    void EXIFResolver::destory()
+    {
+        g_LoadedInfos.clear();
+        g_ThreadFinishSignals.clear();
+        g_LoadImageCheckCode.clear();
+    }
+
     std::tuple<bool, std::string> EXIFResolver::check(int resolverCode)
     {
         bool status = false;
@@ -104,10 +111,12 @@ namespace CM
         auto hashValue = this->hash(path.string());
         /// load file
         auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){
-            const auto res = FileLoad::Load(path);
+            auto loadDataPtr = FileLoad::Load(path);
 
             easyexif::EXIFInfo EXIFResolver;
-            auto exifCheckCode = EXIFResolver.parseFrom(res.data(),res.size());
+            auto exifCheckCode = EXIFResolver.parseFrom(loadDataPtr->data(),loadDataPtr->size());
+            loadDataPtr->clear();
+            loadDataPtr.reset();
 
             auto outputExIFInfos = std::make_shared<EXIFInfo>();
             {
@@ -148,6 +157,7 @@ namespace CM
             g_LoadedInfos.insert({fileHashValue,outputExIFInfos});
             g_LoadImageCheckCode.insert({fileHashValue,exifCheckCode});
             exitSignal.set_value();
+            g_ThreadFinishSignals.erase(fileHashValue);
         };
 
         std::promise<void> exitSignal;

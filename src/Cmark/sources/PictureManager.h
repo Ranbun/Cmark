@@ -9,7 +9,6 @@
 
 namespace CM
 {
-
     template<typename T1, typename T2>
     class FixMap
     {
@@ -94,6 +93,15 @@ namespace CM
             }
         }
 
+        void clear()
+        {
+            while(m_IndexCodeQueue.empty())
+            {
+                m_IndexCodeQueue.pop();
+            }
+            m_Maps.clear();
+        }
+
         std::unordered_map<size_t, std::shared_ptr<QPixmap>>::iterator begin() { return m_Maps.begin(); }
         std::unordered_map<size_t, std::shared_ptr<QPixmap>>::iterator end() { return m_Maps.end(); }
 
@@ -103,9 +111,14 @@ namespace CM
         std::unordered_map<size_t, std::shared_ptr<QPixmap>> m_Maps;
     };
 
+    namespace Tools
+    {
+        class ResourcesTools;
+    }
 
     class PictureManager
     {
+        friend class Tools::ResourcesTools;
     public:
         PictureManager() = default;
 
@@ -122,6 +135,8 @@ namespace CM
 
         static size_t loadImage(const std::string& path);
 
+    private:
+        static void destory();
     private:
         static FixMap<size_t,std::shared_ptr<QPixmap>> m_Maps;
 

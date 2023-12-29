@@ -3,7 +3,7 @@
 
 namespace  CM
 {
-    std::vector<unsigned char> FileLoad::Load(const std::filesystem::path &path)
+    std::shared_ptr<std::vector<unsigned char>> FileLoad::Load(const std::filesystem::path& path)
     {
         std::locale::global(std::locale(""));
 
@@ -40,6 +40,6 @@ namespace  CM
 
         picture.close();
 
-        return std::move(result);
+        return std::make_shared<std::vector<unsigned char>>(std::move(result));
     }
 };

@@ -7,7 +7,7 @@
 #include "Base/Type.h"
 #include "SceneLayoutSettings.h"
 
-#include "UI/LogoManager.h"
+#include "sources/LogoManager.h"
 
 namespace CM
 {

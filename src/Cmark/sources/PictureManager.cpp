@@ -59,19 +59,29 @@ namespace CM
             return imageIndexCode;
         }
 
-        QImage readerFile;
-        readerFile.fill(Qt::transparent);
-        auto readFileToImage = [&readerFile](const std::filesystem::path& path, std::promise<void> & loadedSignal,size_t imageIndexCode)
+        auto readFileToImage = [](const std::filesystem::path& path, std::promise<void> & loadedSignal,size_t imageIndexCode)
         {
-            QImageReader reader(path.string().c_str());
-            reader.setAutoTransform(true);
-            readerFile = reader.read();
+            auto readerFile = new QImage();
+            readerFile->fill(Qt::transparent);
+
+            auto reader = new QImageReader(path.string().c_str());
+            reader->setAutoTransform(true);
+            *readerFile = reader->read();
+            delete reader;
+            reader = nullptr;
 
             /// convert to QPixmap
-            const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readerFile)));
+            const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(*readerFile)));
             insert({ imageIndexCode,preViewImage });
-            loadedSignal.set_value();
 
+            {
+                std::lock_guard<std::mutex> local(g_Mutex);
+                loadedSignal.set_value();
+                g_LoadFinishSignals.erase(imageIndexCode);
+            }
+
+            delete readerFile;
+            readerFile = nullptr;
         };
 
         std::promise<void> exitSignal;
@@ -80,5 +90,10 @@ namespace CM
         readImage.detach();
 
         return imageIndexCode;
+    }
+
+    void PictureManager::destory()
+    {
+        m_Maps.clear();
     }
 }

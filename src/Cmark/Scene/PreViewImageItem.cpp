@@ -1,7 +1,7 @@
 #include "PreViewImageItem.h"
 
 #include "SceneDef.h"
-#include "Core/PictureManager.h"
+#include "sources/PictureManager.h"
 
 namespace CM
 {

@@ -95,8 +95,14 @@ namespace CM
         } LensInfo;
     };
 
+    namespace Tools
+    {
+        class ResourcesTools;
+    }
+
     class EXIFResolver
     {
+        friend  class Tools::ResourcesTools;
     public:
         EXIFResolver() =default;
 
@@ -136,6 +142,9 @@ namespace CM
          * @return
          */
         static ExifInfoMap resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
+
+    private:
+        static void destory();
 
     public:
         /**

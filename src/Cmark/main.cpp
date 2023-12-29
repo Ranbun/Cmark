@@ -4,7 +4,7 @@
 
 #include "Loader/EXIFResolver.h"
 #include "UI/MainWindow.h"
-#include "UI/LogoManager.h"
+#include "sources/LogoManager.h"
 
 #include <SceneLayoutEditor.h>
 

@@ -8,9 +8,9 @@
 #include "Scene/PreViewImageItem.h"
 #include "Scene/LifeSizeImageScene.h"
 
-#include "Core/PictureManager.h"
+#include "sources/PictureManager.h"
 
-#include "LogoManager.h"
+#include "sources/LogoManager.h"
 #include <SceneLayoutEditor.h>
 
 #include <QImage>

@@ -19,8 +19,14 @@ namespace CM
          /// ...... TODO: need add others
     };
 
+    namespace Tools
+    {
+        class ResourcesTools;
+    }
+
     class LogoManager
     {
+        friend class Tools::ResourcesTools;
     public:
         LogoManager() = default;
 
@@ -45,6 +51,14 @@ namespace CM
          * @return logo with QPixmap
          */
         static std::shared_ptr<QPixmap> getCameraMakerLogo(const CameraIndex & cameraIndex);
+
+    protected:
+        static void destory()
+        {
+            m_logos.clear();
+            cameraMakerMap.clear();
+        }
+
 
     private:
         static std::unordered_map<CameraIndex,std::shared_ptr<QPixmap>> m_logos;
