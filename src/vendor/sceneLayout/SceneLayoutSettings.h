@@ -8,10 +8,10 @@ namespace CM
      */
     struct Margin  ///< use pixel
     {
-        int left {30};
-        int right {30};
-        int top {30};
-        int bottom {10};
+        int m_Left {0};
+        int m_Right {0};
+        int m_Top {0};
+        int m_Bottom {10};
     };
 
     class SceneLayoutSettings
@@ -27,8 +27,7 @@ namespace CM
             int x;
             int y;
         };
-
-        bool UpdateFlag{ false };  ///< need update
+        using LPos = LPoint;
 
     public:
         SceneLayoutSettings();
@@ -39,28 +38,30 @@ namespace CM
          */
         void update();
 
-        [[nodiscard]] const Margin & getMargin() const;
-        [[nodiscard]] Margin & getMargin();
-
+        const Margin & getMargin() const;
+        Margin & getMargin();
         void setMargin(int left,int right,int top,int bottom);
 
+        /// Image
+        LPos imagePos() const;
+
         /// logo
-        [[maybe_unused]] void setLogoWithImageSpace(int space);
+        [[deprecated]] void setLogoWithImageSpace(int space);
+        [[deprecated]] int logoWithImageSpace() const;
+        [[deprecated]] int logoWithSplitLineSpace() const;
 
-        [[nodiscard]] int logoWithImageSpace() const;
-        [[nodiscard]] int logoWithSplitLineSpace() const;
+        /// LOGO 
+        const LSize & logoSize()const;
 
-        [[nodiscard]] const LSize & LogoSize()const;
-        void setLogoSize(int w,int h);
-        void setLogoSize(const LSize &size);
+        [[deprecated]] void setLogoSize(int w,int h);
+        [[deprecated]] void setLogoSize(const LSize &size);
 
         [[maybe_unused]] void setImageSize(const LSize &size);
-        [[nodiscard]] const LSize & ImageSize() const;
+        [[nodiscard]] const LSize & imageSize() const;
 
-        [[nodiscard]] [[maybe_unused]] int leftTextOffset() const;
-        [[nodiscard]] [[maybe_unused]] int rightTextOffset() const;
-
-        [[maybe_unused]] [[nodiscard]] int rightTextMaxWidth() const;
+        [[deprecated]] int leftTextOffset() const;
+        [[deprecated]] int rightTextOffset() const;
+        [[deprecated]] int rightTextMaxWidth() const;
 
         /**
          * @brief 设置right_top & right_bottom 显示的文字的最大长度
@@ -74,9 +75,9 @@ namespace CM
          */
         [[nodiscard]] int splitRectWidth() const;
 
-        const LPoint & logoPosition() const;
+        [[nodiscard]] const LPoint & logoPosition() const;
 
-        void resetLayout();;
+        void resetLayout();
 
     private:
         /**
@@ -105,21 +106,24 @@ namespace CM
         void updateLogoPosition();
 
     private:
-        LSize m_showImageSize{1,1};          ///< 显示的图片的大小
-        Margin m_margin;                ///< scene margin{left right top bottom}
+        [[maybe_unused]] LSize m_ShowImageSize{1,1};
 
-        int m_logoSpaceWithImage {10};           ///< show image space with log: TODO draw rect with height == m_logoSpace
-        LSize m_logoSize{64, 64};  ///< logo size
-        LPoint m_logoPosition{-1,-1};
+        [[maybe_unused]] Margin m_Margin;
 
-        int m_leftTextOffset{m_margin.left};      ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
-        int m_rightTextOffset{m_margin.right};    ///< 左边部分文字的偏移长度 (LogoSize.w) * 1.45 right in it
-        int m_logoSplitRectSpace{15};             ///< logo & 显示的文字和分割线之间的距离
+        [[maybe_unused]] LPoint m_LogoPosition{ -1,-1 };
+        [[maybe_unused]] LSize m_LogoSize{ 64, 64 };
 
-        int m_splitRectWidth{0};    ///< 文字与图标分割线(rect & fill)的宽度
-        int m_rightMaxWidth{0};       ///< right top & bottom show text item max width
+
+        int m_LogoSpaceWithImage {10};              ///< logo的上边部分到image的bottom的距离
+        int m_LeftTextOffset{m_Margin.m_Left};      ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
+        int m_RightTextOffset{m_Margin.m_Right};    ///< 左边部分文字的偏移长度 (LogoSize.w) * 1.45 right in it
+        int m_LogoSplitRectSpace{15};               ///< logo & 显示的文字和分割线之间的距离
+
+        int m_SplitRectWidth{0};      ///< 文字与图标分割线(rect & fill)的宽度
+        int m_RightMaxWidth{200};       ///< right top & bottom show text item max width 显示的文字的最大宽度
 
     };
+
 } // CM
 
 #endif //CAMERAMARK_SCENELAYOUTSETTINGS_H

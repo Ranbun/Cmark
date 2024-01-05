@@ -95,9 +95,10 @@ namespace CM
             emit m_DisplayWidget->sigPreViewImage(path.toStdString());
         });
 
+#if  0
         connect(m_EditPreviewSceneLayoutAction, &QAction::triggered, m_DisplayWidget.get(),
                 &DisplayWidget::sigPreViewLayoutSettingsPanel);
-
+#endif 
 
 
 

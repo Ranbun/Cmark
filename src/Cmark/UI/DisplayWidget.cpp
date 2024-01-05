@@ -124,10 +124,12 @@ namespace CM
         {
             const auto bound = m_PreviewImageScene->itemsBoundingRect();
             m_View->setSceneRect(bound); // 设置场景矩形
-            m_View->centerOn(bound.center());
+            const auto center = bound.center();
+            m_View->centerOn(center);
+            /// make scene fit in view
+            m_View->fitInView(bound, Qt::KeepAspectRatio);
         }
-        /// make scene fit in view
-        m_View->fitInView(m_PreviewImageScene->itemsBoundingRect(), Qt::KeepAspectRatio);
+
 
         QWidget::resizeEvent(event);
     }
@@ -141,10 +143,8 @@ namespace CM
             {
                 throw std::runtime_error("save scene failed!");
             }
-            else
-            {
-                std::cout << "Image Save success!" << std::endl;
-            }
+
+            std::cout << "Image Save success!" << std::endl;
         };
 
         auto save = [this,saveAsFile](QGraphicsScene* scene)
@@ -153,11 +153,9 @@ namespace CM
 
             scene->clearSelection(); // Selections would also render to the file
 
-            const auto rect = scene->sceneRect();
-            const auto bound = scene->itemsBoundingRect();
-            scene->setSceneRect(bound);
-
-            auto image = std::make_shared<QImage>(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);
+            const auto rect = scene->itemsBoundingRect();
+            const auto iSize = rect.size().toSize();
+            auto image = std::make_shared<QImage>(iSize, QImage::Format_ARGB32);
 
             image->fill(Qt::white); // Start all pixels white
 
@@ -171,8 +169,6 @@ namespace CM
 
             std::thread saveImage(saveAsFile, image, fileName);
             saveImage.detach();
-
-            scene->setSceneRect(rect);
         };
 
         switch (sceneIndex)

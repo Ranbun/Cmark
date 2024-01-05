@@ -142,6 +142,9 @@ namespace CM
         void InitSplitRect();
 
     protected:
+
+        QGraphicsWidget* m_ToolWidget;    ///< 悬浮窗口
+
         PreViewImageItem* m_ShowImageItem{}; ///< 预览加载的图片Item对象
         QGraphicsPixmapItem* m_LogoItem{}; ///< 加载的logo Item对象
 
@@ -159,7 +162,7 @@ namespace CM
 
         std::shared_ptr<SceneLayoutSettings> m_SceneLayout{nullptr}; ///< 记录场景的布局
 
-        signals:
+    signals:
         void sigNoScenes(bool val);
 
     };
