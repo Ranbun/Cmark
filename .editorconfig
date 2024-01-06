@@ -1,0 +1,11 @@
+root = true
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_size = 4
+indent_style = space
+ij_any_space_before_else_keyword = true
+ij_any_space_before_if_parentheses = true
+ij_c_keep_nested_namespaces_in_one_line = false

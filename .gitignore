@@ -32,7 +32,19 @@
 *.app
 
 # directory
-.idea
-out
+.idea/
+out/
+.vs/
+.vscode/
+src/Cmark/sources/pictures/
 /src/vendor/easyexif
+src/Cmark/sources/pictures/
 
+# Reshaper
+Folder.DotSettings.user
+
+# Qt build dir
+build-sceneLayout*
+
+# Cmake user file
+src/vendor/sceneLayout/CMakeLists.txt.user
