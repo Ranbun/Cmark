@@ -15,8 +15,12 @@ namespace CM
 
     void LifeSizeImageScene::saveSceneAsImage(const std::function<void(QGraphicsScene *)> &saveFunc)
     {
-        updateLayout();
-        applyLayout();
+        m_SceneLayout->update();
+        applyLayout(nullptr);
+
+        const auto sceneRect = itemsBoundingRect();
+        setSceneRect(sceneRect);
+
         saveFunc(this);
     }
 } // CM

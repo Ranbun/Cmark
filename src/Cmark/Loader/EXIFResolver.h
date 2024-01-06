@@ -95,8 +95,14 @@ namespace CM
         } LensInfo;
     };
 
+    namespace Tools
+    {
+        class ResourcesTools;
+    }
+
     class EXIFResolver
     {
+        friend  class Tools::ResourcesTools;
     public:
         EXIFResolver() =default;
 
@@ -121,14 +127,14 @@ namespace CM
          * @param index 加载时候返回的索引
          * @return 图片数据Exif信息
          */
-        std::weak_ptr<EXIFInfo> getExifInfo(size_t index);
+        std::weak_ptr<EXIFInfo> getExifInfo(size_t index) const;
 
         /**
          * @brief 获取加载的文件的加载的结果
          * @param index 加载的文件的索引
          * @return 返回对应的信息码
          */
-        int checkCode(size_t index);
+        int checkCode(size_t index) const;
 
         /**
          * @brief 解析加载完成的exif信息 返回可用的信息
@@ -136,6 +142,9 @@ namespace CM
          * @return
          */
         static ExifInfoMap resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
+
+    private:
+        static void destory();
 
     public:
         /**
@@ -145,21 +154,15 @@ namespace CM
          * @return hash的结果
          */
         template<typename T>
-        size_t Hash(const T & path)
+        size_t hash(const T & path)
         {
             std::hash<T> Hasher;
-            size_t hashValue = Hasher(path);
+            const size_t hashValue = Hasher(path);
             return hashValue;
         }
 
         template<>
-        size_t Hash(const std::string & path)
-        {
-            std::hash<std::string> Hasher;
-            size_t hashValue = Hasher(path);
-            return hashValue;
-        }
-
+        size_t hash(const std::string & path);
     };
 
 } // CM

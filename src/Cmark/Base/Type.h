@@ -9,22 +9,22 @@ namespace CM
     enum class ExifKey: uint16_t
     {
         None = 0,
-        Camera_make,    ///<相机制造商
-        Camera_model,
+        CameraMake,    ///<相机制造商
+        CameraModel,
         Software,
-        Bits_per_sample,
-        Image_width,
-        Image_height,
+        BitsPerSample,
+        ImageWidth,
+        ImageHeight,
         /// data or time
-        Image_date,
-        Exposure_time,  /// 曝光时间
+        ImageDate,
+        ExposureTime,  /// 曝光时间
 
         FocalLength, ///< 焦距
-        F_stop,     ///< 光圈
-        ISO_speed,  ///<感光度
-        Shutter_speed,
+        FStop,     ///< 光圈
+        ISOSpeed,  ///<感光度
+        ShutterSpeed,
 
-        Lens_Model,  ///< 棱镜组 -- 镜头信息
+        LensModel,  ///< 棱镜组 -- 镜头信息
 
         /// GPS
         GPS = None

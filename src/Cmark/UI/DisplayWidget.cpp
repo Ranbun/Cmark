@@ -2,223 +2,262 @@
 
 #include "DisplayWidget.h"
 
-#include "Loader/FileLoad.h"
 #include "Loader/EXIFResolver.h"
-#include "Scene/PreViewImageScene.h"
-#include "Scene/PreViewImageItem.h"
 #include "Scene/LifeSizeImageScene.h"
+#include "Scene/PreViewImageScene.h"
 
-#include "LogoManager.h"
+#include "sources/PictureManager.h"
+
 #include <SceneLayoutEditor.h>
+#include "sources/LogoManager.h"
 
-#include <QImage>
-#include <QPixmap>
 #include <QFileDialog>
-#include <QImageReader>
-#include <QMessageBox>
 #include <QGraphicsView>
-#include <QVBoxLayout>
+#include <QImage>
+#include <QMessageBox>
 #include <QResizeEvent>
+#include <QVBoxLayout>
+#include <QDateTime>
 
 namespace CM
 {
-    DisplayWidget::DisplayWidget(QWidget * parent)
-            : QWidget(parent)
-            , m_previewSceneLayoutSettingPanel(std::make_shared<SceneLayoutEditor>())
-            , m_previewImageScene(new PreViewImageScene)
-            , m_addLogoScene(new LifeSizeImageScene)
-            , m_view (new QGraphicsView)
+    namespace
+    {
+        QString ImageSaveDefaultName()
         {
-            m_previewSceneLayoutSettingPanel->setHidden(true);
+            const QDateTime currentDateTime = QDateTime::currentDateTime();
+            auto outputName = currentDateTime.toString("yyyy-MM-dd__HHHmmMssS");
 
-            m_view->setScene(m_previewImageScene);
-            connect(this,&DisplayWidget::Created,this, [ parent= this, view = m_view ]()
-            {
-                view->setParent(parent);
-            });
-
-            m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-            m_view->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-            m_view->setAlignment(Qt::AlignCenter);
-
-            m_view->resize(640,480);
-            m_previewImageScene->setSceneRect(0,0,m_view->rect().width(),m_view->rect().height());
-
-            emit Created();
-
-            InitConnect();
-
-
+            constexpr std::hash<std::string> nameGenerator;
+            const auto nameCode  = nameGenerator(outputName.toStdString());
+            outputName = outputName + "__" + QString::number(nameCode);
+            return {outputName};
         }
-    void DisplayWidget::Open(const std::filesystem::path& path) const
+
+
+
+    }
+
+    DisplayWidget::DisplayWidget(QWidget* parent)
+        : QWidget(parent)
+          , m_PreviewSceneLayoutSettingPanel(std::make_shared<SceneLayoutEditor>())
+          , m_PreviewImageScene(new PreViewImageScene)
+          , m_AddLogoScene(new LifeSizeImageScene)
+          , m_View(new QGraphicsView)
+    {
+        m_PreviewSceneLayoutSettingPanel->setHidden(true);
+
+        m_View->setScene(m_PreviewImageScene);
+        connect(this, &DisplayWidget::sigCreated, this, [ parent= this, view = m_View ]()
+        {
+            view->setParent(parent);
+        });
+
+        m_View->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+        m_View->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+        m_View->setAlignment(Qt::AlignCenter);
+
+        m_View->resize(960, 720);
+        m_PreviewImageScene->setSceneRect(0, 0, m_View->rect().width(), m_View->rect().height());
+
+        emit sigCreated();
+
+        InitConnect();
+    }
+
+    void DisplayWidget::open(const std::filesystem::path& path) const
     {
         assert(this);
     }
 
-    void DisplayWidget::paintEvent(QPaintEvent *event)
+    void DisplayWidget::paintEvent(QPaintEvent* event)
     {
         QWidget::paintEvent(event);
     }
 
-    void DisplayWidget::PreViewImage(const std::filesystem::path & path)
+    void DisplayWidget::preViewImage(const std::filesystem::path& path)
     {
+        using PictureManagerInterFace = CM::PictureManager;
         EXIFResolver resolver;
-        const auto loadFileIndex = resolver.resolver(path);
 
-        QImage readerFile;
-        readerFile.fill(Qt::transparent);
-        auto readFileToImage = [&readerFile](const std::filesystem::path & path)
-        {
-            QImageReader reader(path.string().c_str());
-            reader.setAutoTransform(true);
-            readerFile = reader.read();
-        };
-        std::thread readImage(readFileToImage, path);
+        /// load image
+        const auto imageIndexCode = PictureManagerInterFace::loadImage(path.string());
 
-        const auto & [res,message] = EXIFResolver::check(resolver.checkCode(loadFileIndex));
-        if(!res)
+        const auto imageExifInfoIndex = resolver.resolver(path);
+        /// check resolver result
+        const auto& [res,message] = EXIFResolver::check(resolver.checkCode(imageExifInfoIndex));
+        if (!res)
         {
-            QMessageBox::about(this,"Warning",message.c_str());
-            return ;
+            QMessageBox::about(this, "Warning", message.c_str());
+            return;
         }
 
-        const auto exifInfos = resolver.getExifInfo(loadFileIndex);
+        /// get resolved image infos
+        const auto exifInfos = resolver.getExifInfo(imageExifInfoIndex);
 
         /// 加载logo
         const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
         LogoManager::loadCameraLogo(cameraIndex);
         const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
-        /// wait load image thread
-        if(readImage.joinable())
-        {
-            readImage.join();
-        }
-
-        /// convert to QPixmap
-        const QPixmap preViewImage = QPixmap::fromImage(readerFile);
+        /// get loaded image
+        const auto preViewImage = PictureManager::getImage(imageIndexCode);
 
         /// get enable exif item
         const auto infos = EXIFResolver::resolverImageExif(exifInfos);
 
         /// 设置预览场景显示的资源
         {
-            const auto scene = dynamic_cast<PreViewImageScene *>(m_previewImageScene);
-            scene->resetPreviewImageTarget(preViewImage);
+            const auto scene = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene);
+            scene->resetStatus();
+            scene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
             scene->resetTexItemsPlainText(infos);
-            scene->resetLogoPixmap(previewImageLogo, Nikon);
+            scene->resetLogoPixmap(previewImageLogo, cameraIndex);
         }
 
         /// 设置单张图片存储的显示资源
-        const auto logoScene = dynamic_cast<LifeSizeImageScene *>(m_addLogoScene);
-        logoScene->resetPreviewImageTarget(preViewImage);
-        logoScene->resetTexItemsPlainText(infos);
-        logoScene->resetLogoPixmap(previewImageLogo, Nikon);
+        {
+            const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
+            logoScene->resetStatus();
+            logoScene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
+            logoScene->resetTexItemsPlainText(infos);
+            logoScene->resetLogoPixmap(previewImageLogo, cameraIndex);
+        }
 
         /// 构建一个resizeEvent make it to applyLayout all item
-        const auto rEvent = new QResizeEvent(this->size(),this->size());
+        /// TODO: we need update scene in here
+        const auto rEvent = new QResizeEvent(this->size(), this->size());
         this->resizeEvent(rEvent);
         delete rEvent;
+
     }
 
-    void DisplayWidget::resizeEvent(QResizeEvent *event)
+    void DisplayWidget::resizeEvent(QResizeEvent* event)
     {
         const auto windowSize = event->size();
-        m_view->resize(windowSize);   ///< resize view
+        m_View->resize(windowSize); ///< resize view
 
-        dynamic_cast<PreViewImageScene*>(m_previewImageScene)->updateSceneRect(m_view, {});
+        dynamic_cast<PreViewImageScene*>(m_PreviewImageScene)->updateSceneRect();
 
         /// 设置视图显示的场景的大小
         /// 设置视图观察的场景的观察点
         {
-            const auto bound = m_previewImageScene->itemsBoundingRect();
-            m_view->setSceneRect(bound); // 设置场景矩形
-            m_view->centerOn(bound.center());
+            const auto bound = m_PreviewImageScene->sceneRect();
+            m_View->setSceneRect(bound); // 设置场景矩形
+            m_View->fitInView(bound, Qt::KeepAspectRatio);
         }
-        /// make scene fit in view
-        m_view->fitInView(m_previewImageScene->itemsBoundingRect(),Qt::KeepAspectRatio);
-
         QWidget::resizeEvent(event);
     }
 
-    void DisplayWidget::saveScene(SceneIndex sceneIndex)
+    void DisplayWidget::saveScene(const SceneIndex sceneIndex)
     {
-        auto saveAsFile = [](const std::shared_ptr<QImage>& image,const QString & filePath)
+        auto saveAsFile = [](const std::shared_ptr<QImage>& image, const QString& filePath)
         {
-            const bool res = image->save(filePath);
-            if(!res)
+            const QFileInfo fileInfo(filePath);
+            const auto suffix = fileInfo.suffix();
+
+            if (const bool res = image->save(filePath, suffix.toStdString().c_str());
+                !res)
             {
                 throw std::runtime_error("save scene failed!");
             }
-            else
-            {
-                std::cout << "Image Save success!" << std::endl;
-            }
+
+            std::cout << "Image Save success!" << std::endl;
         };
 
-        auto save = [this,saveAsFile](QGraphicsScene * scene)
+        auto save = [this,saveAsFile](QGraphicsScene* scene)
         {
-            if(!scene) return ;
+            if (!scene) return;
 
-            scene->clearSelection();                                                       // Selections would also render to the file
+            scene->clearSelection(); // Selections would also render to the file
 
             const auto rect = scene->sceneRect();
-            const auto bound = scene->itemsBoundingRect();
-            scene->setSceneRect(bound);
+            const auto iSize = rect.size().toSize();
+            auto image = std::make_shared<QImage>(iSize, QImage::Format_ARGB32);
 
-            std::shared_ptr<QImage> image = std::make_shared<QImage>(scene->sceneRect().size().toSize(), QImage::Format_ARGB32);
-
-            image->fill(Qt::white);   // Start all pixels white
+            image->fill(Qt::white); // Start all pixels white
 
             QPainter painter(image.get());
             scene->render(&painter);
             painter.end();
 
-            auto fileName = QFileDialog::getSaveFileName(this,tr("Save File"),
-                                                         "./untitled.png",
-                                                         tr("Images (*.png *.xpm *.jpg)"));
+            QFileDialog getFileDialog(this, tr("Save File"),
+                                "./" + ImageSaveDefaultName(),
+                                      tr("Images (*.png);;Images (*.xpm);;Images (*.jpg);;All Files (*)"));
+            getFileDialog.setOption(QFileDialog::DontUseCustomDirectoryIcons);
 
-            std::thread saveImage(saveAsFile,image,fileName);
+            auto fileName = ImageSaveDefaultName() + ".png";
+
+
+            switch (getFileDialog.exec())
+            {
+                case  QFileDialog::Accepted:
+                    {
+                        auto suffix = getFileDialog.selectedNameFilter();
+                        fileName = getFileDialog.selectedFiles().first();
+                        if (!fileName.isEmpty() && !suffix.isEmpty())
+                        {
+                            suffix = suffix.split(QRegExp("[()*]"), Qt::SkipEmptyParts).last();
+                            fileName += suffix;
+                        }
+                    }
+                    break;
+
+            case QFileDialog::Rejected:
+                {
+                    return;
+                }
+                default:
+                        break;
+
+            }
+
+            std::thread saveImage(saveAsFile, image, fileName);
             saveImage.detach();
-
-            scene->setSceneRect(rect);
-
         };
 
         switch (sceneIndex)
         {
-            case SceneIndex::NONE:
-                break;
-            case SceneIndex::PREVIEW_SCENE:
+        case SceneIndex::None:
+            break;
+        case PreviewScene:
             {
-                save(m_previewImageScene);
+                save(m_PreviewImageScene);
             }
             break;
-            case SceneIndex::GENERATELOGO_SCENE:
+        case GenerateLogoScene:
             {
-                const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_addLogoScene);
+                const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
                 logoScene->saveSceneAsImage(save);
             }
             break;
-            default:
-                break;
         }
     }
 
     void DisplayWidget::InitConnect()
     {
         /// TODO: maybe remove it
-        connect(m_previewSceneLayoutSettingPanel.get(), &SceneLayoutEditor::updatedScene, [this]()
+        connect(m_PreviewSceneLayoutSettingPanel.get(), &SceneLayoutEditor::updatedScene, [this]()
         {
-            const auto scene = dynamic_cast<CScene*>(m_previewImageScene);
-            scene->applyLayout();
+            const auto scene = dynamic_cast<CScene*>(m_PreviewImageScene);
+            scene->applyLayout(nullptr);
         });
 
-        connect(this,&DisplayWidget::PreViewLayoutSettingsPanel,[this]()
+        connect(this, &DisplayWidget::sigPreViewLayoutSettingsPanel, [this]()
         {
-            m_previewSceneLayoutSettingPanel->show(dynamic_cast<PreViewImageScene*>(m_previewImageScene)->layoutSettings());
+            const auto layoutSettings = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene)->layoutSettings();
+            emit m_PreviewSceneLayoutSettingPanel->sigShowLayoutSettingPanel(layoutSettings);
+        });
+
+        connect(this, &DisplayWidget::sigOpen, this, [this](const std::string& path)
+        {
+            open(path);
+        }, Qt::QueuedConnection);
+
+
+        connect(this, &DisplayWidget::sigPreViewImage, [this](const std::string& filePath)
+        {
+            preViewImage(filePath);
         });
     }
-
-
 } // CM

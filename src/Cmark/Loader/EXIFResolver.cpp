@@ -9,41 +9,102 @@
 
 namespace CM
 {
-    static std::unordered_map<size_t,std::shared_ptr<EXIFInfo>> loadedInfos;
-    static std::unordered_map<size_t,std::promise<void>> threadFinishSignals;
-    static std::unordered_map<size_t,int> loadImageCheckCode;
+    namespace 
+    {
+        std::unordered_map<size_t, std::shared_ptr<EXIFInfo>> g_LoadedInfos;
+        std::unordered_map<size_t, std::promise<void>> g_ThreadFinishSignals;
+        std::unordered_map<size_t, int> g_LoadImageCheckCode;
 
-    static std::mutex infoMutex;
+        std::mutex g_InfoMutex;
+
+    }
 
     ExifInfoMap EXIFResolver::resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr)
     {
         auto result = *infoPtr.lock();
 
         ExifInfoMap infoMaps;
-        infoMaps.insert({ExifKey::Camera_make,result.Make});
-        infoMaps.insert({ExifKey::Camera_model,result.Model});
-        infoMaps.insert({ExifKey::Image_width,std::to_string(result.ImageWidth)});
-        infoMaps.insert({ExifKey::Image_height,std::to_string(result.ImageHeight)});
-        infoMaps.insert({ExifKey::Image_date,result.DateTime});
+        if (!result.Make.empty())
+        {
+            infoMaps.insert({ ExifKey::CameraMake,result.Make });
+        }
+
+        if (!result.Model.empty())
+        {
+            infoMaps.insert({ ExifKey::CameraModel,result.Model });
+        }
+
+        if (result.ImageWidth)
+        {
+            infoMaps.insert({ ExifKey::ImageWidth,std::to_string(result.ImageWidth) });
+        }
+
+        if (result.ImageHeight)
+        {
+            infoMaps.insert({ ExifKey::ImageHeight,std::to_string(result.ImageHeight) });
+        }
+
+        if (!result.DateTime.empty())
+        {
+            infoMaps.insert({ ExifKey::ImageDate,result.DateTime });
+        }
 
         /// Exposure Time
-        auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
-        infoMaps.insert({ExifKey::Exposure_time,std::string("1/") + std::to_string(inExposureTime)});
+        if (const auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
+            result.ExposureTime > 1e-5 && inExposureTime)
+        {
+            infoMaps.insert({ ExifKey::ExposureTime,std::string("1/") + std::to_string(inExposureTime) });
+        }
 
-        std::string f_stop = std::string("f/") + std::to_string(static_cast<int>(result.FNumber)) + std::string(".") +
-                             std::to_string(static_cast<int>(result.FNumber * 10) % 10);
-        infoMaps.insert({ExifKey::F_stop,f_stop});
+        if (const auto fNumber = static_cast<int>(result.FNumber);
+            fNumber)
+        {
+            std::string fStop = std::string("f/") + std::to_string(fNumber) + std::string(".") +
+                std::to_string(static_cast<int>(result.FNumber * 10) % 10);
 
-        infoMaps.insert({ExifKey::ISO_speed,std::string("ISO") + std::to_string(result.ISOSpeedRatings)});
-        infoMaps.insert({ExifKey::Lens_Model,result.LensInfo.Model});
+
+            infoMaps.insert({ ExifKey::FStop,fStop });
+        }
+
+
+        if (result.ISOSpeedRatings)
+        {
+            infoMaps.insert({ ExifKey::ISOSpeed,std::string("ISO") + std::to_string(result.ISOSpeedRatings) });
+        }
+
+        if (!result.LensInfo.Model.empty())
+        {
+            infoMaps.insert({ ExifKey::LensModel,result.LensInfo.Model });
+        }
 
         /// TODO: we need resolver all info and write it to ExifMap and output it
-        infoMaps.insert({ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
+        if (const auto shutterSpeed = static_cast<int>(1.0 / result.ExposureTime);
+            result.ExposureTime > 1e-5 && shutterSpeed)
+        {
+            infoMaps.insert({ ExifKey::ShutterSpeed,std::to_string(shutterSpeed)});
+        }
 
         /// Focal Length
-        infoMaps.insert({ExifKey::FocalLength,std::to_string((int)result.FocalLength) + "mm"});
+        if (const auto focalLength = static_cast<int>(result.FocalLength); focalLength)
+        {
+            infoMaps.insert({ ExifKey::FocalLength,std::to_string(focalLength) + "mm" });
+        }
+        return infoMaps;
+    }
 
-        return std::move(infoMaps);
+    template <>
+    size_t EXIFResolver::hash<std::string>(const std::string& path)
+    {
+        constexpr std::hash<std::string> hasher;
+        const size_t hashValue = hasher(path);
+        return hashValue;
+    }
+
+    void EXIFResolver::destory()
+    {
+        g_LoadedInfos.clear();
+        g_ThreadFinishSignals.clear();
+        g_LoadImageCheckCode.clear();
     }
 
     std::tuple<bool, std::string> EXIFResolver::check(int resolverCode)
@@ -89,13 +150,15 @@ namespace CM
     {
         assert(this);
 
-        auto hashValue = this->Hash(path.string());
+        auto hashValue = this->hash(path.string());
         /// load file
         auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){
-            auto res = FileLoad::Load(path);
+            auto loadDataPtr = FileLoad::load(path);
 
             easyexif::EXIFInfo EXIFResolver;
-            auto exifCheckCode = EXIFResolver.parseFrom(res.data(),res.size());
+            auto exifCheckCode = EXIFResolver.parseFrom(loadDataPtr->data(),loadDataPtr->size());
+            loadDataPtr->clear();
+            loadDataPtr.reset();
 
             auto outputExIFInfos = std::make_shared<EXIFInfo>();
             {
@@ -132,50 +195,55 @@ namespace CM
                 /// TODO need add others
             }
 
-            std::lock_guard<std::mutex> local(infoMutex);
-            loadedInfos.insert({fileHashValue,outputExIFInfos});
-            loadImageCheckCode.insert({fileHashValue,exifCheckCode});
+            std::lock_guard<std::mutex> local(g_InfoMutex);
+            g_LoadedInfos.insert({fileHashValue,outputExIFInfos});
+            g_LoadImageCheckCode.insert({fileHashValue,exifCheckCode});
+
             exitSignal.set_value();
+            {
+                g_ThreadFinishSignals.erase(fileHashValue);
+            }
         };
 
         std::promise<void> exitSignal;
-        threadFinishSignals.insert({hashValue,std::move(exitSignal)});
-        std::thread loading(loadImageFile,std::ref(threadFinishSignals.at(hashValue)),std::ref(path),hashValue);
+        g_ThreadFinishSignals.insert({hashValue,std::move(exitSignal)});
+        std::thread loading(loadImageFile,std::ref(g_ThreadFinishSignals.at(hashValue)),std::ref(path),hashValue);
         loading.detach();
 
         return hashValue;
     }
 
-    std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(size_t index)
+    std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(const size_t index) const
     {
         assert(this);  /// TODO: maybe remove it
 
-        if(threadFinishSignals.count(index))
+        if(g_ThreadFinishSignals.count(index))
         {
-            auto & exitSignal = threadFinishSignals.at(index);
+            auto & exitSignal = g_ThreadFinishSignals.at(index);
             exitSignal.get_future().wait();   ///< 等待线程结束
-            threadFinishSignals.erase(index);
+            g_ThreadFinishSignals.erase(index);
+            g_LoadImageCheckCode.erase(index);
         }
         /// 获取图片结果
-        return loadedInfos.at(index);
+        return g_LoadedInfos.at(index);
     }
 
-    int EXIFResolver::checkCode(size_t index)
+    int EXIFResolver::checkCode(const size_t index) const
     {
         assert(this);   /// TODO: maybe remove it
 
-        if(threadFinishSignals.count(index))
+        if(g_ThreadFinishSignals.count(index))
         {
-            auto & exitSignal = threadFinishSignals.at(index);
+            auto & exitSignal = g_ThreadFinishSignals.at(index);
             exitSignal.get_future().wait();   ///< 等待线程结束
-            threadFinishSignals.erase(index);
+            g_ThreadFinishSignals.erase(index);
         }
 
-        if(loadImageCheckCode.count(index))
+        if(g_LoadImageCheckCode.count(index))
         {
-            auto Code = loadImageCheckCode.at(index);
-            loadImageCheckCode.erase(index);
-            return Code;
+            const auto code = g_LoadImageCheckCode.at(index);
+            g_LoadImageCheckCode.erase(index);
+            return code;
         }
 
         return PARSE_EXIF_SUCCESS;
