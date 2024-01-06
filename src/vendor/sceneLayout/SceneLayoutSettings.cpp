@@ -1,4 +1,6 @@
 #include "SceneLayoutSettings.h"
+
+#include <algorithm>
 #include <cmath>
 
 namespace CM
@@ -76,6 +78,9 @@ namespace CM
 
     void SceneLayoutSettings::setImageSize(const LSize& size)
     {
+        
+
+
         m_ShowImageSize = size;
     }
 
@@ -85,11 +90,6 @@ namespace CM
 
     void SceneLayoutSettings::update()
     {
-        /// finished image size
-        /// logo size
-        /// margin left & right & top & bottom
-
-        /// applyLayout some items
         updateLeftTextOffset();
         updateRightTextOffset();
         updateLogoSplitSpace();

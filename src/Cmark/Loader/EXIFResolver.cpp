@@ -24,37 +24,79 @@ namespace CM
         auto result = *infoPtr.lock();
 
         ExifInfoMap infoMaps;
-        infoMaps.insert({ExifKey::Camera_make,result.Make});
-        infoMaps.insert({ExifKey::Camera_model,result.Model});
-        infoMaps.insert({ExifKey::Image_width,std::to_string(result.ImageWidth)});
-        infoMaps.insert({ExifKey::Image_height,std::to_string(result.ImageHeight)});
-        infoMaps.insert({ExifKey::Image_date,result.DateTime});
+        if (!result.Make.empty())
+        {
+            infoMaps.insert({ ExifKey::CameraMake,result.Make });
+        }
+
+        if (!result.Model.empty())
+        {
+            infoMaps.insert({ ExifKey::CameraModel,result.Model });
+        }
+
+        if (result.ImageWidth)
+        {
+            infoMaps.insert({ ExifKey::ImageWidth,std::to_string(result.ImageWidth) });
+        }
+
+        if (result.ImageHeight)
+        {
+            infoMaps.insert({ ExifKey::ImageHeight,std::to_string(result.ImageHeight) });
+        }
+
+        if (!result.DateTime.empty())
+        {
+            infoMaps.insert({ ExifKey::ImageDate,result.DateTime });
+        }
 
         /// Exposure Time
-        const auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
-        infoMaps.insert({ExifKey::Exposure_time,std::string("1/") + std::to_string(inExposureTime)});
+        if (const auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
+            result.ExposureTime > 1e-5 && inExposureTime)
+        {
+            infoMaps.insert({ ExifKey::ExposureTime,std::string("1/") + std::to_string(inExposureTime) });
+        }
 
-        std::string f_stop = std::string("f/") + std::to_string(static_cast<int>(result.FNumber)) + std::string(".") +
-                             std::to_string(static_cast<int>(result.FNumber * 10) % 10);
-        infoMaps.insert({ExifKey::F_stop,f_stop});
+        if (const auto fNumber = static_cast<int>(result.FNumber);
+            fNumber)
+        {
+            std::string fStop = std::string("f/") + std::to_string(fNumber) + std::string(".") +
+                std::to_string(static_cast<int>(result.FNumber * 10) % 10);
 
-        infoMaps.insert({ExifKey::ISO_speed,std::string("ISO") + std::to_string(result.ISOSpeedRatings)});
-        infoMaps.insert({ExifKey::Lens_Model,result.LensInfo.Model});
+
+            infoMaps.insert({ ExifKey::FStop,fStop });
+        }
+
+
+        if (result.ISOSpeedRatings)
+        {
+            infoMaps.insert({ ExifKey::ISOSpeed,std::string("ISO") + std::to_string(result.ISOSpeedRatings) });
+        }
+
+        if (!result.LensInfo.Model.empty())
+        {
+            infoMaps.insert({ ExifKey::LensModel,result.LensInfo.Model });
+        }
 
         /// TODO: we need resolver all info and write it to ExifMap and output it
-        infoMaps.insert({ExifKey::Shutter_speed,std::to_string((int)(1.0 / result.ExposureTime))});
+        if (const auto shutterSpeed = static_cast<int>(1.0 / result.ExposureTime);
+            result.ExposureTime > 1e-5 && shutterSpeed)
+        {
+            infoMaps.insert({ ExifKey::ShutterSpeed,std::to_string(shutterSpeed)});
+        }
 
         /// Focal Length
-        infoMaps.insert({ExifKey::FocalLength,std::to_string((int)result.FocalLength) + "mm"});
-
-        return std::move(infoMaps);
+        if (const auto focalLength = static_cast<int>(result.FocalLength); focalLength)
+        {
+            infoMaps.insert({ ExifKey::FocalLength,std::to_string(focalLength) + "mm" });
+        }
+        return infoMaps;
     }
 
     template <>
     size_t EXIFResolver::hash<std::string>(const std::string& path)
     {
-        constexpr std::hash<std::string> Hasher;
-        const size_t hashValue = Hasher(path);
+        constexpr std::hash<std::string> hasher;
+        const size_t hashValue = hasher(path);
         return hashValue;
     }
 
@@ -111,7 +153,7 @@ namespace CM
         auto hashValue = this->hash(path.string());
         /// load file
         auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){
-            auto loadDataPtr = FileLoad::Load(path);
+            auto loadDataPtr = FileLoad::load(path);
 
             easyexif::EXIFInfo EXIFResolver;
             auto exifCheckCode = EXIFResolver.parseFrom(loadDataPtr->data(),loadDataPtr->size());
@@ -156,8 +198,11 @@ namespace CM
             std::lock_guard<std::mutex> local(g_InfoMutex);
             g_LoadedInfos.insert({fileHashValue,outputExIFInfos});
             g_LoadImageCheckCode.insert({fileHashValue,exifCheckCode});
+
             exitSignal.set_value();
-            g_ThreadFinishSignals.erase(fileHashValue);
+            {
+                g_ThreadFinishSignals.erase(fileHashValue);
+            }
         };
 
         std::promise<void> exitSignal;
@@ -168,7 +213,7 @@ namespace CM
         return hashValue;
     }
 
-    std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(size_t index) const
+    std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(const size_t index) const
     {
         assert(this);  /// TODO: maybe remove it
 
@@ -177,6 +222,7 @@ namespace CM
             auto & exitSignal = g_ThreadFinishSignals.at(index);
             exitSignal.get_future().wait();   ///< 等待线程结束
             g_ThreadFinishSignals.erase(index);
+            g_LoadImageCheckCode.erase(index);
         }
         /// 获取图片结果
         return g_LoadedInfos.at(index);
@@ -195,9 +241,9 @@ namespace CM
 
         if(g_LoadImageCheckCode.count(index))
         {
-            const auto Code = g_LoadImageCheckCode.at(index);
+            const auto code = g_LoadImageCheckCode.at(index);
             g_LoadImageCheckCode.erase(index);
-            return Code;
+            return code;
         }
 
         return PARSE_EXIF_SUCCESS;

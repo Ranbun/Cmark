@@ -44,7 +44,7 @@ namespace CM
         [[nodiscard]] [[maybe_unused]]  const float& imageRatio() const;
 
 
-        bool showSplitLine() const;
+        bool validImage() const;
 
     signals:
         void sigShowSplitLine(bool val);

@@ -2,18 +2,15 @@
 
 #include "CScene.h"
 
-#include "SceneDef.h"
 #include "PreViewImageItem.h"
+#include "SceneDef.h"
 
-#include <QGraphicsView>
 #include <QFileDialog>
-
+#include <QGraphicsView>
 
 #include <QGraphicsProxyWidget>
 #include <QPushButton>
-#include <QGraphicsAnchorLayout>
 #include <QTextCursor>
-#include <QTextBlockFormat>
 
 namespace CM
 {
@@ -54,17 +51,28 @@ namespace CM
 
     void CScene::Init()
     {
+        m_PlainTextFont.setFamily("Microsoft YaHei");
+        //m_PlainTextFont.setPointSize(11);
+        m_PlainTextFont.setPixelSize(20);
+
+
         InitMargin();
         InitTargetImageItem();
         InitTexItems();
         InitLogoItem();
         InitSplitRect();
 
-        connect(this, &CScene::sigNoScenes, [this](bool val)
+        connect(this, &CScene::sigNoScenes, [this](const bool val)
         {
             m_SplitRectItem->setVisible(val);
-        });
+            m_LogoItem->setVisible(val);
+            m_Bottom->setVisible(val);
 
+            for (const auto& [key, it] : m_TextItem)
+            {
+                it->setVisible(val);
+            }
+        });
 
 #ifdef TOOLWIDGET
         constexpr QSizeF minSize(30, 100);
@@ -144,12 +152,12 @@ namespace CM
     void CScene::InitTexItems()
     {
         /// default show infos in image
-        m_ShowInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::LeftTop, {ExifKey::Camera_model}});
-        m_ShowInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::LeftBottom, {ExifKey::Image_date}});
-        m_ShowInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::RightTop, {ExifKey::Lens_Model}});
+        m_ShowInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::LeftTop, {ExifKey::CameraModel}});
+        m_ShowInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::LeftBottom, {ExifKey::ImageDate}});
+        m_ShowInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::RightTop, {ExifKey::LensModel}});
         m_ShowInfos.emplace_back(ShowExifInfo{
             ShowExifTexPositionIndex::RightBottom,
-            {ExifKey::FocalLength, ExifKey::F_stop, ExifKey::Exposure_time, ExifKey::ISO_speed}
+            {ExifKey::FocalLength, ExifKey::FStop, ExifKey::ExposureTime, ExifKey::ISOSpeed}
         });
 
         m_TextItem.insert({ShowExifTexPositionIndex::LeftTop, addText("")});
@@ -173,10 +181,7 @@ namespace CM
                 font.setBold(false);
                 break;
             case ShowExifTexPositionIndex::LeftBottom:
-                break;
             case ShowExifTexPositionIndex::RightBottom:
-                break;
-            default:
                 item->setFont(font);
                 break;
             }
@@ -199,19 +204,25 @@ namespace CM
             auto res = std::accumulate(exifInfos.begin(), exifInfos.end(), std::string(),
                                        [](const std::string& a, const std::string& b)
                                        {
-                                           auto tail = b.empty() ? std::string() : std::string(" ") + b;
+                                            if (a.empty() && b.empty())
+                                            {
+                                                return std::string();
+                                            }
+                                           const auto tail = b.empty() ? std::string() : std::string(" ") + b;
                                            return a + tail;
                                        });
-
+            item->setVisible(!res.empty());
             item->setPlainText(res.c_str());
         }
 
         /// TODO: may be applyLayout it
         const auto rightTopTextRect = m_TextItem.at(ShowExifTexPositionIndex::RightTop)->boundingRect();
         const auto rightBottomTextRect = m_TextItem.at(ShowExifTexPositionIndex::RightBottom)->boundingRect();
-        const auto maxW = rightTopTextRect.width() > rightBottomTextRect.width()
+        auto maxW = rightTopTextRect.width() > rightBottomTextRect.width()
                               ? rightTopTextRect.width()
                               : rightBottomTextRect.width();
+
+        if (maxW < 200) maxW = 200;
         m_SceneLayout->setRightMaxWidth(static_cast<int>(maxW));
 
         updateTexItemsPosition();
@@ -302,6 +313,7 @@ namespace CM
         m_SceneLayout->setLogoSize(newW, logoH);
         m_LogoItem->setPixmap(logo->scaled({newW, logoH}, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         m_LogoItem->setData(static_cast<int>(GraphicsItemDataIndex::CameraIndex), static_cast<int>(cameraIndex));
+        m_LogoItem->setVisible(cameraIndex != CameraIndex::None);
 
         updateLogoPosition();
     }
@@ -327,11 +339,13 @@ namespace CM
 
     }
 
-    void CScene::resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode) const
+    void CScene::resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode)
     {
         m_SceneLayout->setImageSize({pixmap.width(), pixmap.height()});
         m_ShowImageItem->resetPixmap(imageIndexCode);
         m_ShowImageItem->setData(static_cast<int>(GraphicsItemDataIndex::PixmapIndex), QVariant(imageIndexCode));
+
+        m_ShowItemFlags = m_ShowImageItem->validImage();
     }
 
     void CScene::InitMargin()
@@ -354,10 +368,6 @@ namespace CM
         addItem(m_Right);
         addItem(m_Top);
         addItem(m_Bottom);
-
-        m_Left->setVisible(0 != left);
-        m_Right->setVisible(0 != right);
-        m_Top->setVisible(0 != top);
     }
 
     void CScene::updateMarginItems()
@@ -379,6 +389,10 @@ namespace CM
         m_Right->setRect(left + imageRect.w, 0, right, sceneBoundMarginRectH);
         m_Top->setRect(0, 0, sceneBoundMarginRectW, top);
         m_Bottom->setRect(0, top + imageRect.h + logoSpaceWithShowImage + logoRect.h, sceneBoundMarginRectW, bottom);
+
+        m_Left->setVisible(0 != left);
+        m_Right->setVisible(0 != right);
+        m_Top->setVisible(0 != top);
     }
 
     void CScene::InitSplitRect()
@@ -432,6 +446,9 @@ namespace CM
         radialGradient.setColorAt(0.9, QColor(222, 222, 222));
         radialGradient.setColorAt(1.0, QColor(241, 241, 241));
         m_SplitRectItem->setBrush(radialGradient);
+
+        /// make rect visiable == false
+        m_SplitRectItem->setVisible(m_LogoItem->isVisible());
     }
 
     void CScene::applyLayout(const std::shared_ptr<SceneLayoutSettings>& layout)
@@ -445,7 +462,11 @@ namespace CM
         updateLogoPosition();
         updateSplitRect();
         updateMarginItems();
-        emit sigNoScenes(m_ShowImageItem->showSplitLine());
+
+        if (!m_ShowItemFlags)
+        {
+            emit sigNoScenes(false);
+        }
 
 #ifdef TOOLWIDGET
         auto logoPos = m_LogoItem->pos();
@@ -462,6 +483,11 @@ namespace CM
     std::shared_ptr<SceneLayoutSettings> CScene::layoutSettings() const
     {
         return m_SceneLayout;
+    }
+
+    void CScene::resetStatus()
+    {
+        m_ShowItemFlags = true;
     }
 
     void CScene::updateShowImage()

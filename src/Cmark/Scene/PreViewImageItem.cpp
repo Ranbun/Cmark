@@ -18,8 +18,8 @@ namespace CM
         : QGraphicsPixmapItem(parent)
           , m_SceneLayout(layout)
     {
-        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
-        setFlag(QGraphicsPixmapItem::ItemIgnoresTransformations);
+//        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+//        setFlag(QGraphicsPixmapItem::ItemIgnoresTransformations);
     }
 
     void PreViewImageItem::resizeImage(const int w, const int h)
@@ -68,7 +68,7 @@ namespace CM
         return m_ImageRatio;
     }
 
-    auto PreViewImageItem::showSplitLine() const -> bool
+    auto PreViewImageItem::validImage() const -> bool
     {
         const auto p = target();
         if(!p || p->isNull())

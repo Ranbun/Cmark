@@ -2,26 +2,42 @@
 
 #include "DisplayWidget.h"
 
-#include "Loader/FileLoad.h"
 #include "Loader/EXIFResolver.h"
-#include "Scene/PreViewImageScene.h"
-#include "Scene/PreViewImageItem.h"
 #include "Scene/LifeSizeImageScene.h"
+#include "Scene/PreViewImageScene.h"
 
 #include "sources/PictureManager.h"
 
-#include "sources/LogoManager.h"
 #include <SceneLayoutEditor.h>
+#include "sources/LogoManager.h"
 
-#include <QImage>
 #include <QFileDialog>
-#include <QMessageBox>
 #include <QGraphicsView>
-#include <QVBoxLayout>
+#include <QImage>
+#include <QMessageBox>
 #include <QResizeEvent>
+#include <QVBoxLayout>
+#include <QDateTime>
 
 namespace CM
 {
+    namespace
+    {
+        QString ImageSaveDefaultName()
+        {
+            const QDateTime currentDateTime = QDateTime::currentDateTime();
+            auto outputName = currentDateTime.toString("yyyy-MM-dd__HHHmmMssS");
+
+            constexpr std::hash<std::string> nameGenerator;
+            const auto nameCode  = nameGenerator(outputName.toStdString());
+            outputName = outputName + "__" + QString::number(nameCode);
+            return {outputName};
+        }
+
+
+
+    }
+
     DisplayWidget::DisplayWidget(QWidget* parent)
         : QWidget(parent)
           , m_PreviewSceneLayoutSettingPanel(std::make_shared<SceneLayoutEditor>())
@@ -41,7 +57,7 @@ namespace CM
         m_View->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
         m_View->setAlignment(Qt::AlignCenter);
 
-        m_View->resize(640, 480);
+        m_View->resize(960, 720);
         m_PreviewImageScene->setSceneRect(0, 0, m_View->rect().width(), m_View->rect().height());
 
         emit sigCreated();
@@ -93,16 +109,20 @@ namespace CM
         /// 设置预览场景显示的资源
         {
             const auto scene = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene);
+            scene->resetStatus();
             scene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
             scene->resetTexItemsPlainText(infos);
-            scene->resetLogoPixmap(previewImageLogo, CameraIndex::Nikon);
+            scene->resetLogoPixmap(previewImageLogo, cameraIndex);
         }
 
         /// 设置单张图片存储的显示资源
-        const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
-        logoScene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
-        logoScene->resetTexItemsPlainText(infos);
-        logoScene->resetLogoPixmap(previewImageLogo, CameraIndex::Nikon);
+        {
+            const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
+            logoScene->resetStatus();
+            logoScene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
+            logoScene->resetTexItemsPlainText(infos);
+            logoScene->resetLogoPixmap(previewImageLogo, cameraIndex);
+        }
 
         /// 构建一个resizeEvent make it to applyLayout all item
         /// TODO: we need update scene in here
@@ -117,20 +137,15 @@ namespace CM
         const auto windowSize = event->size();
         m_View->resize(windowSize); ///< resize view
 
-        dynamic_cast<PreViewImageScene*>(m_PreviewImageScene)->updateSceneRect(m_View, {});
+        dynamic_cast<PreViewImageScene*>(m_PreviewImageScene)->updateSceneRect();
 
         /// 设置视图显示的场景的大小
         /// 设置视图观察的场景的观察点
         {
-            const auto bound = m_PreviewImageScene->itemsBoundingRect();
+            const auto bound = m_PreviewImageScene->sceneRect();
             m_View->setSceneRect(bound); // 设置场景矩形
-            const auto center = bound.center();
-            m_View->centerOn(center);
-            /// make scene fit in view
             m_View->fitInView(bound, Qt::KeepAspectRatio);
         }
-
-
         QWidget::resizeEvent(event);
     }
 
@@ -138,7 +153,10 @@ namespace CM
     {
         auto saveAsFile = [](const std::shared_ptr<QImage>& image, const QString& filePath)
         {
-            if (const bool res = image->save(filePath);
+            const QFileInfo fileInfo(filePath);
+            const auto suffix = fileInfo.suffix();
+
+            if (const bool res = image->save(filePath, suffix.toStdString().c_str());
                 !res)
             {
                 throw std::runtime_error("save scene failed!");
@@ -153,7 +171,7 @@ namespace CM
 
             scene->clearSelection(); // Selections would also render to the file
 
-            const auto rect = scene->itemsBoundingRect();
+            const auto rect = scene->sceneRect();
             const auto iSize = rect.size().toSize();
             auto image = std::make_shared<QImage>(iSize, QImage::Format_ARGB32);
 
@@ -163,9 +181,36 @@ namespace CM
             scene->render(&painter);
             painter.end();
 
-            auto fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                                                         "./untitled.png",
-                                                         tr("Images (*.png *.xpm *.jpg)"));
+            QFileDialog getFileDialog(this, tr("Save File"),
+                                "./" + ImageSaveDefaultName(),
+                                      tr("Images (*.png);;Images (*.xpm);;Images (*.jpg);;All Files (*)"));
+            getFileDialog.setOption(QFileDialog::DontUseCustomDirectoryIcons);
+
+            auto fileName = ImageSaveDefaultName() + ".png";
+
+
+            switch (getFileDialog.exec())
+            {
+                case  QFileDialog::Accepted:
+                    {
+                        auto suffix = getFileDialog.selectedNameFilter();
+                        fileName = getFileDialog.selectedFiles().first();
+                        if (!fileName.isEmpty() && !suffix.isEmpty())
+                        {
+                            suffix = suffix.split(QRegExp("[()*]"), Qt::SkipEmptyParts).last();
+                            fileName += suffix;
+                        }
+                    }
+                    break;
+
+            case QFileDialog::Rejected:
+                {
+                    return;
+                }
+                default:
+                        break;
+
+            }
 
             std::thread saveImage(saveAsFile, image, fileName);
             saveImage.detach();
@@ -185,8 +230,6 @@ namespace CM
                 const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
                 logoScene->saveSceneAsImage(save);
             }
-            break;
-        default:
             break;
         }
     }

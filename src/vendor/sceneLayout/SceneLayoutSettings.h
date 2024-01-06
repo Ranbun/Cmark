@@ -16,18 +16,24 @@ namespace CM
 
     class SceneLayoutSettings
     {
-    public :
+    public:
         struct LSize
         {
             int w;
             int h;
         };
+
         struct LPoint
         {
             int x;
             int y;
         };
         using LPos = LPoint;
+
+        static const LSize & fixPreViewImageSize() { return m_PreViewImageSize; }
+
+    private:
+        inline static LSize m_PreViewImageSize = LSize{ 960, 720 };
 
     public:
         SceneLayoutSettings();
@@ -107,12 +113,9 @@ namespace CM
 
     private:
         [[maybe_unused]] LSize m_ShowImageSize{1,1};
-
         [[maybe_unused]] Margin m_Margin;
-
         [[maybe_unused]] LPoint m_LogoPosition{ -1,-1 };
         [[maybe_unused]] LSize m_LogoSize{ 64, 64 };
-
 
         int m_LogoSpaceWithImage {10};              ///< logo的上边部分到image的bottom的距离
         int m_LeftTextOffset{m_Margin.m_Left};      ///< 左边部分文字的偏移长度 (left + image.width() + right) * 0.1
@@ -121,7 +124,6 @@ namespace CM
 
         int m_SplitRectWidth{0};      ///< 文字与图标分割线(rect & fill)的宽度
         int m_RightMaxWidth{200};       ///< right top & bottom show text item max width 显示的文字的最大宽度
-
     };
 
 } // CM

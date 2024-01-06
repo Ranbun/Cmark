@@ -17,6 +17,10 @@ namespace CM
     {
         m_SceneLayout->update();
         applyLayout(nullptr);
+
+        const auto sceneRect = itemsBoundingRect();
+        setSceneRect(sceneRect);
+
         saveFunc(this);
     }
 } // CM

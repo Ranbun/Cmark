@@ -65,7 +65,7 @@ namespace CM
          * @param pixmap 图片对象
          * @param imageIndexCode 设置的图片的索引 通过索引可以获取图片
          */
-        void resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode) const;
+        void resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode);
 
         /**
          * @brief 根据布局更新场景中所有item
@@ -83,6 +83,12 @@ namespace CM
          * @return shared_otr
          */
         std::shared_ptr<SceneLayoutSettings> layoutSettings() const;
+
+
+        /**
+         * @brief 记录一些场景的显示状态
+         */
+        void resetStatus();
 
     protected:
         /**
@@ -143,7 +149,9 @@ namespace CM
 
     protected:
 
+#ifdef TOOLWIDGET
         QGraphicsWidget* m_ToolWidget;    ///< 悬浮窗口
+#endif 
 
         PreViewImageItem* m_ShowImageItem{}; ///< 预览加载的图片Item对象
         QGraphicsPixmapItem* m_LogoItem{}; ///< 加载的logo Item对象
@@ -161,6 +169,10 @@ namespace CM
         ExifInfoMap m_TargetImageExifInfoLists; ///< 解析的当前图片的所有Info信息
 
         std::shared_ptr<SceneLayoutSettings> m_SceneLayout{nullptr}; ///< 记录场景的布局
+
+        QFont m_PlainTextFont;   ///< 场景显示的文字Item的字体
+
+        bool m_ShowItemFlags{true};
 
     signals:
         void sigNoScenes(bool val);

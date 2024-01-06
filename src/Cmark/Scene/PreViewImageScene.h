@@ -25,7 +25,7 @@ namespace CM
 
         ~PreViewImageScene() override = default;
 
-        void updateSceneRect(const QGraphicsView *view, const QRect &newSceneRect);
+        void updateSceneRect();
     };
 
 } // CM

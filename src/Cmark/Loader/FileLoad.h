@@ -10,7 +10,7 @@ namespace CM
     {
     public:
         FileLoad() = default;
-        [[maybe_unused]] static std::shared_ptr<std::vector<unsigned char>> Load(const std::filesystem::path& path); ///< just read signal file
+        [[maybe_unused]] static std::shared_ptr<std::vector<unsigned char>> load(const std::filesystem::path& path); ///< just read signal file
     };
 }
 
