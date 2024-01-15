@@ -4,6 +4,7 @@ FILE(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT
         ${third_party}/easyexif/exif.cpp ${third_party}/easyexif/exif.h
         ${third_party}/sceneLayout/SceneLayoutEditor.cpp ${third_party}/sceneLayout/SceneLayoutEditor.h
         ${third_party}/sceneLayout/SceneLayoutSettings.cpp ${third_party}/sceneLayout/SceneLayoutSettings.h
+        ${third_party}/QtExtened/qexifimageheader.cpp
         ${third_party}/sceneLayout/dialog.ui
 )
 
@@ -22,6 +23,7 @@ ADD_EXECUTABLE(${target_} ${SOURCE_FILES} ${CMARK_ICON})
 TARGET_INCLUDE_DIRECTORIES(${target_} PRIVATE
         ${third_party}/easyexif
         ${third_party}/sceneLayout
+        ${third_party}/QtExtened
         ${CMAKE_CURRENT_SOURCE_DIR})
 
 SET(LIBRARIES Qt5::Widgets Qt5::Gui)

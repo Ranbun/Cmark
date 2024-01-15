@@ -33,9 +33,6 @@ namespace CM
             outputName = outputName + "__" + QString::number(nameCode);
             return {outputName};
         }
-
-
-
     }
 
     DisplayWidget::DisplayWidget(QWidget* parent)
@@ -45,6 +42,10 @@ namespace CM
           , m_AddLogoScene(new LifeSizeImageScene)
           , m_View(new QGraphicsView)
     {
+
+        /// 注册 std::string 到Qt
+        qRegisterMetaType<std::string>("std::string");
+
         m_PreviewSceneLayoutSettingPanel->setHidden(true);
 
         m_View->setScene(m_PreviewImageScene);
@@ -68,11 +69,6 @@ namespace CM
     void DisplayWidget::open(const std::filesystem::path& path) const
     {
         assert(this);
-    }
-
-    void DisplayWidget::paintEvent(QPaintEvent* event)
-    {
-        QWidget::paintEvent(event);
     }
 
     void DisplayWidget::preViewImage(const std::filesystem::path& path)
@@ -113,6 +109,13 @@ namespace CM
             scene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
             scene->resetTexItemsPlainText(infos);
             scene->resetLogoPixmap(previewImageLogo, cameraIndex);
+
+            scene->updateSceneRect();
+
+            /// fit view show
+            const auto bound = m_PreviewImageScene->sceneRect();
+            m_View->setSceneRect(bound); // 设置场景矩形
+            m_View->fitInView(bound, Qt::KeepAspectRatio);
         }
 
         /// 设置单张图片存储的显示资源
@@ -123,13 +126,6 @@ namespace CM
             logoScene->resetTexItemsPlainText(infos);
             logoScene->resetLogoPixmap(previewImageLogo, cameraIndex);
         }
-
-        /// 构建一个resizeEvent make it to applyLayout all item
-        /// TODO: we need update scene in here
-        const auto rEvent = new QResizeEvent(this->size(), this->size());
-        this->resizeEvent(rEvent);
-        delete rEvent;
-
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent* event)

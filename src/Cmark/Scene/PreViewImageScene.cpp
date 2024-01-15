@@ -21,5 +21,4 @@ namespace CM
             setSceneRect(sceneRect);
         }
     }
-
 }

@@ -83,9 +83,40 @@ namespace CM
         {
             const auto directoryPath = QFileDialog::getExistingDirectory(this);
             const auto path = std::filesystem::path(directoryPath.toStdString());
-            m_LeftDockWidget->ShowMessage(directoryPath.toStdString());
+            m_LeftDockWidget->showMessage(directoryPath.toStdString());
             emit m_DisplayWidget->sigOpen(directoryPath.toStdString());
         });
+
+        connect(m_BatchProcessImage, &QAction::triggered, this,[this]()
+        {
+            const QString rootPath  = emit sigBatchProcessImagesRootPath();
+            const QDir directory(rootPath);
+
+            // 获取目录下的所有文件
+            QFileInfoList fileList = directory.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+
+#if _DEBUG
+            // 遍历文件列表并输出文件名
+            foreach(const QFileInfo & fileInfo, fileList)
+            {
+                qDebug() << fileInfo.fileName();
+                /// 读取文件
+                /// 获取旋转
+                QImage i;
+                
+
+            }
+#endif 
+
+
+
+        });
+        
+        connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
+            {
+                return m_LeftDockWidget->rootImagePath();
+            });
+
 
         connect(m_LeftDockWidget.get(), &FileTreeDockWidget::previewImage, [this](const QString& path)
         {
@@ -98,10 +129,7 @@ namespace CM
 #if  0
         connect(m_EditPreviewSceneLayoutAction, &QAction::triggered, m_DisplayWidget.get(),
                 &DisplayWidget::sigPreViewLayoutSettingsPanel);
-#endif 
-
-
-
+#endif
     }
 
     void MainWindow::InitMenu()
@@ -126,6 +154,11 @@ namespace CM
         m_OpenDirectoryAction->setIcon(QIcon("./sources/icons/open.png"));
         file->addAction(m_OpenDirectoryAction);
 
+        m_BatchProcessImage = new QAction("Process All");
+        m_BatchProcessImage->setToolTip(tr("Process All Image Files"));
+        m_BatchProcessImage->setIcon(QIcon("./sources/icons/open.png"));
+        file->addAction(m_BatchProcessImage);
+
         const auto Edit = new QMenu("Edit(&E)");
         MenuBar->addMenu(Edit);
         m_EditPreviewSceneLayoutAction = new QAction("Layout Setting");
@@ -133,11 +166,7 @@ namespace CM
         m_EditPreviewSceneLayoutAction->setShortcut({"Ctrl+E"});
         m_EditPreviewSceneLayoutAction->setIcon(QIcon("./sources/icons/previewSceneLayoutsettings.png"));
         Edit->addAction(m_EditPreviewSceneLayoutAction);
-    }
 
-    void MainWindow::preViewImage(const std::filesystem::path& path) const
-    {
-        m_DisplayWidget->preViewImage(path);
     }
 
     void MainWindow::InitTool()
@@ -175,5 +204,8 @@ namespace CM
                 m_DisplayWidget->saveScene(SceneIndex::GenerateLogoScene);
             });
         }
+
+
+
     }
 } // CM

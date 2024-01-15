@@ -77,7 +77,7 @@ namespace CM
         m_FileSystemModel = nullptr;
     }
 
-    void FileTreeDockWidget::ShowMessage(const std::string& message)
+    void FileTreeDockWidget::showMessage(const std::string& message)
     {
         if(!m_FileSystemModel)
         {
@@ -92,5 +92,12 @@ namespace CM
         }
         m_FileSystemModel->setRootPath(message.c_str());
         m_TreeView->setRootIndex(m_FileSystemModel->index(message.c_str()));
+    }
+
+    QString FileTreeDockWidget::rootImagePath() const
+    {
+        const auto rootDirIndex = m_TreeView->rootIndex();
+        return m_FileSystemModel->rootPath();
+
     }
 }

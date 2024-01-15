@@ -3,9 +3,15 @@
 #include <UI/StatusBar.h>
 
 #include "EXIFResolver.h"
+
+#include <QBuffer>
+#include <QImageReader>
+
 #include "FileLoad.h"
 
 #include <QString>
+
+#include "QExifImageHeader"
 
 namespace CM
 {
@@ -152,8 +158,42 @@ namespace CM
 
         auto hashValue = this->hash(path.string());
         /// load file
-        auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue){
+        auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue)
+        {
             auto loadDataPtr = FileLoad::load(path);
+
+#if _DEBUG >> 1
+
+            QByteArray imageData(reinterpret_cast<const char*>(loadDataPtr->data()),
+                static_cast<int>(loadDataPtr->size()));
+
+            // Create a QBuffer to treat the QByteArray as a QIODevice
+            QBuffer buffer(&imageData);
+            buffer.open(QIODevice::ReadOnly);
+
+            // Create a QImageReader and set the device to the QBuffer
+            QImageReader imageReader(&buffer);
+
+            // Read the image from the QImageReader
+            QImage image = imageReader.read();
+
+            QExifImageHeader readerExifHeader;
+
+            // readerExifHeader.loadFromJpeg(path.string().c_str());
+            readerExifHeader.loadFromJpeg(&buffer);
+
+            // *readerFile = readerExifHeader.thumbnail();
+            auto imagetags = readerExifHeader.imageTags();
+            auto gpstags = readerExifHeader.gpsTags();
+            auto extendedtags = readerExifHeader.extendedTags();
+
+            auto width = readerExifHeader.value(QExifImageHeader::Make).toString();
+
+            auto ers = image.save("test.png", "png", 1);
+
+
+#endif 
+
 
             easyexif::EXIFInfo EXIFResolver;
             auto exifCheckCode = EXIFResolver.parseFrom(loadDataPtr->data(),loadDataPtr->size());

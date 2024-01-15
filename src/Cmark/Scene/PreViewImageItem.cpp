@@ -18,8 +18,6 @@ namespace CM
         : QGraphicsPixmapItem(parent)
           , m_SceneLayout(layout)
     {
-//        setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
-//        setFlag(QGraphicsPixmapItem::ItemIgnoresTransformations);
     }
 
     void PreViewImageItem::resizeImage(const int w, const int h)
@@ -90,9 +88,6 @@ namespace CM
     QPixmap PreViewImageItem::scaledPixmap(const std::shared_ptr<QPixmap>& image, const int w, const int h)
     {
         auto p = scaledPixmap(*image, w, h);
-        const auto size = p.size();
-        std::cout << "scale pixmap";
-        qDebug() <<size;
         return p;
     }
 

@@ -56,7 +56,6 @@ namespace CM
         void saveScene(SceneIndex sceneIndex);
 
     protected:
-        void paintEvent(QPaintEvent* event) override;
         void resizeEvent(QResizeEvent* event) override;
 
     private:

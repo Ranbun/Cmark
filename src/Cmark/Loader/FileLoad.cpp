@@ -19,7 +19,7 @@ namespace  CM
 
 #ifdef __APPLE__
         std::ifstream picture(path.string(), std::ios::binary);
-#endif 
+#endif
 
 
 #ifndef _WIN32
@@ -32,7 +32,6 @@ namespace  CM
 #endif
 #endif
 #endif
-
 
         if (!picture.is_open())
         {
@@ -53,5 +52,12 @@ namespace  CM
         picture.close();
 
         return std::make_shared<std::vector<unsigned char>>(std::move(result));
+    }
+
+    std::shared_ptr<QByteArray> FileLoad::toQByteArray(const CData &inputData)
+    {
+        auto outData = std::make_shared<QByteArray>(reinterpret_cast<const char*>(inputData->data()),
+                                                    static_cast<int>(inputData->size()));
+        return std::move(outData);
     }
 };

@@ -43,12 +43,11 @@ namespace CM
          */
         [[nodiscard]] [[maybe_unused]]  const float& imageRatio() const;
 
-
-        bool validImage() const;
-
-    signals:
-        void sigShowSplitLine(bool val);
-
+        /**
+         * @brief 当前显示得结果是否可用
+         * @return bool
+         */
+        [[nodiscard]] bool validImage() const;
 
     protected:
         static QPixmap scaledPixmap(const QPixmap& image, int w, int h);
