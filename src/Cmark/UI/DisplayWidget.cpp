@@ -10,6 +10,7 @@
 
 #include <SceneLayoutEditor.h>
 #include "sources/LogoManager.h"
+#include <ImageProcess/ImageProcess.h>
 
 #include <QFileDialog>
 #include <QGraphicsView>
@@ -17,24 +18,9 @@
 #include <QMessageBox>
 #include <QResizeEvent>
 #include <QVBoxLayout>
-#include <QDateTime>
 
 namespace CM
 {
-    namespace
-    {
-        QString ImageSaveDefaultName()
-        {
-            const QDateTime currentDateTime = QDateTime::currentDateTime();
-            auto outputName = currentDateTime.toString("yyyy-MM-dd__HHHmmMssS");
-
-            constexpr std::hash<std::string> nameGenerator;
-            const auto nameCode  = nameGenerator(outputName.toStdString());
-            outputName = outputName + "__" + QString::number(nameCode);
-            return {outputName};
-        }
-    }
-
     DisplayWidget::DisplayWidget(QWidget* parent)
         : QWidget(parent)
           , m_PreviewSceneLayoutSettingPanel(std::make_shared<SceneLayoutEditor>())
@@ -149,6 +135,9 @@ namespace CM
     {
         auto saveAsFile = [](const std::shared_ptr<QImage>& image, const QString& filePath)
         {
+            ImageProcess::save(image, filePath);
+            return;
+
             const QFileInfo fileInfo(filePath);
             const auto suffix = fileInfo.suffix();
 

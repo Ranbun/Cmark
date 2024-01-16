@@ -122,6 +122,10 @@ namespace CM
          */
         size_t resolver(const std::filesystem::path & path);
 
+
+        [[deprecated]] void resolver(std::shared_ptr<QByteArray> imagePixels, size_t imageExifResolverCode);
+
+
         /**
          * @brief 通过加载时候返回的索引获取加载完成的图片数据
          * @param index 加载时候返回的索引

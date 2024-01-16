@@ -66,7 +66,7 @@ namespace CM
             readImage.fill(Qt::transparent);
 
             const auto loadDataPtr = FileLoad::load(path);
-            auto imageData = FileLoad::toQByteArray(loadDataPtr);
+            const auto imageData = FileLoad::toQByteArray(loadDataPtr);
 
             QBuffer ReadAsImageBuffer(imageData.get());
             {
@@ -78,20 +78,6 @@ namespace CM
             imageReader->setAutoTransform(true);
             readImage = imageReader->read();
 
-#if _DEBUG
-            QExifImageHeader readerExifHeader;
-            QBuffer ReadImageExifBuffer(imageData.get());
-            {
-                ReadImageExifBuffer.open(QIODevice::ReadOnly);
-                ReadImageExifBuffer.seek(0);
-            }
-            readerExifHeader.loadFromJpeg(&ReadImageExifBuffer);
-
-            auto imageTags = readerExifHeader.imageTags();
-            auto gpsTags = readerExifHeader.gpsTags();
-            auto extendedTags = readerExifHeader.extendedTags();
-
-#endif
             /// convert to QPixmap
             const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readImage)));
             insert({ imageIndexCode,preViewImage });
