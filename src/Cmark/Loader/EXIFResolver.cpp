@@ -1,6 +1,7 @@
 #include <CMark.h>
 
 #include <UI/StatusBar.h>
+#include <ImageProcess/ImageProcess.h>
 
 #include "EXIFResolver.h"
 
@@ -24,52 +25,59 @@ namespace CM
 
         std::mutex g_InfoMutex;
 
-        QString toQString(QExifValue & value)
+        QList<QString> toQString(QExifValue & value)
         {
             switch (value.type())
             {
                 case QExifValue::Type::Byte:
                 {
                     const auto byte = value.toByte();
-                    return QString::number(byte);
+                    return { QString::number(byte) };
                 }
                 case QExifValue::Type::Ascii:
                 {
-                    return value.toString();
+                    return {value.toString()};
                 }
                 case QExifValue::Type::Short:
                 {
                     const auto shortData = value.toShort();
-                    return QString::number(shortData);
+                    return {QString::number(shortData)};
                 }
                 case QExifValue::Type::Long:
                 {
                     const auto longData = value.toLong();
-                    return QString::number(longData);
+                    return {QString::number(longData)};
                 }
                 case QExifValue::Type::Rational:
                 {
-                    const auto data = value.toRational().first;
-                    return QString::number(data);
+                    const auto data = value.toRational();
+                    auto [f, s] = data;
+                    return { QString::number(f),QString::number(s)};
                 }
                 case QExifValue::Type::Undefined:
                 {
-                    const auto data = value.toString();
-                    return data;
+                    if(value.encoding() == QExifValue::TextEncoding::NoEncoding)
+                    {
+                        const auto array = value.toByteArray();
+                        auto data = QString::fromUtf8(array);
+                        return {data};
+                    }
+                    const auto array = value.toString();
+                    return {array};
                 }
                 case QExifValue::Type::SignedLong:
                 {
                     const auto data = value.toSignedLong();
-                    return QString::number(data);
+                    return {QString::number(data)};
                 }
                 case QExifValue::Type::SignedRational:
                 {
-                    const auto data = value.toSignedRational().first;
-                    return QString::number(data);
+                    const auto map = value.toSignedRational();
+                    const auto [f,s] = map;
+                    return {QString::number(s),QString::number(s)};
                 }
             }
         }
-
 
         std::string ImageTag2String(const QExifImageHeader & readerExifHeader,QExifImageHeader::ImageTag tag)
         {
@@ -107,7 +115,7 @@ namespace CM
                 case QExifImageHeader::ImageTag::Software:
                 case QExifImageHeader::ImageTag::Artist:
                 case QExifImageHeader::ImageTag::Copyright:
-                    return toQString(readerExifHeader.value(tag)).toStdString();
+                    return toQString(readerExifHeader.value(tag))[0].toStdString();
                     break;
             }
 
@@ -178,7 +186,7 @@ namespace CM
             case QExifImageHeader::ExifExtendedTag::SubjectDistanceRange    :
             {
                 qDebug() << tag;
-                auto res = toQString(readerExifHeader.value(tag)).toStdString();
+                auto res = toQString(readerExifHeader.value(tag))[0].toStdString();
                 return res.empty()? "":res;
             }
             break;
@@ -186,9 +194,6 @@ namespace CM
                 return "";
             }
         }
-
-
-
 
     }
 
@@ -265,14 +270,6 @@ namespace CM
         return infoMaps;
     }
 
-    template <>
-    size_t EXIFResolver::hash<std::string>(const std::string& path)
-    {
-        constexpr std::hash<std::string> hasher;
-        const size_t hashValue = hasher(path);
-        return hashValue;
-    }
-
     void EXIFResolver::destory()
     {
         g_LoadedInfos.clear();
@@ -319,13 +316,14 @@ namespace CM
         return {status,outputInfos};
     }
 
-    size_t EXIFResolver::resolver(const std::filesystem::path &path)
+    size_t EXIFResolver::resolver(const std::string& path) const
     {
         assert(this);
 
-        auto hashValue = this->hash(path.string());
+        auto hashValue = ImageProcess::generateFileIndexCode(path);
+
         /// load file
-        auto loadImageFile = [](std::promise<void> & exitSignal, const std::filesystem::path & path, size_t fileHashValue)
+        auto loadImageFile = [](std::promise<void> & exitSignal, const std::string & path, size_t fileHashValue)
         {
             auto loadDataPtr = FileLoad::load(path);
 
@@ -389,7 +387,8 @@ namespace CM
 
     void EXIFResolver::resolver(std::shared_ptr<QByteArray> imagePixels, size_t imageExifResolverCode)
     {
-        auto loadImageFile = [](std::promise<void>& exitSignal, std::shared_ptr<QByteArray> imagePixels, size_t fileHashValue)
+        // auto loadImageFile = [](std::promise<void>& exitSignal, std::shared_ptr<QByteArray> imagePixels, size_t fileHashValue)
+        auto loadImageFile = [](std::shared_ptr<QByteArray> imagePixels)
         {
 
                 QExifImageHeader readerExifHeader;
@@ -427,11 +426,61 @@ namespace CM
                         in->Copyright = ImageTag2String(readerExifHeader, QExifImageHeader::ImageTag::Copyright);
                     }
 
-                    for(auto i: readerExifHeader.extendedTags())
+                    if(readerExifHeader.contains(QExifImageHeader::ExifExtendedTag::ExposureTime))
                     {
-                        qDebug() << QString(ExifExtendTagToString(readerExifHeader,i).c_str()) << endl;
+                        const auto res = ExifExtendTagToString(readerExifHeader, QExifImageHeader::ExifExtendedTag::ExposureTime);
+                        in->ExposureTime = std::stod(res);
                     }
 
+                    if (readerExifHeader.contains(QExifImageHeader::ExifExtendedTag::FocalLength))
+                    {
+                        auto res = ExifExtendTagToString(readerExifHeader, QExifImageHeader::ExifExtendedTag::FocalLength);
+
+                        in->FocalLength = static_cast<double>(readerExifHeader.value(QExifImageHeader::ExifExtendedTag::FocalLength).toLong());
+                    }
+
+                    if (readerExifHeader.contains(QExifImageHeader::ExifExtendedTag::FocalLengthIn35mmFilm))
+                    {
+
+                        in->FocalLengthIn35mm = static_cast<double>(readerExifHeader.value(QExifImageHeader::ExifExtendedTag::FocalLengthIn35mmFilm).toLong());
+                    }
+
+                    if (readerExifHeader.contains(QExifImageHeader::ExifExtendedTag::FNumber))
+                    {
+
+                        auto res = ExifExtendTagToString(readerExifHeader, QExifImageHeader::ExifExtendedTag::FNumber);
+
+                        in->FNumber = static_cast<double>(readerExifHeader.value(QExifImageHeader::ExifExtendedTag::FNumber).toLong());
+                    }
+
+                    if (readerExifHeader.contains(QExifImageHeader::ExifExtendedTag::ISOSpeedRatings))
+                    {
+                        auto res = ExifExtendTagToString(readerExifHeader, QExifImageHeader::ExifExtendedTag::ISOSpeedRatings);
+                        in->ISOSpeedRatings = static_cast<double>(readerExifHeader.value(QExifImageHeader::ExifExtendedTag::ISOSpeedRatings).toLong());
+                    }
+
+                    if (readerExifHeader.contains(QExifImageHeader::ExifExtendedTag::ShutterSpeedValue))
+                    {
+                        auto res = ExifExtendTagToString(readerExifHeader, QExifImageHeader::ExifExtendedTag::ShutterSpeedValue);
+
+                        in->ShutterSpeedValue = static_cast<double>(readerExifHeader.value(QExifImageHeader::ExifExtendedTag::ShutterSpeedValue).toLong());
+                    }
+
+                    if (readerExifHeader.contains(QExifImageHeader::ExifExtendedTag::MakerNote))
+                    {
+                        auto res = ExifExtendTagToString(readerExifHeader, QExifImageHeader::ExifExtendedTag::MakerNote);
+                        in->LensInfo.Make = res;
+                    }
+
+                    for(auto i : extendedTags)
+                    {
+                        auto res = ExifExtendTagToString(readerExifHeader, i);
+                        qDebug() << QString::fromStdString(res);
+                    }
+
+
+
+                    putchar(10);
 
                     // in->ImageDescription = out.ImageDescription;
                     // in->Make = out.Make;
@@ -463,6 +512,7 @@ namespace CM
                     /// TODO need add others
                 }
 
+#if  0
                 std::lock_guard<std::mutex> local(g_InfoMutex);
                 g_LoadedInfos.insert({ fileHashValue,outputExIFInfos });
                 g_LoadImageCheckCode.insert({ fileHashValue,0 });
@@ -471,12 +521,17 @@ namespace CM
                 {
                     g_ThreadFinishSignals.erase(fileHashValue);
                 }
+#endif 
         };
 
+#if 0
         std::promise<void> exitSignal;
         g_ThreadFinishSignals.insert({ imageExifResolverCode,std::move(exitSignal) });
         std::thread loading(loadImageFile, std::ref(g_ThreadFinishSignals.at(imageExifResolverCode)), imagePixels,imageExifResolverCode);
         loading.detach();
+#endif
+
+        loadImageFile(imagePixels);
     }
 
     std::weak_ptr<EXIFInfo> EXIFResolver::getExifInfo(const size_t index) const

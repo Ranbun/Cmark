@@ -41,13 +41,13 @@ namespace CM
          * @param path 路径
          * @note connect with sigOpen
          */
-        void open(const std::filesystem::path& path) const;
+        void open(const std::string& path) const;
 
         /**
          * @brief 预览文件路径下的图片
          * @param path 文件路径
          */
-        void preViewImage(const std::filesystem::path& path);
+        void preViewImage(const std::string& path);
 
         /**
          * @brief save scene as Image

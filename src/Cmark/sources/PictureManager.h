@@ -6,7 +6,7 @@
 #include <queue>
 #include <memory>
 #include <QPixmap>
-#include <Loader/QExifImageHeader>
+#include <Base/ImagePack.h>
 
 
 namespace CM
@@ -135,10 +135,17 @@ namespace CM
 
         static void remove(const size_t index);
 
-        static size_t loadImage(const std::string& path);
+        [[deprecated]] static size_t loadImage(const std::string& path);
+
+        /**
+         * @brief load image from QByteArray
+         * @param pack params pack
+         */
+        static void loadImage(const ImagePack& pack);
 
     private:
         static void destory();
+
     private:
         static FixMap<size_t,std::shared_ptr<QPixmap>> m_Maps;
 

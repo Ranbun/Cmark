@@ -3,13 +3,13 @@
 
 namespace  CM
 {
-    std::shared_ptr<std::vector<unsigned char>> FileLoad::load(const std::filesystem::path& path)
+    std::shared_ptr<std::vector<unsigned char>> FileLoad::load(const std::string& path)
     {
         std::locale::global(std::locale(""));
 
 #ifdef _WIN32
         std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;  // NOLINT(clang-diagnostic-deprecated-declarations)
-        std::wstring filePath = converter.from_bytes(path.string());
+        std::wstring filePath = converter.from_bytes(path);
         std::ifstream picture(filePath, std::ios::binary);
 #endif
 

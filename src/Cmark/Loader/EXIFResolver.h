@@ -120,7 +120,7 @@ namespace CM
          * @param path 图片路径
          * @return 加载的图片的索引 可以通过此索引获取加载的exif信息
          */
-        size_t resolver(const std::filesystem::path & path);
+        size_t resolver(const std::string& path) const;
 
 
         [[deprecated]] void resolver(std::shared_ptr<QByteArray> imagePixels, size_t imageExifResolverCode);

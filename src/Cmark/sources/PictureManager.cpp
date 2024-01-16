@@ -5,6 +5,10 @@
 #include <QImageReader>
 
 #include "Loader/FileLoad.h"
+#include <ImageProcess/ImageProcess.h>
+
+#include "Base/ImagePack.h"
+
 /// make it thread feature
 
 namespace CM
@@ -60,7 +64,7 @@ namespace CM
             return imageIndexCode;
         }
 
-        auto readFileToImage = [](const std::filesystem::path& path, std::promise<void> & loadedSignal,size_t imageIndexCode)
+        auto readFileToImage = [](const std::string& path, std::promise<void> & loadedSignal,size_t imageIndexCode)
         {
             QImage readImage;
             readImage.fill(Qt::transparent);
@@ -97,6 +101,50 @@ namespace CM
 
         return imageIndexCode;
     }
+
+    void PictureManager::loadImage(const ImagePack& pack)
+    {
+        if (getImage(pack.fileIndexCode))
+            return;
+
+        auto readFileToImage = [](const ImagePack& pack, std::promise<void>& loadedSignal)
+        {
+            auto imageIndexCode = pack.fileIndexCode;
+            QImage readImage;
+            readImage.fill(Qt::transparent);
+
+            std::unique_lock local_mutex(*pack.localMutex);
+            const QFileInfo fileInfo(QString::fromStdString(pack.fileName));
+            QBuffer ReadAsImageBuffer(pack.imageData.get());
+            local_mutex.unlock();
+
+            ReadAsImageBuffer.open(QIODevice::ReadOnly);
+            ReadAsImageBuffer.seek(0);
+
+            const auto format = fileInfo.suffix().toUpper().toStdString();
+            const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, format.c_str()); ///< maybe we need get file name
+            imageReader->setAutoTransform(true);
+            readImage = imageReader->read();
+
+            /// convert to QPixmap
+            const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readImage)));
+            insert({ imageIndexCode,preViewImage });
+
+            {
+                std::lock_guard<std::mutex> local(g_Mutex);
+                loadedSignal.set_value();
+                g_LoadFinishSignals.erase(imageIndexCode);
+            }
+
+        };
+
+        std::promise<void> exitSignal;
+        g_LoadFinishSignals.insert({ pack.fileIndexCode,std::move(exitSignal) });
+        std::thread readImage(readFileToImage, std::ref(pack), std::ref(g_LoadFinishSignals.at(pack.fileIndexCode)));
+        readImage.detach();
+
+    }
+
 
     void PictureManager::destory()
     {

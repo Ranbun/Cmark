@@ -11,6 +11,7 @@
 #include <SceneLayoutEditor.h>
 #include "sources/LogoManager.h"
 #include <ImageProcess/ImageProcess.h>
+#include <Base/ImagePack.h>
 
 #include <QFileDialog>
 #include <QGraphicsView>
@@ -52,18 +53,28 @@ namespace CM
         InitConnect();
     }
 
-    void DisplayWidget::open(const std::filesystem::path& path) const
+    void DisplayWidget::open(const std::string& path) const
     {
         assert(this);
     }
 
-    void DisplayWidget::preViewImage(const std::filesystem::path& path)
+    void DisplayWidget::preViewImage(const std::string& path)
     {
         using PictureManagerInterFace = CM::PictureManager;
         EXIFResolver resolver;
 
+        /// load file as QByteArray
+        const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
+        const auto data = ImageProcess::loadFile(QString::fromStdString(path));
+
+        const ImagePack loadImagePack{data,path,std::make_shared<std::mutex>(),fileIndexCode};
+
         /// load image
-        const auto imageIndexCode = PictureManagerInterFace::loadImage(path.string());
+        const auto imageIndexCode = fileIndexCode;
+        PictureManagerInterFace::loadImage(loadImagePack);
+
+
+        resolver.resolver(data, fileIndexCode);
 
         const auto imageExifInfoIndex = resolver.resolver(path);
         /// check resolver result
