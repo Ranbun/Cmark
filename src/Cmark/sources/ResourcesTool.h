@@ -21,7 +21,6 @@ namespace CM::Tools
 
         ~ResourcesTools() = default;
 
-        
         static std::shared_ptr<QPixmap> getLoadedImage(const size_t index)
         {
             return PictureManager::getImage(index);
@@ -38,6 +37,8 @@ namespace CM::Tools
             LogoManager::destory();
             PictureManager::destory();
         }
+
+        /// TODO: load image & resolver exif infos
 
     };
 }

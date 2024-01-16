@@ -12,6 +12,7 @@
 #include "sources/LogoManager.h"
 #include <ImageProcess/ImageProcess.h>
 #include <Base/ImagePack.h>
+#include <Log/CLog.h>
 
 #include <QFileDialog>
 #include <QGraphicsView>
@@ -72,9 +73,7 @@ namespace CM
         /// load image
         const auto imageIndexCode = fileIndexCode;
         PictureManagerInterFace::loadImage(loadImagePack);
-
-
-        resolver.resolver(data, fileIndexCode);
+        resolver.resolver(loadImagePack);
 
         const auto imageExifInfoIndex = resolver.resolver(path);
         /// check resolver result
@@ -83,6 +82,10 @@ namespace CM
         {
             QMessageBox::about(this, "Warning", message.c_str());
             return;
+        }
+        else
+        {
+            CLog::Print<QString>(QString("Resolver Exif Info Success!"));
         }
 
         /// get resolved image infos

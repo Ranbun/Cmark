@@ -3,6 +3,7 @@
 
 #include "exif.h"
 #include "Base/Type.h"
+#include "Base/ImagePack.h"
 
 #include <filesystem>
 
@@ -120,11 +121,10 @@ namespace CM
          * @param path 图片路径
          * @return 加载的图片的索引 可以通过此索引获取加载的exif信息
          */
-        size_t resolver(const std::string& path) const;
+        [[deprecated]] size_t resolver(const std::string& path) const;
 
-
-        [[deprecated]] void resolver(std::shared_ptr<QByteArray> imagePixels, size_t imageExifResolverCode);
-
+        static void
+        resolver(const ImagePack &pack);
 
         /**
          * @brief 通过加载时候返回的索引获取加载完成的图片数据
@@ -148,6 +148,7 @@ namespace CM
         static ExifInfoMap resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
 
     private:
+
         static void destory();
 
     public:
