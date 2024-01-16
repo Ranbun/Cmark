@@ -151,22 +151,6 @@ namespace CM
         static void destory();
 
     public:
-        /**
-         * @brief 生成对应的hashCode
-         * @tparam T hash的类型
-         * @param path hash的变量
-         * @return hash的结果
-         */
-        template<typename T>
-        size_t hash(const T & path)
-        {
-            std::hash<T> Hasher;
-            const size_t hashValue = Hasher(path);
-            return hashValue;
-        }
-
-        template<>
-        size_t hash(const std::string & path);
     };
 
 } // CM
