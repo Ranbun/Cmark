@@ -7,12 +7,14 @@
 #include "StatusBar.h"
 #include "DisplayWidget.h"
 #include "sources/ResourcesTool.h"
+#include "ImageProcess/ImageProcess.h"
 
 
 #include <QMenuBar>
 #include <QToolBar>
 #include <QFileDialog>
 #include <QAction>
+#include <QFileInfoList>
 
 #if _DEBUG
 #include <QDebug>
@@ -20,6 +22,49 @@
 
 namespace CM
 {
+    namespace 
+    {
+        QFileInfoList imageFileLists;
+        const QList<QString> availableFileType{ "jpeg","jpg"};
+
+        void scanDirectory(const QString& path)
+        {
+            const QDir dir(path);
+            // 判断目录是否存在
+            if (!dir.exists())
+            {
+                qDebug() << "Directory does not exist: " << path;
+                return;
+            }
+
+            // 获取目录下的所有文件和子文件夹
+            QStringList entries = dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+
+            // 遍历文件和子文件夹
+            foreach(const QString & entry, entries)
+            {
+                QString entryPath = dir.filePath(entry);
+
+                // 如果是文件夹，则递归扫描
+                if (QFileInfo(entryPath).isDir())
+                {
+                    scanDirectory(entryPath);
+                }
+                else
+                {
+                    auto fileInfo = QFileInfo(entryPath);
+                    const auto fileType = fileInfo.suffix().toLower();
+                    if (availableFileType.contains(fileType))
+                    {
+                        imageFileLists.append(fileInfo);
+                    }
+                }
+            }
+        };
+
+    }
+
+
     MainWindow::MainWindow()
         : QMainWindow(nullptr)
     {
@@ -83,9 +128,81 @@ namespace CM
         {
             const auto directoryPath = QFileDialog::getExistingDirectory(this);
             const auto path = std::filesystem::path(directoryPath.toStdString());
-            m_LeftDockWidget->ShowMessage(directoryPath.toStdString());
+            m_LeftDockWidget->showMessage(directoryPath.toStdString());
             emit m_DisplayWidget->sigOpen(directoryPath.toStdString());
         });
+
+        connect(m_BatchProcessImage, &QAction::triggered, this,[this]()
+        {
+            const QString rootPath  = emit sigBatchProcessImagesRootPath();
+            const QDir directory(rootPath);
+
+            imageFileLists.clear();
+            scanDirectory(rootPath);
+
+            // 遍历文件列表并输出文件名
+
+            auto dealFiles = [this](QFileInfoList & imageFileLists)
+            {
+                using PictureManagerInterFace = CM::PictureManager;
+                EXIFResolver resolver;
+                foreach(const QFileInfo & fileInfo, imageFileLists)
+                {
+                    qDebug() << "File: " << fileInfo.filePath();
+
+#if  0
+                    /// 开线程 加载所有文件
+                    const auto imageIndexCode = PictureManagerInterFace::loadImage(fileInfo.filePath().toStdString());
+                    /// 解析文件信息
+                    const auto resolverIndex = resolver.resolver(fileInfo.filePath().toStdString());
+
+                    /// get resolved image infos
+                    const auto exifInfos = resolver.getExifInfo(resolverIndex);
+
+                    /// 加载logo
+                    const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
+                    LogoManager::loadCameraLogo(cameraIndex);
+                    const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
+
+                    /// get loaded image
+                    const auto preViewImage = PictureManager::getImage(imageIndexCode);
+
+                    const auto infos = EXIFResolver::resolverImageExif(exifInfos);
+
+                    const auto imageRatio = static_cast<float>(preViewImage->size().width()) / preViewImage->size().height();
+
+                    auto newSize = QSize(1000, 1000 / imageRatio);
+
+                    if(preViewImage->isNull())
+                    {
+                        qDebug() << "Pixmap Null";
+                    }
+
+                    const auto output = std::make_shared<QPixmap >(preViewImage->scaled(newSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+
+                    if (output->isNull())
+                    {
+                        qDebug() << "Scaled Pixmap Null";
+
+                        continue;
+                    }
+                    ImageProcess::save(output, "");
+
+#endif 
+
+                }
+            };
+
+            std::thread dealFileThread(dealFiles,std::ref(imageFileLists));
+            dealFileThread.detach();
+
+        });
+        
+        connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
+            {
+                return m_LeftDockWidget->rootImagePath();
+            });
+
 
         connect(m_LeftDockWidget.get(), &FileTreeDockWidget::previewImage, [this](const QString& path)
         {
@@ -98,10 +215,7 @@ namespace CM
 #if  0
         connect(m_EditPreviewSceneLayoutAction, &QAction::triggered, m_DisplayWidget.get(),
                 &DisplayWidget::sigPreViewLayoutSettingsPanel);
-#endif 
-
-
-
+#endif
     }
 
     void MainWindow::InitMenu()
@@ -126,6 +240,12 @@ namespace CM
         m_OpenDirectoryAction->setIcon(QIcon("./sources/icons/open.png"));
         file->addAction(m_OpenDirectoryAction);
 
+        m_BatchProcessImage = new QAction("Process All");
+        m_BatchProcessImage->setToolTip(tr("Process All Image Files"));
+        m_BatchProcessImage->setIcon(QIcon("./sources/icons/multiProcess.png"));
+        m_BatchProcessImage->setShortcut({ "Ctrl+Shift+A" });
+        file->addAction(m_BatchProcessImage);
+
         const auto Edit = new QMenu("Edit(&E)");
         MenuBar->addMenu(Edit);
         m_EditPreviewSceneLayoutAction = new QAction("Layout Setting");
@@ -133,11 +253,7 @@ namespace CM
         m_EditPreviewSceneLayoutAction->setShortcut({"Ctrl+E"});
         m_EditPreviewSceneLayoutAction->setIcon(QIcon("./sources/icons/previewSceneLayoutsettings.png"));
         Edit->addAction(m_EditPreviewSceneLayoutAction);
-    }
 
-    void MainWindow::preViewImage(const std::filesystem::path& path) const
-    {
-        m_DisplayWidget->preViewImage(path);
     }
 
     void MainWindow::InitTool()
@@ -175,5 +291,8 @@ namespace CM
                 m_DisplayWidget->saveScene(SceneIndex::GenerateLogoScene);
             });
         }
+
+
+
     }
 } // CM

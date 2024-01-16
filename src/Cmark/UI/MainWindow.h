@@ -17,7 +17,6 @@ namespace CM
         Q_OBJECT
     public:
         MainWindow();
-        void preViewImage(const std::filesystem::path & path) const;
 
     private:
         void InitWindowLayout();
@@ -36,9 +35,17 @@ namespace CM
         /// File Actions
         QAction* m_NewAction{nullptr};
         QAction* m_OpenDirectoryAction{nullptr};   ///< 打开文件夹
+        QAction* m_BatchProcessImage{nullptr};
 
         /// Edit
         QAction * m_EditPreviewSceneLayoutAction{nullptr};
+
+    signals:
+        /**
+         * @brief 
+         * @return 
+         */
+        QString sigBatchProcessImagesRootPath();
 
     };
 

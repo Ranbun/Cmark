@@ -1,14 +1,15 @@
 #include <CMark.h>
 #include "PictureManager.h"
 
+#include <QBuffer>
 #include <QImageReader>
 
-
+#include "Loader/FileLoad.h"
 /// make it thread feature
 
 namespace CM
 {
-    namespace 
+    namespace
     {
         std::unordered_map<size_t, std::promise<void>> g_LoadFinishSignals;
         std::mutex g_Mutex;
@@ -46,7 +47,7 @@ namespace CM
 
         std::lock_guard<std::mutex> local(g_Mutex);
         m_Maps.remove(index);
-            
+
     }
 
     size_t PictureManager::loadImage(const std::string& path)
@@ -61,17 +62,24 @@ namespace CM
 
         auto readFileToImage = [](const std::filesystem::path& path, std::promise<void> & loadedSignal,size_t imageIndexCode)
         {
-            auto readerFile = new QImage();
-            readerFile->fill(Qt::transparent);
+            QImage readImage;
+            readImage.fill(Qt::transparent);
 
-            auto reader = new QImageReader(path.string().c_str());
-            reader->setAutoTransform(true);
-            *readerFile = reader->read();
-            delete reader;
-            reader = nullptr;
+            const auto loadDataPtr = FileLoad::load(path);
+            const auto imageData = FileLoad::toQByteArray(loadDataPtr);
+
+            QBuffer ReadAsImageBuffer(imageData.get());
+            {
+                ReadAsImageBuffer.open(QIODevice::ReadOnly);
+                ReadAsImageBuffer.seek(0);
+            }
+
+            const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer,"JPEG");
+            imageReader->setAutoTransform(true);
+            readImage = imageReader->read();
 
             /// convert to QPixmap
-            const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(*readerFile)));
+            const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readImage)));
             insert({ imageIndexCode,preViewImage });
 
             {
@@ -80,8 +88,6 @@ namespace CM
                 g_LoadFinishSignals.erase(imageIndexCode);
             }
 
-            delete readerFile;
-            readerFile = nullptr;
         };
 
         std::promise<void> exitSignal;

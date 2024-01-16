@@ -6,6 +6,8 @@
 #include <queue>
 #include <memory>
 #include <QPixmap>
+#include <Loader/QExifImageHeader>
+
 
 namespace CM
 {

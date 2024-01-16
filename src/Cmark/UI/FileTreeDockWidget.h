@@ -16,8 +16,20 @@ namespace CM
         explicit FileTreeDockWidget(const QString & title, QWidget * parent = nullptr);
         ~FileTreeDockWidget() override;
 
+        FileTreeDockWidget(const FileTreeDockWidget& other) = delete;
+        FileTreeDockWidget(const FileTreeDockWidget&& other) = delete;
+
+        FileTreeDockWidget& operator=(const FileTreeDockWidget& other) = delete;
+        FileTreeDockWidget& operator=(const FileTreeDockWidget&& other) = delete;
+
         void New();
-        void ShowMessage(const std::string& message);
+        void showMessage(const std::string& message);
+
+        /**
+         * @brief 获取当前FileSystem Model 指向的文件路径
+         * @return QString
+         */
+        QString rootImagePath() const;
 
     private:
         QTreeView * m_TreeView;
