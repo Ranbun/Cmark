@@ -90,6 +90,9 @@ namespace CM
             std::string Make;               // Lens manufacturer
             std::string Model;              // Lens model
         } LensInfo;
+
+        uint64_t m_LoadedCheckCode{0};
+
     };
 
 

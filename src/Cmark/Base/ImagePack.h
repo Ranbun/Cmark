@@ -10,10 +10,11 @@ namespace CM
 {
     struct ImagePack
     {
-        std::shared_ptr<QByteArray> imageData;
-        const std::string & fileName;
-        std::shared_ptr<std::mutex> localMutex;
-        size_t fileIndexCode;
+        size_t m_FileIndexCode;
+
+        std::shared_ptr<QByteArray> m_ImageData;
+        std::string m_FileName;
+        std::shared_ptr<std::mutex> m_LocalMutex;
     };
 
 }

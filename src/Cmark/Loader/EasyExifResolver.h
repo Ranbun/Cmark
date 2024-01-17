@@ -1,15 +1,25 @@
-//
-// Created by RanLH on 1/17/2024.
-//
-
 #ifndef CAMERAMARK_EASYEXIFRESOLVER_H
 #define CAMERAMARK_EASYEXIFRESOLVER_H
 
-namespace CM {
+#include "Resolver.h"
 
-class EasyExifResolver {
+namespace CM
+{
+    class EasyExifResolver final : public Resolver
+    {
+    public:
+        EasyExifResolver();
+        ~EasyExifResolver() override;
 
-};
+        EasyExifResolver(const EasyExifResolver&) = delete;
+        EasyExifResolver(const EasyExifResolver&&) = delete;
+
+        EasyExifResolver& operator=(const EasyExifResolver&) = delete;
+        EasyExifResolver& operator=(const EasyExifResolver&&) = delete;
+
+
+        std::shared_ptr<EXIFInfo> resolver(const ImagePack& imagePack) override;
+    };
 
 } // CM
 

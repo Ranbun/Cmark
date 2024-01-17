@@ -7,7 +7,8 @@ namespace CM
 {
     enum class CameraIndex : uint8_t
     {
-        None = 0,   ///< empty
+        None = 0,
+        ///< empty
         Nikon,
         Sony,
         Canon,
@@ -16,7 +17,7 @@ namespace CM
         Leica,
         Hasselblad,
         Fujifilm
-         /// ...... TODO: need add others
+        /// ...... TODO: need add others
     };
 
     namespace Tools
@@ -27,6 +28,7 @@ namespace CM
     class LogoManager
     {
         friend class Tools::ResourcesTools;
+
     public:
         LogoManager() = default;
 
@@ -43,14 +45,14 @@ namespace CM
          * @brief load logo
          * @param cameraIndex 加载的logo的相机
          */
-        static void loadCameraLogo(const CameraIndex & cameraIndex);
+        static void loadCameraLogo(const CameraIndex& cameraIndex);
 
         /**
          * @brief 获取camera maker logo
          * @param cameraIndex
          * @return logo with QPixmap
          */
-        static std::shared_ptr<QPixmap> getCameraMakerLogo(const CameraIndex & cameraIndex);
+        static std::shared_ptr<QPixmap> getCameraMakerLogo(const CameraIndex& cameraIndex);
 
     protected:
         static void destory()
@@ -59,13 +61,11 @@ namespace CM
             cameraMakerMap.clear();
         }
 
-
     private:
-        static std::unordered_map<CameraIndex,std::shared_ptr<QPixmap>> m_logos;
-        static std::unordered_map<std::string,CameraIndex> cameraMakerMap;
+        static std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> m_logos;
+        static std::unordered_map<std::string, CameraIndex> cameraMakerMap;
         static std::once_flag m_initFlag;
     };
-
 } // CM
 
 #endif //CAMERAMARK_LOGOMANAGER_H

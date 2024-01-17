@@ -25,6 +25,7 @@ namespace CM
         }
 
         const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, format.toStdString().c_str());
+        ReadAsImageBuffer.close();
         imageReader->setAutoTransform(true);
         return std::make_shared<QImage>(imageReader->read());
     }
@@ -62,6 +63,8 @@ namespace CM
                 qDebug() << "Image saved successfully.";
             }
         }
+
+        buffer.close();
     }
 
     void ImageProcess::save(const std::shared_ptr<QImage>& image, const QString& fileName)

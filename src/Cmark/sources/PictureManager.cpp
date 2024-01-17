@@ -25,15 +25,15 @@ namespace CM
     void PictureManager::insert(const size_t key, const std::shared_ptr<QPixmap>& value)
     {
         std::lock_guard<std::mutex> local(g_Mutex);
-        m_Maps.insert(key,value);
+        m_Maps.insert(key, value);
     }
 
     std::shared_ptr<QPixmap> PictureManager::getImage(const size_t key)
     {
-        if(g_LoadFinishSignals.count(key))
+        if (g_LoadFinishSignals.count(key))
         {
             auto& exitSignal = g_LoadFinishSignals.at(key);
-            exitSignal.get_future().wait();   ///< 等待线程结束
+            exitSignal.get_future().wait(); ///< 等待线程结束
             g_LoadFinishSignals.erase(key);
         }
 
@@ -45,13 +45,12 @@ namespace CM
         if (g_LoadFinishSignals.count(index))
         {
             auto& exitSignal = g_LoadFinishSignals.at(index);
-            exitSignal.get_future().wait();   ///< 等待线程结束
+            exitSignal.get_future().wait(); ///< 等待线程结束
             g_LoadFinishSignals.erase(index);
         }
 
         std::lock_guard<std::mutex> local(g_Mutex);
         m_Maps.remove(index);
-
     }
 
     size_t PictureManager::loadImage(const std::string& path)
@@ -64,7 +63,7 @@ namespace CM
             return imageIndexCode;
         }
 
-        auto readFileToImage = [](const std::string& path, std::promise<void> & loadedSignal,size_t imageIndexCode)
+        auto readFileToImage = [](const std::string& path, std::promise<void>& loadedSignal, size_t imageIndexCode)
         {
             QImage readImage;
             readImage.fill(Qt::transparent);
@@ -78,25 +77,24 @@ namespace CM
                 ReadAsImageBuffer.seek(0);
             }
 
-            const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer,"JPEG");
+            const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, "JPEG");
             imageReader->setAutoTransform(true);
             readImage = imageReader->read();
-
+            ReadAsImageBuffer.close();
             /// convert to QPixmap
-            const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readImage)));
-            insert({ imageIndexCode,preViewImage });
+            const auto preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readImage)));
+            insert({imageIndexCode, preViewImage});
 
             {
                 std::lock_guard<std::mutex> local(g_Mutex);
                 loadedSignal.set_value();
                 g_LoadFinishSignals.erase(imageIndexCode);
             }
-
         };
 
         std::promise<void> exitSignal;
-        g_LoadFinishSignals.insert({ imageIndexCode,std::move(exitSignal) });
-        std::thread readImage(readFileToImage, path,std::ref(g_LoadFinishSignals.at(imageIndexCode)), imageIndexCode);
+        g_LoadFinishSignals.insert({imageIndexCode, std::move(exitSignal)});
+        std::thread readImage(readFileToImage, path, std::ref(g_LoadFinishSignals.at(imageIndexCode)), imageIndexCode);
         readImage.detach();
 
         return imageIndexCode;
@@ -104,45 +102,36 @@ namespace CM
 
     void PictureManager::loadImage(const ImagePack& pack)
     {
-        if (getImage(pack.fileIndexCode))
+        if (getImage(pack.m_FileIndexCode))
             return;
 
-        auto readFileToImage = [](const ImagePack& pack, std::promise<void>& loadedSignal)
+        auto readFileToImage = [](const ImagePack& imagePack, std::promise<void>& loadedSignal)
         {
-            auto imageIndexCode = pack.fileIndexCode;
+            auto imageIndexCode = imagePack.m_FileIndexCode;
             QImage readImage;
             readImage.fill(Qt::transparent);
 
-            std::unique_lock local_mutex(*pack.localMutex);
-            const QFileInfo fileInfo(QString::fromStdString(pack.fileName));
-            QBuffer ReadAsImageBuffer(pack.imageData.get());
-            local_mutex.unlock();
-
-            ReadAsImageBuffer.open(QIODevice::ReadOnly);
-            ReadAsImageBuffer.seek(0);
-
-            const auto format = fileInfo.suffix().toUpper().toStdString();
-            const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, format.c_str()); ///< maybe we need get file name
-            imageReader->setAutoTransform(true);
-            readImage = imageReader->read();
-
+            {
+                std::lock_guard local_mutex(*imagePack.m_LocalMutex);
+                const QFileInfo fileInfo(QString::fromStdString(imagePack.m_FileName));
+                const auto format = fileInfo.suffix().toUpper();
+                readImage = *ImageProcess::toQImage(imagePack.m_ImageData, format);
+            }
             /// convert to QPixmap
-            const std::shared_ptr<QPixmap> preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readImage)));
-            insert({ imageIndexCode,preViewImage });
-
+            auto preViewImage = std::make_shared<QPixmap>(QPixmap::fromImage(readImage));
+            insert({imageIndexCode, preViewImage});
             {
                 std::lock_guard<std::mutex> local(g_Mutex);
                 loadedSignal.set_value();
                 g_LoadFinishSignals.erase(imageIndexCode);
             }
-
         };
 
         std::promise<void> exitSignal;
-        g_LoadFinishSignals.insert({ pack.fileIndexCode,std::move(exitSignal) });
-        std::thread readImage(readFileToImage, std::ref(pack), std::ref(g_LoadFinishSignals.at(pack.fileIndexCode)));
-        readImage.detach();
+        g_LoadFinishSignals.insert({pack.m_FileIndexCode, std::move(exitSignal)});
+        std::thread readImage(readFileToImage, std::ref(pack), std::ref(g_LoadFinishSignals.at(pack.m_FileIndexCode)));
 
+        readImage.join();
     }
 
 

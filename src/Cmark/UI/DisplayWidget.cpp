@@ -59,7 +59,7 @@ namespace CM
         assert(this);
     }
 
-    void DisplayWidget::preViewImage(const std::string& path)
+    void DisplayWidget::preViewImage(const std::string& path) const
     {
         using PictureManagerInterFace = CM::PictureManager;
         EXIFResolver resolver;
@@ -67,47 +67,31 @@ namespace CM
         /// load file as QByteArray
         const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
         const auto data = ImageProcess::loadFile(QString::fromStdString(path));
-
-        const ImagePack loadImagePack{data,path,std::make_shared<std::mutex>(),fileIndexCode};
+        const ImagePack loadImagePack{ fileIndexCode,data,path,std::make_shared<std::mutex>()};
 
         /// load image
-        const auto imageIndexCode = fileIndexCode;
         PictureManagerInterFace::loadImage(loadImagePack);
-        resolver.resolver(loadImagePack);
-
-        const auto imageExifInfoIndex = resolver.resolver(path);
-        /// check resolver result
-        const auto& [res,message] = EXIFResolver::check(resolver.checkCode(imageExifInfoIndex));
-        if (!res)
         {
-            QMessageBox::about(this, "Warning", message.c_str());
-            return;
-        }
-        else
-        {
-            CLog::Print<QString>(QString("Resolver Exif Info Success!"));
+            EXIFResolver::resolver(loadImagePack);
         }
 
         /// get resolved image infos
-        const auto exifInfos = resolver.getExifInfo(imageExifInfoIndex);
+        const auto exifInfos = CM::EXIFResolver::getExifInfo(fileIndexCode);
 
         /// 加载logo
-        const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
+        const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.count(ExifKey::CameraMake)? exifInfos.at(ExifKey::CameraMake):"");
         LogoManager::loadCameraLogo(cameraIndex);
         const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
         /// get loaded image
-        const auto preViewImage = PictureManager::getImage(imageIndexCode);
-
-        /// get enable exif item
-        const auto infos = EXIFResolver::resolverImageExif(exifInfos);
+        const auto preViewImage = PictureManager::getImage(fileIndexCode);
 
         /// 设置预览场景显示的资源
         {
             const auto scene = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene);
             scene->resetStatus();
-            scene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
-            scene->resetTexItemsPlainText(infos);
+            scene->resetPreviewImageTarget(*preViewImage, fileIndexCode);
+            scene->resetTexItemsPlainText(exifInfos);
             scene->resetLogoPixmap(previewImageLogo, cameraIndex);
 
             scene->updateSceneRect();
@@ -122,10 +106,13 @@ namespace CM
         {
             const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
             logoScene->resetStatus();
-            logoScene->resetPreviewImageTarget(*preViewImage, imageIndexCode);
-            logoScene->resetTexItemsPlainText(infos);
+            logoScene->resetPreviewImageTarget(*preViewImage, fileIndexCode);
+            logoScene->resetTexItemsPlainText(exifInfos);
             logoScene->resetLogoPixmap(previewImageLogo, cameraIndex);
         }
+
+        EXIFResolver::destory();
+
     }
 
     void DisplayWidget::resizeEvent(QResizeEvent* event)

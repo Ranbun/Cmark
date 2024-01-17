@@ -47,7 +47,7 @@ namespace CM
          * @brief 预览文件路径下的图片
          * @param path 文件路径
          */
-        void preViewImage(const std::string& path);
+        void preViewImage(const std::string& path) const;
 
         /**
          * @brief save scene as Image

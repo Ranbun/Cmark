@@ -8,6 +8,8 @@
 
 #include <SceneLayoutEditor.h>
 
+#include "exif.h"
+
 namespace Tools
 {
 #if _DEBUG
