@@ -25,9 +25,12 @@ namespace CM
         }
 
         const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, format.toStdString().c_str());
+        auto im = std::make_shared<QImage>(imageReader->read());
+        imageData->clear();
         ReadAsImageBuffer.close();
+        ReadAsImageBuffer.deleteLater();
         imageReader->setAutoTransform(true);
-        return std::make_shared<QImage>(imageReader->read());
+        return im;
     }
 
     std::shared_ptr<QImage> ImageProcess::loadImage(const QString& fileName)
@@ -75,7 +78,7 @@ namespace CM
             name = ImageSaveDefaultName() + ".png";
         }
 
-            
+
         if (QFile file(name);
             file.open(QIODevice::WriteOnly))
         {

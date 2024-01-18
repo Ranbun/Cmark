@@ -8,6 +8,7 @@
 #include "DisplayWidget.h"
 #include "sources/ResourcesTool.h"
 #include "ImageProcess/ImageProcess.h"
+#include "CThread/ThreadPool.h"
 
 
 #include <QMenuBar>
@@ -15,6 +16,7 @@
 #include <QFileDialog>
 #include <QAction>
 #include <QFileInfoList>
+#include <future>
 
 #if _DEBUG
 #include <QDebug>
@@ -135,67 +137,40 @@ namespace CM
         connect(m_BatchProcessImage, &QAction::triggered, this,[this]()
         {
             const QString rootPath  = emit sigBatchProcessImagesRootPath();
-            const QDir directory(rootPath);
 
             imageFileLists.clear();
             scanDirectory(rootPath);
 
             // 遍历文件列表并输出文件名
 
-            auto dealFiles = [this](QFileInfoList & imageFileLists)
+            auto dealFiles = [this](const QFileInfo & fileInfo)
             {
-                using PictureManagerInterFace = CM::PictureManager;
-                EXIFResolver resolver;
-                foreach(const QFileInfo & fileInfo, imageFileLists)
+                if(!fileInfo.exists())
                 {
-                    qDebug() << "File: " << fileInfo.filePath();
-
-#if  0
-                    /// 开线程 加载所有文件
-                    const auto imageIndexCode = PictureManagerInterFace::loadImage(fileInfo.filePath().toStdString());
-                    /// 解析文件信息
-                    const auto resolverIndex = resolver.resolver(fileInfo.filePath().toStdString());
-
-                    /// get resolved image infos
-                    const auto exifInfos = resolver.getExifInfo(resolverIndex);
-
-                    /// 加载logo
-                    const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
-                    LogoManager::loadCameraLogo(cameraIndex);
-                    const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
-
-                    /// get loaded image
-                    const auto preViewImage = PictureManager::getImage(imageIndexCode);
-
-                    const auto infos = EXIFResolver::resolverImageExif(exifInfos);
-
-                    const auto imageRatio = static_cast<float>(preViewImage->size().width()) / preViewImage->size().height();
-
-                    auto newSize = QSize(1000, 1000 / imageRatio);
-
-                    if(preViewImage->isNull())
-                    {
-                        qDebug() << "Pixmap Null";
-                    }
-
-                    const auto output = std::make_shared<QPixmap >(preViewImage->scaled(newSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-
-                    if (output->isNull())
-                    {
-                        qDebug() << "Scaled Pixmap Null";
-
-                        continue;
-                    }
-                    ImageProcess::save(output, "");
-
-#endif
-
+                    return ;
                 }
+
+                const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
+                const auto data = ImageProcess::loadFile(fileInfo.filePath());
+                const ImagePack loadImagePack{ fileIndexCode,data,fileInfo.filePath().toStdString(),std::make_shared<std::mutex>()};
+                /// load image
+                PictureManager::loadImage(loadImagePack);
+                EXIFResolver::resolver(loadImagePack);
+
+                data->clear();
             };
 
-            std::thread dealFileThread(dealFiles,std::ref(imageFileLists));
-            dealFileThread.detach();
+            ThreadPool pool(4);
+            std::vector<std::future<void>> futures;
+            for(auto & fileInfo: imageFileLists)
+            {
+                futures.emplace_back(pool.enqueue(dealFiles,std::ref(fileInfo)));
+            }
 
+            for (auto& future : futures)
+            {
+                future.get(); /// wait thread
+            }
         });
 
         connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString

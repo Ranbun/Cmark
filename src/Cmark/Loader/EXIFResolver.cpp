@@ -13,7 +13,7 @@ namespace CM
     {
         std::unordered_map<size_t, std::shared_ptr<EXIFInfo>> g_LoadedInfos;
 
-        std::unordered_map<size_t, std::promise<void>> g_ThreadFinishSignals;
+        [[deprecated]] std::unordered_map<size_t, std::promise<void>> g_ThreadFinishSignals;
         std::unordered_map<size_t, int> g_LoadImageCheckCode;
 
         std::mutex g_InfoMutex;
@@ -143,31 +143,33 @@ namespace CM
         return {status, outputInfos};
     }
 
-    void EXIFResolver::resolver(const ImagePack& pack)
+    void EXIFResolver::resolver(const ImagePack &pack, bool synchronization)
     {
-        if(g_LoadedInfos.count(pack.m_FileIndexCode))
         {
-            return;
+            std::lock_guard<std::mutex> local(g_InfoMutex);
+            if(g_LoadedInfos.count(pack.m_FileIndexCode))
+            {
+                return;
+            }
         }
 
-        auto loadImageFile = [](std::promise<void>& exitSignal, const ImagePack& imagePack)
+        auto loadImageFile = [](const ImagePack& imagePack)
         {
             auto outputExIfInfos = m_ExifInfoResolver->resolver(imagePack);
             std::lock_guard<std::mutex> local(g_InfoMutex);
             g_LoadedInfos.insert({imagePack.m_FileIndexCode, outputExIfInfos});
             g_LoadImageCheckCode.insert({imagePack.m_FileIndexCode, outputExIfInfos->m_LoadedCheckCode});
-
-            exitSignal.set_value();
-            {
-                g_ThreadFinishSignals.erase(imagePack.m_FileIndexCode);
-            }
         };
 
-        std::promise<void> exitSignal;
-        g_ThreadFinishSignals.insert({pack.m_FileIndexCode, std::move(exitSignal)});
-        std::thread loading(loadImageFile, std::ref(g_ThreadFinishSignals.at(pack.m_FileIndexCode)), std::ref(pack));
-
-        loading.join();
+        if(!synchronization)
+        {
+            std::thread loading(loadImageFile, std::ref(pack));
+            loading.join();
+        }
+        else
+        {
+            loadImageFile(pack);
+        }
     }
 
     ExifInfoMap EXIFResolver::getExifInfo(const size_t index)
@@ -186,9 +188,7 @@ namespace CM
         }
 
         return {};
-
     }
-
 
     int EXIFResolver::checkCode(const size_t index)
     {

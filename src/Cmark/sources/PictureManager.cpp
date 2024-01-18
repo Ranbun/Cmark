@@ -52,12 +52,12 @@ namespace CM
         m_Maps.remove(index);
     }
 
-    void PictureManager::loadImage(const ImagePack& pack)
+    void PictureManager::loadImage(const ImagePack &pack, const bool synchronization)
     {
         if (getImage(pack.m_FileIndexCode))
             return;
 
-        auto readFileToImage = [](const ImagePack& imagePack, std::promise<void>& loadedSignal)
+        auto readFileToImage = [synchronization](const ImagePack& imagePack)
         {
             auto imageIndexCode = imagePack.m_FileIndexCode;
             QImage readImage;
@@ -72,18 +72,17 @@ namespace CM
             /// convert to QPixmap
             auto preViewImage = std::make_shared<QPixmap>(QPixmap::fromImage(readImage));
             insert({imageIndexCode, preViewImage});
-            {
-                std::lock_guard<std::mutex> local(g_Mutex);
-                loadedSignal.set_value();
-                g_LoadFinishSignals.erase(imageIndexCode);
-            }
         };
 
-        std::promise<void> exitSignal;
-        g_LoadFinishSignals.insert({pack.m_FileIndexCode, std::move(exitSignal)});
-        std::thread readImage(readFileToImage, std::ref(pack), std::ref(g_LoadFinishSignals.at(pack.m_FileIndexCode)));
-
-        readImage.join();
+        if(!synchronization)
+        {
+            std::thread readImage(readFileToImage, std::ref(pack));
+            readImage.join();
+        }
+        else
+        {
+            readFileToImage(pack);
+        }
     }
 
     void PictureManager::destroy()

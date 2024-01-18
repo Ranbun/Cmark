@@ -35,7 +35,7 @@ namespace CM
          * @brief load image from QByteArray
          * @param pack params pack
          */
-        static void loadImage(const ImagePack& pack);
+        static void loadImage(const ImagePack &pack, bool synchronization = true);
 
     private:
         static void destroy();
