@@ -71,9 +71,7 @@ namespace CM
 
         /// load image
         PictureManagerInterFace::loadImage(loadImagePack);
-        {
-            EXIFResolver::resolver(loadImagePack);
-        }
+        EXIFResolver::resolver(loadImagePack);
 
         /// get resolved image infos
         const auto exifInfos = CM::EXIFResolver::getExifInfo(fileIndexCode);
@@ -111,7 +109,7 @@ namespace CM
             logoScene->resetLogoPixmap(previewImageLogo, cameraIndex);
         }
 
-        EXIFResolver::destory();
+        EXIFResolver::destroyCache();
 
     }
 

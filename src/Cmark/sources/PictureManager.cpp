@@ -21,7 +21,6 @@ namespace CM
 
     FixMap<size_t, std::shared_ptr<QPixmap>> PictureManager::m_Maps;
 
-
     void PictureManager::insert(const size_t key, const std::shared_ptr<QPixmap>& value)
     {
         std::lock_guard<std::mutex> local(g_Mutex);
@@ -51,53 +50,6 @@ namespace CM
 
         std::lock_guard<std::mutex> local(g_Mutex);
         m_Maps.remove(index);
-    }
-
-    size_t PictureManager::loadImage(const std::string& path)
-    {
-        constexpr std::hash<std::string> hasher;
-        const auto imageIndexCode = hasher(path);
-
-        if (const auto loadedImage = getImage(imageIndexCode))
-        {
-            return imageIndexCode;
-        }
-
-        auto readFileToImage = [](const std::string& path, std::promise<void>& loadedSignal, size_t imageIndexCode)
-        {
-            QImage readImage;
-            readImage.fill(Qt::transparent);
-
-            const auto loadDataPtr = FileLoad::load(path);
-            const auto imageData = FileLoad::toQByteArray(loadDataPtr);
-
-            QBuffer ReadAsImageBuffer(imageData.get());
-            {
-                ReadAsImageBuffer.open(QIODevice::ReadOnly);
-                ReadAsImageBuffer.seek(0);
-            }
-
-            const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, "JPEG");
-            imageReader->setAutoTransform(true);
-            readImage = imageReader->read();
-            ReadAsImageBuffer.close();
-            /// convert to QPixmap
-            const auto preViewImage = std::make_shared<QPixmap>(std::move(QPixmap::fromImage(readImage)));
-            insert({imageIndexCode, preViewImage});
-
-            {
-                std::lock_guard<std::mutex> local(g_Mutex);
-                loadedSignal.set_value();
-                g_LoadFinishSignals.erase(imageIndexCode);
-            }
-        };
-
-        std::promise<void> exitSignal;
-        g_LoadFinishSignals.insert({imageIndexCode, std::move(exitSignal)});
-        std::thread readImage(readFileToImage, path, std::ref(g_LoadFinishSignals.at(imageIndexCode)), imageIndexCode);
-        readImage.detach();
-
-        return imageIndexCode;
     }
 
     void PictureManager::loadImage(const ImagePack& pack)
@@ -134,9 +86,9 @@ namespace CM
         readImage.join();
     }
 
-
-    void PictureManager::destory()
+    void PictureManager::destroy()
     {
+        g_LoadFinishSignals.clear();
         m_Maps.clear();
     }
 }

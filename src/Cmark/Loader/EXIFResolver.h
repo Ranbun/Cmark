@@ -67,7 +67,7 @@ namespace CM
          */
         static ExifInfoMap resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
 
-        static void destory();
+        static void destroyCache();
 
     private:
 

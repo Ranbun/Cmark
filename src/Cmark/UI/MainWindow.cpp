@@ -22,7 +22,7 @@
 
 namespace CM
 {
-    namespace 
+    namespace
     {
         QFileInfoList imageFileLists;
         const QList<QString> availableFileType{ "jpeg","jpg"};
@@ -121,7 +121,7 @@ namespace CM
         connect(m_NewAction, &QAction::triggered, [this]()
         {
             m_LeftDockWidget->New();
-            Tools::ResourcesTools::destory();
+            Tools::ResourcesTools::destroy();
         });
 
         connect(m_OpenDirectoryAction, &QAction::triggered, [this]()
@@ -188,7 +188,7 @@ namespace CM
                     }
                     ImageProcess::save(output, "");
 
-#endif 
+#endif
 
                 }
             };
@@ -197,7 +197,7 @@ namespace CM
             dealFileThread.detach();
 
         });
-        
+
         connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
             {
                 return m_LeftDockWidget->rootImagePath();

@@ -31,8 +31,6 @@ namespace CM
 
         static void remove(size_t index);
 
-        [[deprecated]] static size_t loadImage(const std::string& path);
-
         /**
          * @brief load image from QByteArray
          * @param pack params pack
@@ -40,7 +38,7 @@ namespace CM
         static void loadImage(const ImagePack& pack);
 
     private:
-        static void destory();
+        static void destroy();
 
     private:
         static FixMap<size_t, std::shared_ptr<QPixmap>> m_Maps;

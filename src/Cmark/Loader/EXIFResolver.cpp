@@ -95,7 +95,7 @@ namespace CM
         return std::move(infoMaps);
     }
 
-    void EXIFResolver::destory()
+    void EXIFResolver::destroyCache()
     {
         g_LoadedInfos.clear();
         g_ThreadFinishSignals.clear();
@@ -166,7 +166,8 @@ namespace CM
         std::promise<void> exitSignal;
         g_ThreadFinishSignals.insert({pack.m_FileIndexCode, std::move(exitSignal)});
         std::thread loading(loadImageFile, std::ref(g_ThreadFinishSignals.at(pack.m_FileIndexCode)), std::ref(pack));
-        loading.detach();
+
+        loading.join();
     }
 
     ExifInfoMap EXIFResolver::getExifInfo(const size_t index)
