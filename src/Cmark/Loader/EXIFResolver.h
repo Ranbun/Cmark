@@ -1,6 +1,8 @@
 #ifndef CAMERAMARK_EXIFRESOLVER_H
 #define CAMERAMARK_EXIFRESOLVER_H
 
+#include <QObject>
+
 #include "Base/ExifInfo.h"
 #include "Base/Type.h"
 #include "Base/ImagePack.h"
@@ -15,7 +17,7 @@ namespace CM
         class ResourcesTools;
     }
 
-    class EXIFResolver
+    class EXIFResolver : public QObject
     {
         friend  class Tools::ResourcesTools;
     public:
@@ -23,10 +25,10 @@ namespace CM
 
         /**
          * @brief 解析错误码
-         * @param fileIndexCode checkCode函数的返回值
+         * @param checkCode checkCode函数的返回值
          * @return 结果和错误信息
          */
-        static std::tuple<bool, std::string> check(size_t fileIndexCode);
+        static void check(int checkCode);
 
         /// ---------------------------------new resolver interface --------------------------------------------------
 
@@ -46,17 +48,6 @@ namespace CM
          * @return 图片数据Exif信息
          */
         static ExifInfoMap getExifInfo(size_t index);
-
-
-    private:
-
-        /**
-         * @brief 获取加载的文件的加载的结果
-         * @param index 加载的文件的索引
-         * @return 返回对应的信息码
-         */
-        static int checkCode(size_t index);
-
 
     public:
 

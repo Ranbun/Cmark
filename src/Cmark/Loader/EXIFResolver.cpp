@@ -3,6 +3,7 @@
 #include <ImageProcess/ImageProcess.h>
 #include "EXIFResolver.h"
 #include "Base/ImagePack.h"
+#include <Log/CLog.h>
 
 #include <QBuffer>
 #include <QString>
@@ -12,13 +13,9 @@ namespace CM
     namespace
     {
         std::unordered_map<size_t, std::shared_ptr<EXIFInfo>> g_LoadedInfos;
-
-        [[deprecated]] std::unordered_map<size_t, std::promise<void>> g_ThreadFinishSignals;
         std::unordered_map<size_t, int> g_LoadImageCheckCode;
-
         std::mutex g_InfoMutex;
     }
-
 
     std::shared_ptr<Resolver> EXIFResolver::m_ExifInfoResolver = std::make_shared<EasyExifResolver>();
 
@@ -98,49 +95,40 @@ namespace CM
     void EXIFResolver::destroyCache()
     {
         g_LoadedInfos.clear();
-        g_ThreadFinishSignals.clear();
         g_LoadImageCheckCode.clear();
     }
 
-    std::tuple<bool, std::string> EXIFResolver::check(const size_t fileIndexCode)
+    void EXIFResolver::check(const int checkCode)
     {
-        const auto code = checkCode(fileIndexCode);
-
         bool status = true;
         std::string outputInfos{"Resolver Picture Info Success!"};
-        switch (code)
+        switch (checkCode)
         {
         case 0:
             status = true;
             outputInfos = "Resolver Picture Info Success!";
-            std::cout << outputInfos << std::endl;
             break;
         case 1982:
             status = false;
             outputInfos = "No JPEG markers found in buffer, possibly invalid JPEG file!";
-            std::cout << outputInfos << std::endl;
             break;
         case 1983:
             status = false;
             outputInfos = "No EXIF header found in JPEG file.";
-            std::cout << outputInfos << std::endl;
             break;
         case 1985:
             status = false;
             outputInfos = "Byte alignment specified in EXIF file was unknown (not Motorola or Intel).";
-            std::cout << outputInfos << std::endl;
             break;
         case 1986:
             status = false;
             outputInfos = "EXIF header was found, but data was corrupted.";
-            std::cout << outputInfos << std::endl;
             break;
         default:
             break;
         }
-
+        CM::CLog::Print(QString::fromStdString(outputInfos));
         StatusBar::showMessage(QString(outputInfos.c_str()));
-        return {status, outputInfos};
     }
 
     void EXIFResolver::resolver(const ImagePack &pack, bool synchronization)
@@ -170,18 +158,21 @@ namespace CM
         {
             loadImageFile(pack);
         }
+
+        auto loadStatusCode = 0;
+        {
+            std::lock_guard local(g_InfoMutex);
+            if (g_LoadImageCheckCode.count(pack.m_FileIndexCode))
+            {
+                loadStatusCode = g_LoadImageCheckCode.at(pack.m_FileIndexCode);
+            }
+        }
+
+        check(loadStatusCode);
     }
 
     ExifInfoMap EXIFResolver::getExifInfo(const size_t index)
     {
-        if (g_ThreadFinishSignals.count(index))
-        {
-            auto& exitSignal = g_ThreadFinishSignals.at(index);
-            exitSignal.get_future().wait(); ///< 等待线程结束
-            g_ThreadFinishSignals.erase(index);
-            g_LoadImageCheckCode.erase(index);
-        }
-
         if(g_LoadedInfos.count(index))
         {
             return resolverImageExif(g_LoadedInfos.at(index));
@@ -190,22 +181,4 @@ namespace CM
         return {};
     }
 
-    int EXIFResolver::checkCode(const size_t index)
-    {
-        if (g_ThreadFinishSignals.count(index))
-        {
-            auto& exitSignal = g_ThreadFinishSignals.at(index);
-            exitSignal.get_future().wait(); ///< 等待线程结束
-            g_ThreadFinishSignals.erase(index);
-        }
-
-        if (g_LoadImageCheckCode.count(index))
-        {
-            const auto code = g_LoadImageCheckCode.at(index);
-            g_LoadImageCheckCode.erase(index);
-            return code;
-        }
-
-        return 0;
-    }
 } // CM
