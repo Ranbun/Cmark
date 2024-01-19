@@ -153,6 +153,7 @@ int main(int argc,char ** argv)
 #if SHOW_WIDGET
 
     QApplication app(argc,argv);
+    qSetMessagePattern("%{time yyyy-MM-dd hh:mm:ss}--[%{type}]--%{function}:%{message}");
     CM::MainWindow manApp;
 
     CM::LogoManager::Init();

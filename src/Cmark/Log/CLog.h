@@ -11,11 +11,39 @@ namespace CM
         template<typename T>
         static void Print(const T & value)
         {
-            // auto typeName = QMetaType::typeName(QMetaTypeId<T>());
-            auto typeName = "N";
+            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
             if(typeName)
             {
-                qDebug() << value << endl;
+                qDebug() << value;
+            }
+        }
+        template<typename T>
+        static void Info(const T & value)
+        {
+            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
+            if(typeName)
+            {
+                qInfo() << value;
+            }
+        }
+
+        template<typename T>
+        static void Warning(const T & value)
+        {
+            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
+            if(typeName)
+            {
+                qWarning() << value;
+            }
+        }
+
+        template<typename T>
+        static void Fatal(const T & value)
+        {
+            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
+            if(typeName)
+            {
+                qFatal() << value;
             }
         }
 
