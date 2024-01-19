@@ -28,7 +28,7 @@ namespace CM
          * @param checkCode checkCode函数的返回值
          * @return 结果和错误信息
          */
-        static void check(int checkCode);
+        static std::tuple<bool, std::string> check(int checkCode);
 
         /// ---------------------------------new resolver interface --------------------------------------------------
 

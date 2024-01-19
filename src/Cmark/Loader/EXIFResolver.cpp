@@ -98,7 +98,7 @@ namespace CM
         g_LoadImageCheckCode.clear();
     }
 
-    void EXIFResolver::check(const int checkCode)
+    std::tuple<bool, std::string> EXIFResolver::check(const int checkCode)
     {
         bool status = true;
         std::string outputInfos{"Resolver Picture Info Success!"};
@@ -127,8 +127,9 @@ namespace CM
         default:
             break;
         }
-        CM::CLog::Print(QString::fromStdString(outputInfos));
-        StatusBar::showMessage(QString(outputInfos.c_str()));
+        // CM::CLog::Info(QString::fromStdString(outputInfos));
+        // StatusBar::showMessage(QString(outputInfos.c_str()));
+        return {status,outputInfos};
     }
 
     void EXIFResolver::resolver(const ImagePack &pack, bool synchronization)
@@ -168,7 +169,13 @@ namespace CM
             }
         }
 
-        check(loadStatusCode);
+        auto [status,infos] = check(loadStatusCode);
+        if(status)
+        {
+            CLog::Info(QString::fromStdString(infos));
+            return;
+        }
+        CLog::Warning(QString::fromStdString(infos));
     }
 
     ExifInfoMap EXIFResolver::getExifInfo(const size_t index)
