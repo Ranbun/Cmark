@@ -1,4 +1,5 @@
 #include "ImageProcess.h"
+#include <Log/CLog.h>
 
 namespace CM
 {
@@ -24,12 +25,13 @@ namespace CM
             ReadAsImageBuffer.seek(0);
         }
 
-        const auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, format.toStdString().c_str());
+        auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, format.toStdString().c_str());
+        imageReader->setAutoTransform(true);
         auto im = std::make_shared<QImage>(imageReader->read());
-        imageData->clear();
         ReadAsImageBuffer.close();
         ReadAsImageBuffer.deleteLater();
-        imageReader->setAutoTransform(true);
+        imageReader.reset();
+
         return im;
     }
 
@@ -63,7 +65,7 @@ namespace CM
             {
                 file.write(buffer.data());
                 file.close();
-                qDebug() << "Image saved successfully.";
+                CLog::Print<QString>(QString("Image saved successfully."));
             }
         }
 
@@ -78,7 +80,6 @@ namespace CM
             name = ImageSaveDefaultName() + ".png";
         }
 
-
         if (QFile file(name);
             file.open(QIODevice::WriteOnly))
         {
@@ -88,7 +89,7 @@ namespace CM
             if(QImageWriter imageWriter(&file, format.c_str());
                 imageWriter.write(*image))
             {
-                qDebug() << "Image saved successfully.";
+                CLog::Info(QString("Image saved successfully."));
             }
 
             file.close();
