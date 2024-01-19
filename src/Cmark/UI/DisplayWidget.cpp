@@ -64,14 +64,18 @@ namespace CM
         using PictureManagerInterFace = CM::PictureManager;
         EXIFResolver resolver;
 
-        /// load file as QByteArray
         const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
-        const auto data = ImageProcess::loadFile(QString::fromStdString(path));
-        const ImagePack loadImagePack{ fileIndexCode,data,path,std::make_shared<std::mutex>()};
+        {
+            /// load file as QByteArray
+            auto data = ImageProcess::loadFile(QString::fromStdString(path));
+            const ImagePack loadImagePack{ fileIndexCode,data,path,std::make_shared<std::mutex>()};
 
-        /// load image
-        PictureManagerInterFace::loadImage(loadImagePack);
-        EXIFResolver::resolver(loadImagePack, true);
+            /// load image
+            PictureManagerInterFace::loadImage(loadImagePack);
+            EXIFResolver::resolver(loadImagePack, true);
+            data->clear();
+            data.reset();
+        }
 
         /// get resolved image infos
         const auto exifInfos = CM::EXIFResolver::getExifInfo(fileIndexCode);
