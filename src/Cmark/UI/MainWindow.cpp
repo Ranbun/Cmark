@@ -9,13 +9,15 @@
 #include "sources/ResourcesTool.h"
 #include "ImageProcess/ImageProcess.h"
 #include "CThread/ThreadPool.h"
-
+#include "Log/CLog.h"
 
 #include <QMenuBar>
 #include <QToolBar>
 #include <QFileDialog>
 #include <QAction>
 #include <QFileInfoList>
+#include <QMessageBox>
+
 #include <future>
 
 #if _DEBUG
@@ -35,7 +37,7 @@ namespace CM
             // 判断目录是否存在
             if (!dir.exists())
             {
-                qDebug() << "Directory does not exist: " << path;
+                CLog::Warning(QString("Directory does not exist: " ));
                 return;
             }
 
@@ -147,7 +149,11 @@ namespace CM
             {
                 if(!fileInfo.exists())
                 {
+                    emit sigWarning(fileInfo.filePath() + QString("load error!"));
                     return ;
+                }
+                {
+                    CLog::Info(QString("File: ") + fileInfo.filePath() + QString(" load success!"));
                 }
 
                 const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
@@ -174,10 +180,9 @@ namespace CM
         });
 
         connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
-            {
-                return m_LeftDockWidget->rootImagePath();
-            });
-
+        {
+            return m_LeftDockWidget->rootImagePath();
+        });
 
         connect(m_LeftDockWidget.get(), &FileTreeDockWidget::previewImage, [this](const QString& path)
         {
@@ -186,6 +191,13 @@ namespace CM
             StatusBar::repaint();
             emit m_DisplayWidget->sigPreViewImage(path.toStdString());
         });
+
+        connect(this,&MainWindow::sigWarning,this,[parent = this](const QString& info)
+        {
+            // QMessageBox::warning(parent,"Warning",info);
+            CLog::Warning(info);
+        },Qt::QueuedConnection);
+
 
 #if  0
         connect(m_EditPreviewSceneLayoutAction, &QAction::triggered, m_DisplayWidget.get(),

@@ -1,6 +1,7 @@
 #include <CMark.h>
 
 #include "FileTreeDockWidget.h"
+#include <Log/CLog.h>
 
 #include <QTextEdit>
 #include <QVBoxLayout>
@@ -35,13 +36,9 @@ namespace CM
             {
                 return ;
             }
-
             const QString filePath = m_FileSystemModel->filePath(index);
             emit previewImage(filePath);
-
-#if _DEBUG
-            qDebug() << "Clicked file path: " << filePath;
-#endif
+            CLog::Info(QString("Clicked file path: ") + filePath);
         });
 
         const auto lTitleBar = this->titleBarWidget();
