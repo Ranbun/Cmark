@@ -87,6 +87,10 @@ namespace CM
                     {
                         m_IndexCodeQueue.emplace(f);
                     }
+                    else
+                    {
+                        tempQueue.pop();
+                    }
                 }
             }
         }
