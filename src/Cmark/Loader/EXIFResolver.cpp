@@ -188,4 +188,10 @@ namespace CM
         return {};
     }
 
+    std::string EXIFResolver::ExifItem(size_t fileIndexCode, ExifKey key)
+    {
+        const auto exifInfos = getExifInfo(fileIndexCode);
+        auto res = exifInfos.count(ExifKey::CameraMake)? exifInfos.at(key):"";
+    }
+
 } // CM
