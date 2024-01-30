@@ -58,7 +58,7 @@ namespace CM
             const size_t hashValue = hasher(key);
             return hashValue;
         }
-        
+
     };
 
 
@@ -83,6 +83,9 @@ namespace CM
         static void save(const std::shared_ptr<QPixmap>& pixmap, const QString& fileName);
 
         static void save(const std::shared_ptr<QImage> &image, const QString& fileName);
+
+        static float imageRatio(const QPixmap &pixmap);
+
     };
 
 } // CM

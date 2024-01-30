@@ -71,6 +71,17 @@ namespace CM
             }
             /// convert to QPixmap
             auto preViewImage = std::make_shared<QPixmap>(QPixmap::fromImage(readImage));
+            if(imagePack.Size.w != -1 && imagePack.Size.h != -1)
+            {
+                const auto & [w,h] = imagePack.Size;
+
+                const auto newWidth = w;
+                auto imageSize = QSizeF(preViewImage->size());
+                const auto imageRatio = imageSize.width() / imageSize.height();
+                const auto newHeight = static_cast<int>(std::floor(static_cast<float>(newWidth) / imageRatio));
+
+                *preViewImage =   preViewImage->scaled(newWidth,newHeight,Qt::KeepAspectRatioByExpanding,Qt::SmoothTransformation);
+            }
             insert({imageIndexCode, preViewImage});
         };
 

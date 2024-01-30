@@ -62,27 +62,28 @@ namespace CM
     void DisplayWidget::preViewImage(const std::string& path) const
     {
         using PictureManagerInterFace = CM::PictureManager;
-        EXIFResolver resolver;
 
         const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
         {
             /// load file as QByteArray
+            auto [w,h] = SceneLayoutSettings::fixPreViewImageSize();
             auto data = ImageProcess::loadFile(QString::fromStdString(path));
-            const ImagePack loadImagePack{ fileIndexCode,data,path,std::make_shared<std::mutex>()};
+            const ImagePack loadImagePack{ fileIndexCode,data,path,std::make_shared<std::mutex>(),{w,h}};
 
             /// load image
             PictureManagerInterFace::loadImage(loadImagePack);
-            EXIFResolver::resolver(loadImagePack, true);
+            EXIFResolver::resolver(loadImagePack);
             data->clear();
             data.reset();
         }
 
-        /// get resolved image infos
-        const auto exifInfos = CM::EXIFResolver::getExifInfo(fileIndexCode);
-
         /// 加载logo
-        const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.count(ExifKey::CameraMake)? exifInfos.at(ExifKey::CameraMake):"");
+        const auto cameraIndex = LogoManager::resolverCameraIndex(EXIFResolver::ExifItem(fileIndexCode,ExifKey::CameraMake));
         LogoManager::loadCameraLogo(cameraIndex);
+
+        /// TODO: we just need call show Image args with fileIndexCode
+        /// show Image need implement
+
         const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
 
         /// get loaded image
@@ -96,6 +97,15 @@ namespace CM
             scene->resetTexItemsPlainText(exifInfos);
             scene->resetLogoPixmap(previewImageLogo, cameraIndex);
 
+            {
+                const auto &[FixImageSizeW, FixImageSizeH] = SceneLayoutSettings::fixPreViewImageSize();
+                const auto newWidth = FixImageSizeW;
+                const auto imageRatio = ImageProcess::imageRatio(*preViewImage);
+                const auto newHeight = static_cast<int>(std::floor(static_cast<float>(newWidth) / imageRatio));
+                auto sceneLayout = scene->layoutSettings();
+                sceneLayout->setImageSize({static_cast<int>(newWidth), newHeight});
+                sceneLayout->update();
+            }
             scene->updateSceneRect();
 
             /// fit view show
@@ -119,8 +129,6 @@ namespace CM
         const auto windowSize = event->size();
         m_View->resize(windowSize); ///< resize view
 
-        dynamic_cast<PreViewImageScene*>(m_PreviewImageScene)->updateSceneRect();
-
         /// 设置视图显示的场景的大小
         /// 设置视图观察的场景的观察点
         {
@@ -128,6 +136,7 @@ namespace CM
             m_View->setSceneRect(bound); // 设置场景矩形
             m_View->fitInView(bound, Qt::KeepAspectRatio);
         }
+
         QWidget::resizeEvent(event);
     }
 

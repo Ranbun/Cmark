@@ -95,4 +95,11 @@ namespace CM
             file.close();
         }
     }
+
+    float ImageProcess::imageRatio(const QPixmap &pixmap)
+    {
+        auto size = QSizeF(pixmap.size());
+        return size.width() / size.height();
+    }
+
 } // CM

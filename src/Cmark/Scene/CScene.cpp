@@ -36,7 +36,7 @@ namespace CM
             return w;
         }
     }
-#endif 
+#endif
 
     CScene::CScene(QObject* parent)
         : QGraphicsScene(parent)
@@ -45,6 +45,13 @@ namespace CM
     {
         m_ShowImageItem = new PreViewImageItem(nullptr, m_SceneLayout);
         Init();
+        {
+            const auto &[FixImageSizeW, FixImageSizeH] = SceneLayoutSettings::fixPreViewImageSize();
+            const auto newWidth = FixImageSizeW;
+            const auto newHeight = FixImageSizeH;
+            m_SceneLayout->setImageSize({newWidth, newHeight});
+            m_SceneLayout->update();
+        }
     }
 
     CScene::~CScene() = default;
@@ -95,7 +102,7 @@ namespace CM
 
 
         auto b = CreateItem(minSize, prefSize, maxSize, "B");
-        
+
         {
             auto bp = dynamic_cast<QPushButton*>(b->widget());
             bp->setText("Photo Times");
@@ -146,7 +153,7 @@ namespace CM
         m_ToolWidget->setContentsMargins(0, 0, 0, 0);
         m_ToolWidget->setWindowFrameMargins(0, 0, 0, 0);
         // this->addItem(m_ToolWidget);
-#endif 
+#endif
     }
 
     void CScene::InitTexItems()
@@ -472,7 +479,7 @@ namespace CM
         auto logoPos = m_LogoItem->pos();
         auto x = m_SceneLayout->leftTextOffset();
         m_ToolWidget->setPos(x, logoPos.y());
-#endif 
+#endif
     }
 
     void CScene::updateLayout()

@@ -78,9 +78,6 @@ namespace CM
 
     void SceneLayoutSettings::setImageSize(const LSize& size)
     {
-        
-
-
         m_ShowImageSize = size;
     }
 

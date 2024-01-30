@@ -10,6 +10,7 @@
 #include "ImageProcess/ImageProcess.h"
 #include "CThread/ThreadPool.h"
 #include "Log/CLog.h"
+#include "SceneLayoutSettings.h"
 
 #include <QMenuBar>
 #include <QToolBar>
@@ -156,9 +157,11 @@ namespace CM
                     CLog::Info(QString("File: ") + fileInfo.filePath() + QString(" load success!"));
                 }
 
+                const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
+
                 const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
                 const auto data = ImageProcess::loadFile(fileInfo.filePath());
-                const ImagePack loadImagePack{ fileIndexCode,data,fileInfo.filePath().toStdString(),std::make_shared<std::mutex>()};
+                const ImagePack loadImagePack{ fileIndexCode,data,fileInfo.filePath().toStdString(),std::make_shared<std::mutex>(),{w,h}};
                 /// load image
                 PictureManager::loadImage(loadImagePack);
                 EXIFResolver::resolver(loadImagePack);
@@ -272,7 +275,7 @@ namespace CM
             QPixmap previewSceneSaveIcon("./sources/icons/save.png");
             previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio, Qt::SmoothTransformation);
             save->setIcon(previewSceneSaveIcon);
-
+            save->setVisible(false);
             connect(save, &QAction::triggered, [this]()
             {
                 m_DisplayWidget->saveScene(SceneIndex::GenerateLogoScene);
