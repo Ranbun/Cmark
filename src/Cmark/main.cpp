@@ -2,9 +2,9 @@
 
 #include <QApplication>
 
-#include "Loader/EXIFResolver.h"
-#include "UI/MainWindow.h"
-#include "sources/LogoManager.h"
+#include "File/Resolver/EXIFResolver.h"
+#include "Window/MainWindow.h"
+#include "File/LogoManager.h"
 
 #include <SceneLayoutEditor.h>
 

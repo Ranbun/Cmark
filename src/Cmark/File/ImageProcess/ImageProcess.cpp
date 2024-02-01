@@ -1,5 +1,5 @@
 #include "ImageProcess.h"
-#include <Log/CLog.h>
+#include "Log/CLog.h"
 
 namespace CM
 {

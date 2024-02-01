@@ -112,6 +112,7 @@ namespace CM
         void updateLogoPosition();
 
     private:
+
         [[maybe_unused]] LSize m_ShowImageSize{1,1};
         [[maybe_unused]] Margin m_Margin;
         [[maybe_unused]] LPoint m_LogoPosition{ -1,-1 };

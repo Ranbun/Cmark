@@ -6,8 +6,8 @@
 #include "ImagePropertyDockWidget.h"
 #include "StatusBar.h"
 #include "DisplayWidget.h"
-#include "sources/ResourcesTool.h"
-#include "ImageProcess/ImageProcess.h"
+#include "File/ResourcesTool.h"
+#include <File/ImageProcess/ImageProcess.h>
 #include "CThread/ThreadPool.h"
 #include "Log/CLog.h"
 #include "SceneLayoutSettings.h"

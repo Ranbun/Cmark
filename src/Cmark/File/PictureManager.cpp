@@ -1,13 +1,11 @@
-#include <CMark.h>
+#include "CMark.h"
+
 #include "PictureManager.h"
 
-#include <QBuffer>
-#include <QImageReader>
-
-#include "Loader/FileLoad.h"
-#include <ImageProcess/ImageProcess.h>
-
+#include "File/ImageProcess/ImageProcess.h"
 #include "Base/ImagePack.h"
+
+#include <QBuffer>
 
 /// make it thread feature
 
@@ -100,5 +98,10 @@ namespace CM
     {
         g_LoadFinishSignals.clear();
         m_Maps.clear();
+    }
+
+    void PictureManager::insert(const std::pair<size_t, std::shared_ptr<QPixmap>> &d)
+    {
+        m_Maps.insert(d);
     }
 }

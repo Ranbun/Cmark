@@ -13,7 +13,7 @@ namespace CM
     {
     public:
         FixMap() = default;
-        ~FixMap() { m_maps.clear(); }
+        ~FixMap() = default;
 
         FixMap(const FixMap&) = delete;
         FixMap(const FixMap&&) = delete;

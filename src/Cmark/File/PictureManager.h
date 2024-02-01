@@ -2,8 +2,8 @@
 #define CMARK_PICTUREMANAGER_H_
 
 
-#include <Base/ImagePack.h>
-#include <Base/FixMap.hpp>
+#include "Base/ImagePack.h"
+#include "Base/FixMap.hpp"
 
 
 namespace CM
@@ -20,10 +20,7 @@ namespace CM
     public:
         PictureManager() = default;
 
-        static void insert(const std::pair<size_t, std::shared_ptr<QPixmap>>& d)
-        {
-            m_Maps.insert(d);
-        }
+        static void insert(const std::pair<size_t, std::shared_ptr<QPixmap>>& d);
 
         static void insert(size_t key, const std::shared_ptr<QPixmap>& value);
 

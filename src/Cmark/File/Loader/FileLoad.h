@@ -3,7 +3,6 @@
 
 namespace CM
 {
-
     /**
      * @brief 加载图片文件文件的类
      */

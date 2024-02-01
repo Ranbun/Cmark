@@ -2,9 +2,9 @@
 #define CMARK_RESOURCESTOOLS_H_
 
 #include "PictureManager.h"
-#include "sources/LogoManager.h"
-#include "Loader/EXIFResolver.h"
-#include <ImageProcess/ImageProcess.h>
+#include "File/LogoManager.h"
+#include "File/Resolver/EXIFResolver.h"
+#include "File/ImageProcess/ImageProcess.h"
 
 namespace CM::Tools
 {
