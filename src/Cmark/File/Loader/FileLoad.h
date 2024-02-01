@@ -3,7 +3,6 @@
 
 namespace CM
 {
-
     /**
      * @brief 加载图片文件文件的类
      */
@@ -13,7 +12,7 @@ namespace CM
         using CData = std::shared_ptr<std::vector<unsigned char>>;
 
         FileLoad() = default;
-        [[maybe_unused]] static CData load(const std::filesystem::path& path); ///< just read signal file
+        [[maybe_unused]] static CData load(const std::string& path); ///< just read signal file
         static std::shared_ptr<QByteArray> toQByteArray(const CData &inputData);
     };
 }

@@ -2,11 +2,13 @@
 
 #include <QApplication>
 
-#include "Loader/EXIFResolver.h"
-#include "UI/MainWindow.h"
-#include "sources/LogoManager.h"
+#include "File/Resolver/EXIFResolver.h"
+#include "Window/MainWindow.h"
+#include "File/LogoManager.h"
 
 #include <SceneLayoutEditor.h>
+
+#include "exif.h"
 
 namespace Tools
 {
@@ -151,6 +153,7 @@ int main(int argc,char ** argv)
 #if SHOW_WIDGET
 
     QApplication app(argc,argv);
+    qSetMessagePattern("%{time yyyy-MM-dd hh:mm:ss}--[%{type}]--%{function}:%{message}");
     CM::MainWindow manApp;
 
     CM::LogoManager::Init();

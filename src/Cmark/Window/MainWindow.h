@@ -42,10 +42,11 @@ namespace CM
 
     signals:
         /**
-         * @brief 
-         * @return 
+         * @brief
+         * @return
          */
         QString sigBatchProcessImagesRootPath();
+        void sigWarning(QString info);
 
     };
 

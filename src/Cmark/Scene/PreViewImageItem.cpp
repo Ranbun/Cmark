@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "SceneDef.h"
-#include "sources/PictureManager.h"
+#include "File/PictureManager.h"
 
 #if _DEBUG
 

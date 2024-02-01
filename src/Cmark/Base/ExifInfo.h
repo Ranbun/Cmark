@@ -1,10 +1,7 @@
-#ifndef CAMERAMARK_EXIFRESOLVER_H
-#define CAMERAMARK_EXIFRESOLVER_H
+#ifndef CMARK_EXIFINFO_H_
+#define CMARK_EXIFINFO_H_
 
-#include "exif.h"
-#include "Base/Type.h"
-
-#include <filesystem>
+#include <string>
 
 namespace CM
 {
@@ -93,82 +90,13 @@ namespace CM
             std::string Make;               // Lens manufacturer
             std::string Model;              // Lens model
         } LensInfo;
+
+        uint64_t m_LoadedCheckCode{0};
+
     };
 
-    namespace Tools
-    {
-        class ResourcesTools;
-    }
 
-    class EXIFResolver
-    {
-        friend  class Tools::ResourcesTools;
-    public:
-        EXIFResolver() =default;
-
-        /**
-         * @brief 解析错误码
-         * @param resolverCode checkCode函数的返回值
-         * @return 结果和错误信息
-         */
-        static std::tuple<bool, std::string> check(int resolverCode);
-
-        /// ---------------------------------new resolver interface --------------------------------------------------
-
-        /**
-         * @brief 加载图片并解析相应的exif信息
-         * @param path 图片路径
-         * @return 加载的图片的索引 可以通过此索引获取加载的exif信息
-         */
-        size_t resolver(const std::filesystem::path & path);
+}
 
 
-        [[deprecated]] void resolver(std::shared_ptr<QByteArray> imagePixels, size_t imageExifResolverCode);
-
-
-        /**
-         * @brief 通过加载时候返回的索引获取加载完成的图片数据
-         * @param index 加载时候返回的索引
-         * @return 图片数据Exif信息
-         */
-        std::weak_ptr<EXIFInfo> getExifInfo(size_t index) const;
-
-        /**
-         * @brief 获取加载的文件的加载的结果
-         * @param index 加载的文件的索引
-         * @return 返回对应的信息码
-         */
-        int checkCode(size_t index) const;
-
-        /**
-         * @brief 解析加载完成的exif信息 返回可用的信息
-         * @param infoPtr 加载的对应的文件的exif信息
-         * @return
-         */
-        static ExifInfoMap resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
-
-    private:
-        static void destory();
-
-    public:
-        /**
-         * @brief 生成对应的hashCode
-         * @tparam T hash的类型
-         * @param path hash的变量
-         * @return hash的结果
-         */
-        template<typename T>
-        size_t hash(const T & path)
-        {
-            std::hash<T> Hasher;
-            const size_t hashValue = Hasher(path);
-            return hashValue;
-        }
-
-        template<>
-        size_t hash(const std::string & path);
-    };
-
-} // CM
-
-#endif //CAMERAMARK_EXIFRESOLVER_H
+#endif

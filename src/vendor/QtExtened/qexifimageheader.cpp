@@ -507,7 +507,7 @@ QString QExifValue::toString() const
             switch( encoding() )
             {
             case AsciiEncoding:
-                return QString::fromLatin1( string.constData(), string.length() );
+                return QString::fromUtf8( string.constData(), string.length() );
             case JisEncoding:
                 {
                     QTextCodec *codec = QTextCodec::codecForName( "JIS X 0208" );
@@ -1373,24 +1373,9 @@ QByteArray QExifImageHeader::extractExif( QIODevice *device ) const
 
     stream.setByteOrder( QDataStream::BigEndian );
 
-#if  0
-    auto str = device->read(2).toStdString();
-    std::cout << str << std::endl;
-
-
-    if (str.size() < 2 || str[0] != '\xFF' || str[1] != '\xD8')
-        return  QByteArray();   
-
-    if (str != "\xFF\xD8")
-    {
-        putchar(10);
-    }
-#endif 
-
-#if 1
     if( device->read( 2 ) != "\xFF\xD8" )
         return QByteArray();
-#endif 
+
 
     while( device->read( 2 ).toStdString() != "\xFF\xE1" )
     {
@@ -1408,7 +1393,7 @@ QByteArray QExifImageHeader::extractExif( QIODevice *device ) const
 
     stream >> length;
 
-    if( device->read( 4 ) != "Exif" )
+    if( device->read( 4 ).toStdString() != "Exif" )
         return QByteArray();
 
     device->read( 2 );

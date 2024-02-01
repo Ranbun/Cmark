@@ -1,7 +1,7 @@
 #ifndef QEXIFIMAGEHEADER_H_
 #define QEXIFIMAGEHEADER_H_
 
-#include <qexifimageheader.h>
+#include "qexifimageheader.h"
 
-#endif 
+#endif
 

@@ -9,23 +9,28 @@ namespace CM
 
     class PreViewImageScene final :public CScene
     {
+        Q_OBJECT
     public:
         explicit PreViewImageScene(QObject * parent = nullptr)
         : CScene(parent)
         {
-
+            initConnect();
         }
-
         PreViewImageScene(const PreViewImageScene&) = delete;
         PreViewImageScene(const PreViewImageScene&&) = delete;
-
         PreViewImageScene& operator=(const PreViewImageScene&) = delete;
         PreViewImageScene& operator=(const PreViewImageScene&&) = delete;
-
-
         ~PreViewImageScene() override = default;
 
         void updateSceneRect();
+
+    private:
+        void showImage(size_t fileIndexCode);
+        void initConnect();
+
+    signals:
+        void sigShowImage(size_t code);
+
     };
 
 } // CM

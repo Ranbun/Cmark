@@ -6,15 +6,20 @@
 #include "ImagePropertyDockWidget.h"
 #include "StatusBar.h"
 #include "DisplayWidget.h"
-#include "sources/ResourcesTool.h"
-#include "ImageProcess/ImageProcess.h"
-
+#include "File/ResourcesTool.h"
+#include <File/ImageProcess/ImageProcess.h>
+#include "CThread/ThreadPool.h"
+#include "Log/CLog.h"
+#include "SceneLayoutSettings.h"
 
 #include <QMenuBar>
 #include <QToolBar>
 #include <QFileDialog>
 #include <QAction>
 #include <QFileInfoList>
+#include <QMessageBox>
+
+#include <future>
 
 #if _DEBUG
 #include <QDebug>
@@ -22,7 +27,7 @@
 
 namespace CM
 {
-    namespace 
+    namespace
     {
         QFileInfoList imageFileLists;
         const QList<QString> availableFileType{ "jpeg","jpg"};
@@ -33,7 +38,7 @@ namespace CM
             // 判断目录是否存在
             if (!dir.exists())
             {
-                qDebug() << "Directory does not exist: " << path;
+                CLog::Warning(QString("Directory does not exist: " ));
                 return;
             }
 
@@ -121,7 +126,7 @@ namespace CM
         connect(m_NewAction, &QAction::triggered, [this]()
         {
             m_LeftDockWidget->New();
-            Tools::ResourcesTools::destory();
+            Tools::ResourcesTools::destroy();
         });
 
         connect(m_OpenDirectoryAction, &QAction::triggered, [this]()
@@ -135,74 +140,52 @@ namespace CM
         connect(m_BatchProcessImage, &QAction::triggered, this,[this]()
         {
             const QString rootPath  = emit sigBatchProcessImagesRootPath();
-            const QDir directory(rootPath);
 
             imageFileLists.clear();
             scanDirectory(rootPath);
 
             // 遍历文件列表并输出文件名
 
-            auto dealFiles = [this](QFileInfoList & imageFileLists)
+            auto dealFiles = [this](const QFileInfo & fileInfo)
             {
-                using PictureManagerInterFace = CM::PictureManager;
-                EXIFResolver resolver;
-                foreach(const QFileInfo & fileInfo, imageFileLists)
+                if(!fileInfo.exists())
                 {
-                    qDebug() << "File: " << fileInfo.filePath();
-
-#if  0
-                    /// 开线程 加载所有文件
-                    const auto imageIndexCode = PictureManagerInterFace::loadImage(fileInfo.filePath().toStdString());
-                    /// 解析文件信息
-                    const auto resolverIndex = resolver.resolver(fileInfo.filePath().toStdString());
-
-                    /// get resolved image infos
-                    const auto exifInfos = resolver.getExifInfo(resolverIndex);
-
-                    /// 加载logo
-                    const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.lock()->Make);
-                    LogoManager::loadCameraLogo(cameraIndex);
-                    const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
-
-                    /// get loaded image
-                    const auto preViewImage = PictureManager::getImage(imageIndexCode);
-
-                    const auto infos = EXIFResolver::resolverImageExif(exifInfos);
-
-                    const auto imageRatio = static_cast<float>(preViewImage->size().width()) / preViewImage->size().height();
-
-                    auto newSize = QSize(1000, 1000 / imageRatio);
-
-                    if(preViewImage->isNull())
-                    {
-                        qDebug() << "Pixmap Null";
-                    }
-
-                    const auto output = std::make_shared<QPixmap >(preViewImage->scaled(newSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-
-                    if (output->isNull())
-                    {
-                        qDebug() << "Scaled Pixmap Null";
-
-                        continue;
-                    }
-                    ImageProcess::save(output, "");
-
-#endif 
-
+                    emit sigWarning(fileInfo.filePath() + QString("load error!"));
+                    return ;
                 }
+                {
+                    CLog::Info(QString("File: ") + fileInfo.filePath() + QString(" load success!"));
+                }
+
+                const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
+
+                const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
+                const auto data = ImageProcess::loadFile(fileInfo.filePath());
+                const ImagePack loadImagePack{ fileIndexCode,data,fileInfo.filePath().toStdString(),std::make_shared<std::mutex>(),{w,h}};
+                /// load image
+                PictureManager::loadImage(loadImagePack);
+                EXIFResolver::resolver(loadImagePack);
+
+                data->clear();
             };
 
-            std::thread dealFileThread(dealFiles,std::ref(imageFileLists));
-            dealFileThread.detach();
-
-        });
-        
-        connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
+            ThreadPool pool(4);
+            std::vector<std::future<void>> futures;
+            for(auto & fileInfo: imageFileLists)
             {
-                return m_LeftDockWidget->rootImagePath();
-            });
+                futures.emplace_back(pool.enqueue(dealFiles,std::ref(fileInfo)));
+            }
 
+            for (auto& future : futures)
+            {
+                future.get(); /// wait thread
+            }
+        });
+
+        connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
+        {
+            return m_LeftDockWidget->rootImagePath();
+        });
 
         connect(m_LeftDockWidget.get(), &FileTreeDockWidget::previewImage, [this](const QString& path)
         {
@@ -211,6 +194,13 @@ namespace CM
             StatusBar::repaint();
             emit m_DisplayWidget->sigPreViewImage(path.toStdString());
         });
+
+        connect(this,&MainWindow::sigWarning,this,[parent = this](const QString& info)
+        {
+            // QMessageBox::warning(parent,"Warning",info);
+            CLog::Warning(info);
+        },Qt::QueuedConnection);
+
 
 #if  0
         connect(m_EditPreviewSceneLayoutAction, &QAction::triggered, m_DisplayWidget.get(),
@@ -285,7 +275,7 @@ namespace CM
             QPixmap previewSceneSaveIcon("./sources/icons/save.png");
             previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio, Qt::SmoothTransformation);
             save->setIcon(previewSceneSaveIcon);
-
+            save->setVisible(false);
             connect(save, &QAction::triggered, [this]()
             {
                 m_DisplayWidget->saveScene(SceneIndex::GenerateLogoScene);

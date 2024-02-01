@@ -44,20 +44,20 @@ namespace CM
          */
         void update();
 
-        const Margin & getMargin() const;
+        [[nodiscard]] const Margin & getMargin() const;
         Margin & getMargin();
         void setMargin(int left,int right,int top,int bottom);
 
         /// Image
-        LPos imagePos() const;
+        [[nodiscard]] LPos imagePos() const;
 
         /// logo
         [[deprecated]] void setLogoWithImageSpace(int space);
-        [[deprecated]] int logoWithImageSpace() const;
-        [[deprecated]] int logoWithSplitLineSpace() const;
+        [[deprecated]] [[nodiscard]] int logoWithImageSpace() const;
+        [[deprecated]] [[nodiscard]] int logoWithSplitLineSpace() const;
 
-        /// LOGO 
-        const LSize & logoSize()const;
+        /// LOGO
+        [[nodiscard]] const LSize & logoSize()const;
 
         [[deprecated]] void setLogoSize(int w,int h);
         [[deprecated]] void setLogoSize(const LSize &size);
@@ -65,9 +65,9 @@ namespace CM
         [[maybe_unused]] void setImageSize(const LSize &size);
         [[nodiscard]] const LSize & imageSize() const;
 
-        [[deprecated]] int leftTextOffset() const;
-        [[deprecated]] int rightTextOffset() const;
-        [[deprecated]] int rightTextMaxWidth() const;
+        [[deprecated]] [[nodiscard]] int leftTextOffset() const;
+        [[deprecated]] [[nodiscard]] int rightTextOffset() const;
+        [[deprecated]] [[nodiscard]] int rightTextMaxWidth() const;
 
         /**
          * @brief 设置right_top & right_bottom 显示的文字的最大长度
@@ -112,6 +112,7 @@ namespace CM
         void updateLogoPosition();
 
     private:
+
         [[maybe_unused]] LSize m_ShowImageSize{1,1};
         [[maybe_unused]] Margin m_Margin;
         [[maybe_unused]] LPoint m_LogoPosition{ -1,-1 };
