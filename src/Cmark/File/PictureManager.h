@@ -34,6 +34,8 @@ namespace CM
          */
         static void loadImage(const ImagePack &pack, bool synchronization = true);
 
+        static FixMap<size_t, std::shared_ptr<QPixmap>> & images(){return m_Maps;}
+
     private:
         static void destroy();
 

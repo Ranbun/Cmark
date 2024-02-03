@@ -104,6 +104,9 @@ namespace CM
             m_Maps.clear();
         }
 
+        std::unordered_map<size_t, std::shared_ptr<QPixmap>>::iterator begin(){return m_Maps.begin();}
+        std::unordered_map<size_t, std::shared_ptr<QPixmap>>::iterator end(){return m_Maps.end();}
+
     private:
         uint64_t m_MaxSize = 20;
         std::queue<size_t> m_IndexCodeQueue;
