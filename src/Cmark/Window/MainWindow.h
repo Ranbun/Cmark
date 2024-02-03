@@ -2,6 +2,7 @@
 #define CAMERAMARK_MAINWINDOW_H
 
 #include <QMainWindow>
+#include "CThread/ThreadPool.h"
 
 namespace CM
 {
@@ -39,6 +40,8 @@ namespace CM
 
         /// Edit
         QAction * m_EditPreviewSceneLayoutAction{nullptr};
+
+        ThreadPool * pool;
 
     signals:
         /**

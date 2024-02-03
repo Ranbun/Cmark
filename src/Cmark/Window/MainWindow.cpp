@@ -8,7 +8,6 @@
 #include "DisplayWidget.h"
 #include "File/ResourcesTool.h"
 #include <File/ImageProcess/ImageProcess.h>
-#include "CThread/ThreadPool.h"
 #include "Log/CLog.h"
 #include "SceneLayoutSettings.h"
 
@@ -72,6 +71,7 @@ namespace CM
 
     MainWindow::MainWindow()
         : QMainWindow(nullptr)
+        , pool(new ThreadPool(5))
     {
         InitUi();
     }
@@ -146,7 +146,8 @@ namespace CM
 
             // 遍历文件列表并输出文件名
 
-            auto dealFiles = [this](const QFileInfo & fileInfo)
+            std::map<size_t,QFileInfo> fileInfos;
+            auto dealFiles = [&fileInfos,this](const QFileInfo & fileInfo)
             {
                 if(!fileInfo.exists())
                 {
@@ -158,7 +159,6 @@ namespace CM
                 }
 
                 const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
-
                 const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
                 const auto data = ImageProcess::loadFile(fileInfo.filePath());
                 const ImagePack loadImagePack{ fileIndexCode,data,fileInfo.filePath().toStdString(),std::make_shared<std::mutex>(),{w,h}};
@@ -167,19 +167,56 @@ namespace CM
                 EXIFResolver::resolver(loadImagePack);
 
                 data->clear();
+
+                fileInfos.insert({fileIndexCode,fileInfo});  /// TODO: danger
             };
 
-            ThreadPool pool(4);
             std::vector<std::future<void>> futures;
             for(auto & fileInfo: imageFileLists)
             {
-                futures.emplace_back(pool.enqueue(dealFiles,std::ref(fileInfo)));
+                futures.emplace_back(pool->enqueue(dealFiles,std::ref(fileInfo)));
             }
 
             for (auto& future : futures)
             {
                 future.get(); /// wait thread
             }
+
+            /// write file to QPixmap
+            struct writePack
+            {
+                std::shared_ptr<QPixmap> pixmap;
+                std::shared_ptr<QPixmap> logo;
+                QString fileName{""};
+                int w;
+                int h;
+
+            };
+            auto writeFile = [this](writePack pack)
+            {
+
+                /// 计算绘制的字体& 绘制的图标的位置
+                /// 绘制文字 % 图标
+                /// 保存图片
+
+                ImageProcess::save(pack.pixmap,pack.fileName);
+            };
+
+            futures.clear();
+            for(auto & [fileIndexCode,pixmap] : PictureManager::images())
+            {
+                const auto & [w,h] = SceneLayoutSettings::fixPreViewImageSize();
+                auto cameraLogoIndex = LogoManager::resolverCameraIndex(EXIFResolver::ExifItem(fileIndexCode,ExifKey::CameraMake));
+                auto logo = LogoManager::getCameraMakerLogo(cameraLogoIndex);
+                auto fileName = fileInfos.at(fileIndexCode).fileName();
+                futures.emplace_back(pool->enqueue(writeFile, writePack{ pixmap,logo,fileName,w,h }));
+            }
+
+            for (auto& future : futures)
+            {
+                future.get(); /// wait thread
+            }
+
         });
 
         connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
