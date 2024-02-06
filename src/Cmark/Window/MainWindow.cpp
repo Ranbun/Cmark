@@ -2,34 +2,31 @@
 
 #include "MainWindow.h"
 
-#include "FileTreeDockWidget.h"
-#include "ImagePropertyDockWidget.h"
-#include "StatusBar.h"
-#include "DisplayWidget.h"
-#include "File/ResourcesTool.h"
-#include <File/ImageProcess/ImageProcess.h>
-#include "Log/CLog.h"
-#include "SceneLayoutSettings.h"
-
+#include <future>
+#include <QFileDialog>
+#include <QFileInfoList>
 #include <QMenuBar>
 #include <QToolBar>
-#include <QFileDialog>
-#include <QAction>
-#include <QFileInfoList>
-#include <QMessageBox>
 
-#include <future>
+#include <File/LogoManager.h>
+#include <File/ResourcesTool.h>
+#include <File/ImageProcess/ImageProcess.h>
+#include <File/Resolver/EXIFResolver.h>
+#include <Log/CLog.h>
 
-#if _DEBUG
-#include <QDebug>
-#endif
+#include "DisplayWidget.h"
+#include "FileTreeDockWidget.h"
+#include "ImagePropertyDockWidget.h"
+#include "SceneLayoutSettings.h"
+#include "StatusBar.h"
+
 
 namespace CM
 {
     namespace
     {
         QFileInfoList imageFileLists;
-        const QList<QString> availableFileType{ "jpeg","jpg"};
+        const QList<QString> availableFileType{"jpeg", "jpg"};
 
         void scanDirectory(const QString& path)
         {
@@ -37,7 +34,7 @@ namespace CM
             // 判断目录是否存在
             if (!dir.exists())
             {
-                CLog::Warning(QString("Directory does not exist: " ));
+                CLog::Warning(QString("Directory does not exist: "));
                 return;
             }
 
@@ -65,13 +62,12 @@ namespace CM
                 }
             }
         };
-
     }
 
 
     MainWindow::MainWindow()
         : QMainWindow(nullptr)
-        , pool(new ThreadPool(5))
+          , pool(new ThreadPool(5))
     {
         InitUi();
     }
@@ -137,89 +133,99 @@ namespace CM
             emit m_DisplayWidget->sigOpen(directoryPath.toStdString());
         });
 
-        connect(m_BatchProcessImage, &QAction::triggered, this,[this]()
+        connect(m_BatchProcessImage, &QAction::triggered, this, [this]()
         {
-            const QString rootPath  = emit sigBatchProcessImagesRootPath();
+            const QString rootPath = emit sigBatchProcessImagesRootPath();
 
             imageFileLists.clear();
             scanDirectory(rootPath);
 
-            // 遍历文件列表并输出文件名
-
-            std::map<size_t,QFileInfo> fileInfos;
-            auto dealFiles = [&fileInfos,this](const QFileInfo & fileInfo)
+            auto func = [this]()
             {
-                if(!fileInfo.exists())
+                std::map<size_t, QFileInfo> fileInfos;
+                std::mutex fileInfosMutex;
+
+                auto dealFiles = [&fileInfosMutex,&fileInfos, this](const QFileInfo& fileInfo)
                 {
-                    emit sigWarning(fileInfo.filePath() + QString("load error!"));
-                    return ;
-                }
+                    if (!fileInfo.exists())
+                    {
+                        emit sigWarning(fileInfo.filePath() + QString("load error!"));
+                        return;
+                    }
+                    {
+                        CLog::Info(QString("File: ") + fileInfo.filePath() + QString(" load success!"));
+                    }
+
+                    const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
+                    const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
+                    const auto data = ImageProcess::loadFile(fileInfo.filePath());
+                    const ImagePack loadImagePack{
+                        fileIndexCode, data, fileInfo.filePath().toStdString(), std::make_shared<std::mutex>(), {w, h}
+                    };
+                    /// load image
+                    PictureManager::loadImage(loadImagePack);
+                    EXIFResolver::resolver(loadImagePack);
+
+                    data->clear();
+
+                    {
+                        std::lock_guard local(fileInfosMutex);
+                        fileInfos.insert({ fileIndexCode, fileInfo }); /// TODO: danger
+                    }
+                };
+
+                std::vector<std::future<void>> futures;
+                for (auto& fileInfo : imageFileLists)
                 {
-                    CLog::Info(QString("File: ") + fileInfo.filePath() + QString(" load success!"));
+                    futures.emplace_back(pool->enqueue(dealFiles, std::ref(fileInfo)));
                 }
 
-                const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
-                const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
-                const auto data = ImageProcess::loadFile(fileInfo.filePath());
-                const ImagePack loadImagePack{ fileIndexCode,data,fileInfo.filePath().toStdString(),std::make_shared<std::mutex>(),{w,h}};
-                /// load image
-                PictureManager::loadImage(loadImagePack);
-                EXIFResolver::resolver(loadImagePack);
+                for (auto& future : futures)
+                {
+                    future.get(); /// wait thread
+                }
 
-                data->clear();
+                /// write file to QPixmap
+                struct WritePack
+                {
+                    std::shared_ptr<QPixmap> m_Pixmap;
+                    std::shared_ptr<QPixmap> m_Logo;
+                    QString m_FileName{""};
+                    int m_W;
+                    int m_H;
+                };
+                auto writeFile = [this](const WritePack& pack)
+                {
+                    /// 计算绘制的字体& 绘制的图标的位置
+                    /// 绘制文字 % 图标
+                    /// 保存图片
 
-                fileInfos.insert({fileIndexCode,fileInfo});  /// TODO: danger
+                    ImageProcess::save(pack.m_Pixmap, pack.m_FileName);
+                };
+
+                futures.clear();
+                for (auto& [fileIndexCode, pixmap] : PictureManager::images())
+                {
+                    const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
+                    auto cameraLogoIndex = LogoManager::resolverCameraIndex(
+                        EXIFResolver::ExifItem(fileIndexCode, ExifKey::CameraMake));
+                    const auto logo = LogoManager::getCameraMakerLogo(cameraLogoIndex);
+                    const auto fileName = fileInfos.at(fileIndexCode).fileName();
+                    futures.emplace_back(pool->enqueue(writeFile, WritePack{pixmap, logo, fileName, w, h}));
+                }
+
+                /// wait thread finish
+                for (auto& future : futures)
+                {
+                    future.get();
+                }
             };
 
-            std::vector<std::future<void>> futures;
-            for(auto & fileInfo: imageFileLists)
-            {
-                futures.emplace_back(pool->enqueue(dealFiles,std::ref(fileInfo)));
-            }
-
-            for (auto& future : futures)
-            {
-                future.get(); /// wait thread
-            }
-
-            /// write file to QPixmap
-            struct writePack
-            {
-                std::shared_ptr<QPixmap> pixmap;
-                std::shared_ptr<QPixmap> logo;
-                QString fileName{""};
-                int w;
-                int h;
-
-            };
-            auto writeFile = [this](writePack pack)
-            {
-
-                /// 计算绘制的字体& 绘制的图标的位置
-                /// 绘制文字 % 图标
-                /// 保存图片
-
-                ImageProcess::save(pack.pixmap,pack.fileName);
-            };
-
-            futures.clear();
-            for(auto & [fileIndexCode,pixmap] : PictureManager::images())
-            {
-                const auto & [w,h] = SceneLayoutSettings::fixPreViewImageSize();
-                auto cameraLogoIndex = LogoManager::resolverCameraIndex(EXIFResolver::ExifItem(fileIndexCode,ExifKey::CameraMake));
-                auto logo = LogoManager::getCameraMakerLogo(cameraLogoIndex);
-                auto fileName = fileInfos.at(fileIndexCode).fileName();
-                futures.emplace_back(pool->enqueue(writeFile, writePack{ pixmap,logo,fileName,w,h }));
-            }
-
-            for (auto& future : futures)
-            {
-                future.get(); /// wait thread
-            }
+            auto taskFuture = pool->enqueue(func);
 
         });
 
-        connect(this,&MainWindow::sigBatchProcessImagesRootPath,m_LeftDockWidget.get(),[this]()->QString
+        connect(this, &MainWindow::sigBatchProcessImagesRootPath, m_LeftDockWidget.get(), [this]()-> QString
         {
             return m_LeftDockWidget->rootImagePath();
         });
@@ -232,11 +238,10 @@ namespace CM
             emit m_DisplayWidget->sigPreViewImage(path.toStdString());
         });
 
-        connect(this,&MainWindow::sigWarning,this,[parent = this](const QString& info)
+        connect(this, &MainWindow::sigWarning, this, [](const QString& info)
         {
-            // QMessageBox::warning(parent,"Warning",info);
             CLog::Warning(info);
-        },Qt::QueuedConnection);
+        }, Qt::QueuedConnection);
 
 
 #if  0
@@ -270,7 +275,7 @@ namespace CM
         m_BatchProcessImage = new QAction("Process All");
         m_BatchProcessImage->setToolTip(tr("Process All Image Files"));
         m_BatchProcessImage->setIcon(QIcon("./sources/icons/multiProcess.png"));
-        m_BatchProcessImage->setShortcut({ "Ctrl+Shift+A" });
+        m_BatchProcessImage->setShortcut({"Ctrl+Shift+A"});
         file->addAction(m_BatchProcessImage);
 
         const auto Edit = new QMenu("Edit(&E)");
@@ -280,7 +285,6 @@ namespace CM
         m_EditPreviewSceneLayoutAction->setShortcut({"Ctrl+E"});
         m_EditPreviewSceneLayoutAction->setIcon(QIcon("./sources/icons/previewSceneLayoutsettings.png"));
         Edit->addAction(m_EditPreviewSceneLayoutAction);
-
     }
 
     void MainWindow::InitTool()
@@ -318,8 +322,5 @@ namespace CM
                 m_DisplayWidget->saveScene(SceneIndex::GenerateLogoScene);
             });
         }
-
-
-
     }
 } // CM

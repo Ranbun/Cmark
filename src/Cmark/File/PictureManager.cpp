@@ -62,7 +62,7 @@ namespace CM
             readImage.fill(Qt::transparent);
 
             {
-                std::lock_guard local_mutex(*imagePack.m_LocalMutex);
+                std::lock_guard localMutex(*imagePack.m_LocalMutex);
                 const QFileInfo fileInfo(QString::fromStdString(imagePack.m_FileName));
                 const auto format = fileInfo.suffix().toUpper();
                 readImage = *ImageProcess::toQImage(imagePack.m_ImageData, format);
@@ -74,7 +74,7 @@ namespace CM
                 const auto & [w,h] = imagePack.Size;
 
                 const auto newWidth = w;
-                auto imageSize = QSizeF(preViewImage->size());
+                const auto imageSize = QSizeF(preViewImage->size());
                 const auto imageRatio = imageSize.width() / imageSize.height();
                 const auto newHeight = static_cast<int>(std::floor(static_cast<float>(newWidth) / imageRatio));
 

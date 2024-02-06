@@ -19,17 +19,17 @@ namespace CM
 
     std::shared_ptr<QImage> ImageProcess::toQImage(const std::shared_ptr<QByteArray>& imageData, const QString& format)
     {
-        QBuffer ReadAsImageBuffer(imageData.get());
+        QBuffer readAsImageBuffer(imageData.get());
         {
-            ReadAsImageBuffer.open(QIODevice::ReadOnly);
-            ReadAsImageBuffer.seek(0);
+            readAsImageBuffer.open(QIODevice::ReadOnly);
+            readAsImageBuffer.seek(0);
         }
 
-        auto imageReader = std::make_shared<QImageReader>(&ReadAsImageBuffer, format.toStdString().c_str());
+        auto imageReader = std::make_shared<QImageReader>(&readAsImageBuffer, format.toStdString().c_str());
         imageReader->setAutoTransform(true);
         auto im = std::make_shared<QImage>(imageReader->read());
-        ReadAsImageBuffer.close();
-        ReadAsImageBuffer.deleteLater();
+        readAsImageBuffer.close();
+        readAsImageBuffer.deleteLater();
         imageReader.reset();
 
         return im;
@@ -56,6 +56,12 @@ namespace CM
         buffer.open(QIODevice::WriteOnly);
 
         const QFileInfo fileInfo(name);
+        if(fileInfo.exists())
+        {
+            buffer.close();
+            CLog::Print<QString>(name + QString(" exists."));
+            return;
+        }
         const auto format = fileInfo.suffix().toLower().toStdString();
 
         if (pixmap->save(&buffer, format.c_str()))
