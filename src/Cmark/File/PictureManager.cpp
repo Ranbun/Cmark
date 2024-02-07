@@ -1,11 +1,9 @@
-#include "CMark.h"
+#include <CMark.h>
 
 #include "PictureManager.h"
 
-#include "File/ImageProcess/ImageProcess.h"
-#include "Base/ImagePack.h"
-
-#include <QBuffer>
+#include <Base/ImagePack.h>
+#include <File/ImageProcess/ImageProcess.h>
 
 /// make it thread feature
 
@@ -34,6 +32,7 @@ namespace CM
             g_LoadFinishSignals.erase(key);
         }
 
+        std::lock_guard<std::mutex> local(g_Mutex);
         return m_Maps.getPixmap(key);
     }
 
@@ -80,13 +79,20 @@ namespace CM
 
                 *preViewImage =   preViewImage->scaled(newWidth,newHeight,Qt::KeepAspectRatioByExpanding,Qt::SmoothTransformation);
             }
-            insert({imageIndexCode, preViewImage});
+
+            /// insert image
+            insert({ imageIndexCode, preViewImage });
         };
+
 
         if(!synchronization)
         {
-            std::thread readImage(readFileToImage, std::ref(pack));
-            readImage.join();
+            std::vector<std::future<void>> futures;
+            futures.emplace_back(std::async(std::launch::async, readFileToImage, std::ref(pack)));
+            for(const auto & f: futures)
+            {
+                f.wait();
+            }
         }
         else
         {
@@ -96,12 +102,14 @@ namespace CM
 
     void PictureManager::destroy()
     {
+        std::lock_guard<std::mutex> local(g_Mutex);
         g_LoadFinishSignals.clear();
         m_Maps.clear();
     }
 
     void PictureManager::insert(const std::pair<size_t, std::shared_ptr<QPixmap>> &d)
     {
+        std::lock_guard local(g_Mutex);
         m_Maps.insert(d);
     }
 }

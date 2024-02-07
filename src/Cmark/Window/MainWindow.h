@@ -41,8 +41,6 @@ namespace CM
         /// Edit
         QAction * m_EditPreviewSceneLayoutAction{nullptr};
 
-        ThreadPool * pool;
-
     signals:
         /**
          * @brief

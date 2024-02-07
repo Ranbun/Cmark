@@ -34,13 +34,13 @@ namespace CM
     void PreViewImageItem::resetPixmap(const size_t imageIndex)
     {
         const auto pic = CM::PictureManager::getImage(imageIndex);
-        if(pic->isNull())
+        if (pic->isNull())
         {
             throw std::runtime_error("Pixmap is Null!");
         }
 
-        const auto & [w,h] = m_SceneLayout.lock()->imageSize();
-        setPixmap(scaledPixmap(pic,w,h));
+        const auto& [w,h] = m_SceneLayout.lock()->imageSize();
+        setPixmap(scaledPixmap(pic, w, h));
 
         updateImageRatio(pic);
 
@@ -50,7 +50,7 @@ namespace CM
 
     void PreViewImageItem::applyLayout(const std::shared_ptr<SceneLayoutSettings>& layout)
     {
-        if(layout)
+        if (layout)
         {
             const auto& [w, h] = layout->imageSize();
             resizeImage(w, h);
@@ -58,7 +58,6 @@ namespace CM
             const auto& [x,y] = layout->imagePos();
             setPos(0, 0);
         }
-
     }
 
     const float& PreViewImageItem::imageRatio() const
@@ -69,7 +68,7 @@ namespace CM
     auto PreViewImageItem::validImage() const -> bool
     {
         const auto p = target();
-        if(!p || p->isNull())
+        if (!p || p->isNull())
         {
             return false;
         }
@@ -82,7 +81,7 @@ namespace CM
         {
             return {w, h};
         }
-        return image.scaled(w, h,Qt::KeepAspectRatioByExpanding,Qt::SmoothTransformation);
+        return image.scaled(w, h, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     }
 
     QPixmap PreViewImageItem::scaledPixmap(const std::shared_ptr<QPixmap>& image, const int w, const int h)
@@ -100,7 +99,7 @@ namespace CM
     void PreViewImageItem::updateImageRatio(const std::shared_ptr<QPixmap>& tar)
     {
         const auto pixSize = QSizeF(tar->size());
-        m_ImageRatio = static_cast<float>(pixSize.width() / pixSize.height());  /// w / h
+        m_ImageRatio = static_cast<float>(pixSize.width() / pixSize.height()); /// w / h
     }
 
     PreViewImageItem::~PreViewImageItem() = default;

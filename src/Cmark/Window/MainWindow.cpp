@@ -6,68 +6,25 @@
 #include <QFileDialog>
 #include <QFileInfoList>
 #include <QMenuBar>
+#include <QPainter>
 #include <QToolBar>
 
-#include <File/LogoManager.h>
 #include <File/ResourcesTool.h>
-#include <File/ImageProcess/ImageProcess.h>
-#include <File/Resolver/EXIFResolver.h>
 #include <Log/CLog.h>
 
 #include "DisplayWidget.h"
 #include "FileTreeDockWidget.h"
 #include "ImagePropertyDockWidget.h"
-#include "SceneLayoutSettings.h"
 #include "StatusBar.h"
+#include "Scene/CScene.h"
+
+#include <File/BatchImageProcess.h>
 
 
 namespace CM
 {
-    namespace
-    {
-        QFileInfoList imageFileLists;
-        const QList<QString> availableFileType{"jpeg", "jpg"};
-
-        void scanDirectory(const QString& path)
-        {
-            const QDir dir(path);
-            // 判断目录是否存在
-            if (!dir.exists())
-            {
-                CLog::Warning(QString("Directory does not exist: "));
-                return;
-            }
-
-            // 获取目录下的所有文件和子文件夹
-            QStringList entries = dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-
-            // 遍历文件和子文件夹
-            foreach(const QString & entry, entries)
-            {
-                QString entryPath = dir.filePath(entry);
-
-                // 如果是文件夹，则递归扫描
-                if (QFileInfo(entryPath).isDir())
-                {
-                    scanDirectory(entryPath);
-                }
-                else
-                {
-                    auto fileInfo = QFileInfo(entryPath);
-                    const auto fileType = fileInfo.suffix().toLower();
-                    if (availableFileType.contains(fileType))
-                    {
-                        imageFileLists.append(fileInfo);
-                    }
-                }
-            }
-        };
-    }
-
-
     MainWindow::MainWindow()
         : QMainWindow(nullptr)
-          , pool(new ThreadPool(5))
     {
         InitUi();
     }
@@ -136,93 +93,8 @@ namespace CM
         connect(m_BatchProcessImage, &QAction::triggered, this, [this]()
         {
             const QString rootPath = emit sigBatchProcessImagesRootPath();
-
-            imageFileLists.clear();
-            scanDirectory(rootPath);
-
-            auto func = [this]()
-            {
-                std::map<size_t, QFileInfo> fileInfos;
-                std::mutex fileInfosMutex;
-
-                auto dealFiles = [&fileInfosMutex,&fileInfos, this](const QFileInfo& fileInfo)
-                {
-                    if (!fileInfo.exists())
-                    {
-                        emit sigWarning(fileInfo.filePath() + QString("load error!"));
-                        return;
-                    }
-                    {
-                        CLog::Info(QString("File: ") + fileInfo.filePath() + QString(" load success!"));
-                    }
-
-                    const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
-                    const auto fileIndexCode = ImageProcess::generateFileIndexCode(fileInfo.filePath().toStdString());
-                    const auto data = ImageProcess::loadFile(fileInfo.filePath());
-                    const ImagePack loadImagePack{
-                        fileIndexCode, data, fileInfo.filePath().toStdString(), std::make_shared<std::mutex>(), {w, h}
-                    };
-                    /// load image
-                    PictureManager::loadImage(loadImagePack);
-                    EXIFResolver::resolver(loadImagePack);
-
-                    data->clear();
-
-                    {
-                        std::lock_guard local(fileInfosMutex);
-                        fileInfos.insert({ fileIndexCode, fileInfo }); /// TODO: danger
-                    }
-                };
-
-                std::vector<std::future<void>> futures;
-                for (auto& fileInfo : imageFileLists)
-                {
-                    futures.emplace_back(pool->enqueue(dealFiles, std::ref(fileInfo)));
-                }
-
-                for (auto& future : futures)
-                {
-                    future.get(); /// wait thread
-                }
-
-                /// write file to QPixmap
-                struct WritePack
-                {
-                    std::shared_ptr<QPixmap> m_Pixmap;
-                    std::shared_ptr<QPixmap> m_Logo;
-                    QString m_FileName{""};
-                    int m_W;
-                    int m_H;
-                };
-                auto writeFile = [this](const WritePack& pack)
-                {
-                    /// 计算绘制的字体& 绘制的图标的位置
-                    /// 绘制文字 % 图标
-                    /// 保存图片
-
-                    ImageProcess::save(pack.m_Pixmap, pack.m_FileName);
-                };
-
-                futures.clear();
-                for (auto& [fileIndexCode, pixmap] : PictureManager::images())
-                {
-                    const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
-                    auto cameraLogoIndex = LogoManager::resolverCameraIndex(
-                        EXIFResolver::ExifItem(fileIndexCode, ExifKey::CameraMake));
-                    const auto logo = LogoManager::getCameraMakerLogo(cameraLogoIndex);
-                    const auto fileName = fileInfos.at(fileIndexCode).fileName();
-                    futures.emplace_back(pool->enqueue(writeFile, WritePack{pixmap, logo, fileName, w, h}));
-                }
-
-                /// wait thread finish
-                for (auto& future : futures)
-                {
-                    future.get();
-                }
-            };
-
-            auto taskFuture = pool->enqueue(func);
-
+            BatchImageProcessor batchImageProcessor({rootPath});
+            batchImageProcessor.Run();
         });
 
         connect(this, &MainWindow::sigBatchProcessImagesRootPath, m_LeftDockWidget.get(), [this]()-> QString

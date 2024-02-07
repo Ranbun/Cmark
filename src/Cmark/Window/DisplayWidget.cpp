@@ -1,15 +1,6 @@
 #include <CMark.h>
+
 #include "DisplayWidget.h"
-
-#include "File/Resolver/EXIFResolver.h"
-#include "Scene/LifeSizeImageScene.h"
-#include "Scene/PreViewImageScene.h"
-#include "File/PictureManager.h"
-#include "File/LogoManager.h"
-#include <File/ImageProcess/ImageProcess.h>
-#include <Base/ImagePack.h>
-
-#include <SceneLayoutEditor.h>
 
 #include <QFileDialog>
 #include <QGraphicsView>
@@ -17,6 +8,15 @@
 #include <QMessageBox>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+#include <SceneLayoutEditor.h>
+#include <Base/ImagePack.h>
+#include <File/ImageProcess/ImageProcess.h>
+
+#include <File/LogoManager.h>
+#include <File/PictureManager.h>
+#include <File/Resolver/EXIFResolver.h>
+#include "Scene/LifeSizeImageScene.h"
+#include <Scene/PreViewImageScene.h>
 
 namespace CM
 {
@@ -58,6 +58,7 @@ namespace CM
 
     void DisplayWidget::preViewImage(const std::string& path)
     {
+
         using PictureManagerInterFace = CM::PictureManager;
         const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
 
@@ -74,8 +75,17 @@ namespace CM
             const ImagePack loadImagePack{ fileIndexCode,data,path,std::make_shared<std::mutex>(),{w,h}};
 
             /// load image
-            PictureManagerInterFace::loadImage(loadImagePack);
-            EXIFResolver::resolver(loadImagePack);
+
+            PictureManagerInterFace::loadImage(loadImagePack,true);
+            EXIFResolver::resolver(loadImagePack, false);
+
+            const auto loadF = std::async(std::launch::async, PictureManagerInterFace::loadImage,std::ref(loadImagePack),true);
+            const auto resolverF = std::async(std::launch::async, EXIFResolver::resolver, std::ref(loadImagePack),true);
+
+            ///  等待异步任务完成
+            loadF.wait();
+            resolverF.wait();
+
             data->clear();
             data.reset();
         }

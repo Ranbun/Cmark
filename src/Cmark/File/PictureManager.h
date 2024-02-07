@@ -2,8 +2,10 @@
 #define CMARK_PICTUREMANAGER_H_
 
 
-#include "Base/ImagePack.h"
-#include "Base/FixMap.hpp"
+#include <future>
+
+#include <Base/FixMap.hpp>
+#include <Base/ImagePack.h>
 
 
 namespace CM
@@ -31,6 +33,7 @@ namespace CM
         /**
          * @brief load image from QByteArray
          * @param pack params pack
+         * @param synchronization bool 是否同步
          */
         static void loadImage(const ImagePack &pack, bool synchronization = true);
 

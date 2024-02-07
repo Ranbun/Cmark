@@ -11,8 +11,7 @@ namespace CM
         template<typename T>
         static void Print(const T & value)
         {
-            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
-            if(typeName)
+            if(auto typeName = QMetaType::typeName(qMetaTypeId<T>()))
             {
                 qDebug() << value;
             }
@@ -20,8 +19,7 @@ namespace CM
         template<typename T>
         static void Info(const T & value)
         {
-            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
-            if(typeName)
+            if(auto typeName = QMetaType::typeName(qMetaTypeId<T>()))
             {
                 qInfo() << value;
             }
@@ -30,8 +28,7 @@ namespace CM
         template<typename T>
         static void Warning(const T & value)
         {
-            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
-            if(typeName)
+            if(auto typeName = QMetaType::typeName(qMetaTypeId<T>()))
             {
                 qWarning() << value;
             }
@@ -40,13 +37,14 @@ namespace CM
         template<typename T>
         static void Fatal(const T & value)
         {
-            auto typeName = QMetaType::typeName(qMetaTypeId<T>());
-            if(typeName)
-            {
-                qFatal() << value;
-            }
+            Q_ASSERT(false);
         }
 
+        template<>
+        static void Fatal(const std::string& value)
+        {
+            qFatal("%s",value.c_str());
+        }
     };
 
 } // CM

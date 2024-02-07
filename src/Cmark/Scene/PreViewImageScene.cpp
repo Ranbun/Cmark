@@ -20,52 +20,36 @@ namespace CM
         }
     }
 
-    void PreViewImageScene::showImage(size_t fileIndexCode)
+    void PreViewImageScene::showImage(const size_t fileIndexCode)
     {
-        auto exifInfos = EXIFResolver::getExifInfo(fileIndexCode);
+        /// 设置预览场景显示的资源
+        const auto exifInfos = EXIFResolver::getExifInfo(fileIndexCode);
         const auto cameraIndex = LogoManager::resolverCameraIndex(exifInfos.count(ExifKey::CameraMake)? exifInfos.at(ExifKey::CameraMake): "");
         const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
-        /// get loaded image
         const auto preViewImage = PictureManager::getImage(fileIndexCode);
+        resetStatus();
+        resetPreviewImageTarget(*preViewImage, fileIndexCode);
+        resetTexItemsPlainText(exifInfos);
+        resetLogoPixmap(previewImageLogo, cameraIndex);
 
-        /// 设置预览场景显示的资源
         {
-            resetStatus();
-            resetPreviewImageTarget(*preViewImage, fileIndexCode);
-            resetTexItemsPlainText(exifInfos);
-            resetLogoPixmap(previewImageLogo, cameraIndex);
-
-            {
-                const auto &[FixImageSizeW, FixImageSizeH] = SceneLayoutSettings::fixPreViewImageSize();
-                const auto newWidth = FixImageSizeW;
-                const auto imageRatio = ImageProcess::imageRatio(*preViewImage);
-                const auto newHeight = static_cast<int>(std::floor(static_cast<float>(newWidth) / imageRatio));
-                auto sceneLayout = layoutSettings();
-                sceneLayout->setImageSize({static_cast<int>(newWidth), newHeight});
-                sceneLayout->update();
-            }
-            updateSceneRect();
-
-            /// fit view show
-            const auto bound = sceneRect();
-            for(auto & view: views())
-            {
-                view->setSceneRect(bound); // 设置场景矩形
-                view->fitInView(bound, Qt::KeepAspectRatio);
-            }
-
+            const auto &[FixImageSizeW, FixImageSizeH] = SceneLayoutSettings::fixPreViewImageSize();
+            const auto newWidth = FixImageSizeW;
+            const auto imageRatio = ImageProcess::imageRatio(*preViewImage);
+            const auto newHeight = static_cast<int>(std::floor(static_cast<float>(newWidth) / imageRatio));
+            const auto sceneLayout = layoutSettings();
+            sceneLayout->setImageSize({static_cast<int>(newWidth), newHeight});
+            sceneLayout->update();
         }
+        updateSceneRect();
 
-#if  0
-        /// 设置单张图片存储的显示资源
+        /// fit view show
+        const auto bound = sceneRect();
+        for(const auto & view: views())
         {
-            const auto logoScene = dynamic_cast<LifeSizeImageScene*>(m_AddLogoScene);
-            logoScene->resetStatus();
-            logoScene->resetPreviewImageTarget(*preViewImage, fileIndexCode);
-            logoScene->resetTexItemsPlainText(exifInfos);
-            logoScene->resetLogoPixmap(previewImageLogo, cameraIndex);
+            view->setSceneRect(bound); // 设置场景矩形
+            view->fitInView(bound, Qt::KeepAspectRatio);
         }
-#endif
 
     }
 
