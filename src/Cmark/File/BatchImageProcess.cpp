@@ -25,7 +25,7 @@ BatchImageProcessor::BatchImageProcessor(QString rootPath)
 
 }
 
-QFileInfoList &BatchImageProcessor::availabeleFileInfos()
+QFileInfoList &BatchImageProcessor::availableFileInfos()
 {
     m_ImageFileLists.clear();
     scanDirectory(m_Root);
@@ -72,7 +72,7 @@ void BatchImageProcessor::scanDirectory(const QString &path)
 
 void BatchImageProcessor::Run()
 {
-    auto imageFileLists = availabeleFileInfos();
+    auto imageFileLists = availableFileInfos();
 
     std::map<size_t, QFileInfo> fileInfos;
     std::mutex fileInfosMutex;
@@ -286,6 +286,7 @@ void BatchImageProcessor::Run()
     };
 
     futures.clear();
+
     for (auto &[fileIndexCode, pixmap]: PictureManager::images())
     {
         const auto &[w, h] = SceneLayoutSettings::fixPreViewImageSize();

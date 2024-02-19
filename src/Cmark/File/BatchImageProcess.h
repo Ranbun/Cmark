@@ -19,7 +19,7 @@ namespace CM
     public:
         explicit BatchImageProcessor(QString rootPath);
 
-        QFileInfoList &availabeleFileInfos();
+        QFileInfoList & availableFileInfos();
 
         void Run();
 
