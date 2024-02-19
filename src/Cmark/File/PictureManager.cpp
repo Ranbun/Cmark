@@ -68,9 +68,9 @@ namespace CM
             }
             /// convert to QPixmap
             auto preViewImage = std::make_shared<QPixmap>(QPixmap::fromImage(readImage));
-            if(imagePack.Size.w != -1 && imagePack.Size.h != -1)
+            if(imagePack.m_Size.m_W != -1 && imagePack.m_Size.m_H != -1)
             {
-                const auto & [w,h] = imagePack.Size;
+                const auto & [w,h] = imagePack.m_Size;
 
                 const auto newWidth = w;
                 const auto imageSize = QSizeF(preViewImage->size());
