@@ -13,6 +13,12 @@ namespace CM
         Resolver() = default;
         virtual ~Resolver() = default;
 
+        Resolver(const Resolver&) = delete;
+        Resolver(const Resolver&&) = delete;
+
+        Resolver& operator=(const Resolver&) = delete;
+        Resolver& operator=(const Resolver&&) = delete;
+
         virtual  std::shared_ptr<EXIFInfo> resolver(const ImagePack & imagePack) = 0;
     };
 }

@@ -18,6 +18,21 @@
 #include "Scene/LifeSizeImageScene.h"
 #include <Scene/PreViewImageScene.h>
 
+
+namespace
+{
+    [[maybe_unused]] auto ImageSaveDefaultName() -> QString
+    {
+        const QDateTime currentDateTime = QDateTime::currentDateTime();
+        auto outputName = currentDateTime.toString("yyyy-MM-dd__HHHmmMssS");
+
+        constexpr std::hash<std::string> nameGenerator;
+        const auto nameCode = nameGenerator(outputName.toStdString());
+        outputName = outputName + "__" + QString::number(nameCode);
+        return { outputName };
+    }
+}
+
 namespace CM
 {
     DisplayWidget::DisplayWidget(QWidget* parent)
@@ -228,7 +243,7 @@ namespace CM
 
         connect(this, &DisplayWidget::sigShowImage, [this](size_t code)
         {
-            auto scene = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene);
+            const auto scene = dynamic_cast<PreViewImageScene*>(m_PreviewImageScene);
             emit scene->sigShowImage(code);
         });
 

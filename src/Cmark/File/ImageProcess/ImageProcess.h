@@ -1,36 +1,14 @@
 #ifndef CAMERAMARK_IMAGEPROCESS_H
 #define CAMERAMARK_IMAGEPROCESS_H
 
-#include <QObject>
-#include <QFileInfo>
-#include <QPixmap>
-#include <QDateTime>
-
 #include <memory>
-#include <QBuffer>
+#include <QFileInfo>
 #include <QImageReader>
 #include <QImageWriter>
-
-#if _DEBUG
-    #include <QDebug>
-#endif
+#include <QPixmap>
 
 namespace CM
 {
-    namespace
-    {
-        QString ImageSaveDefaultName()
-        {
-            const QDateTime currentDateTime = QDateTime::currentDateTime();
-            auto outputName = currentDateTime.toString("yyyy-MM-dd__HHHmmMssS");
-
-            constexpr std::hash<std::string> nameGenerator;
-            const auto nameCode  = nameGenerator(outputName.toStdString());
-            outputName = outputName + "__" + QString::number(nameCode);
-            return {outputName};
-        }
-    }
-
 
     class FileProcess: public QObject
     {

@@ -26,8 +26,8 @@ namespace CM
         {
             size_t m_FileIndexCode;
             QString m_FileName{""};
-            int m_W;
-            int m_H;
+            [[maybe_unused]] int m_W;
+            [[maybe_unused]] int m_H;
         };
 
         /**
@@ -81,9 +81,7 @@ namespace CM
             layout.setImageSize({size.width(), size.height()});
             layout.update();
 
-            auto newH = size.height() + layout.logoWithImageSpace() + layout.logoSize().h + layout.getMargin().m_Bottom
-                +
-                layout.getMargin().m_Top;
+            auto newH = size.height() + layout.logoWithImageSpace() + layout.logoSize().h + layout.getMargin().m_Bottom + layout.getMargin().m_Top;
             auto newW = size.width() + layout.getMargin().m_Left + layout.getMargin().m_Right;
             const auto output = std::make_shared<QPixmap>(newW, newH);
 
@@ -160,7 +158,7 @@ namespace CM
             }
 
             const auto& [l, r, t, b] = layout.getMargin();
-            auto showImageSize = layout.imageSize();
+            auto [layoutImageSizeW, layoutImageSizeH] = layout.imageSize();
 
             QTextOption textOption;
             textOption.setAlignment(Qt::AlignLeft | Qt::AlignTop); // 居中对齐
@@ -181,7 +179,7 @@ namespace CM
                         pen.setFont(font);
                         /// 计算位置
                         QFontMetrics metrics(pen.font());
-                        int textWidth = metrics.horizontalAdvance(infos.c_str());
+                        [[maybe_unused]] int textWidth = metrics.horizontalAdvance(infos.c_str());
                         int textHeight = metrics.height();
 
                         QPoint position(layout.leftTextOffset(),
@@ -210,11 +208,11 @@ namespace CM
                         font.setBold(true);
                         pen.setFont(font);
                         QFontMetrics metrics(pen.font());
-                        int textWidth = metrics.horizontalAdvance(infos.c_str());
+                        [[maybe_unused]] int textWidth = metrics.horizontalAdvance(infos.c_str());
                         int textHeight = metrics.height();
                         QPoint position(
-                            l + showImageSize.w + r - layout.rightTextMaxWidth() - layout.rightTextOffset(),
-                            t + showImageSize.h + layout.logoWithImageSpace() + textHeight);
+                            l + layoutImageSizeW + r - layout.rightTextMaxWidth() - layout.rightTextOffset(),
+                            t + layoutImageSizeH + layout.logoWithImageSpace() + textHeight);
 
                         pen.drawText(position, infos.c_str());
                     }
@@ -226,7 +224,7 @@ namespace CM
                         QFontMetrics metrics(pen.font());
                         int textWidth = metrics.horizontalAdvance(infos.c_str());
                         int textHeight = metrics.height();
-                        QPoint position(l + showImageSize.w + r - layout.rightTextMaxWidth() - layout.rightTextOffset(),
+                        QPoint position(l + layoutImageSizeW + r - layout.rightTextMaxWidth() - layout.rightTextOffset(),
                                         t + preViewImage->size().height() + layout.logoWithImageSpace() +
                                         layout.logoSize().h - textHeight);
 
@@ -242,9 +240,6 @@ namespace CM
 
             /// 保存图片
             ImageProcess::save(output, pack.m_FileName);
-
-
-            // ImageProcess::save(preViewImage, pack.m_FileName);
         }
     }
 

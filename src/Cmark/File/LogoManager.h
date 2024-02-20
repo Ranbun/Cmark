@@ -55,16 +55,19 @@ namespace CM
         static std::shared_ptr<QPixmap> getCameraMakerLogo(const CameraIndex& cameraIndex);
 
     protected:
-        static void destory()
+        /**
+         * @brief 销毁logo manager 清空所有加载的logo
+         */
+        static void destroy()
         {
-            m_logos.clear();
-            cameraMakerMap.clear();
+            m_Logos.clear();
+            m_CameraMakerMap.clear();
         }
 
     private:
-        static std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> m_logos;
-        static std::unordered_map<std::string, CameraIndex> cameraMakerMap;
-        static std::once_flag m_initFlag;
+        static std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> m_Logos;
+        static std::unordered_map<std::string, CameraIndex> m_CameraMakerMap;
+        static std::once_flag m_InitFlag;
     };
 } // CM
 

@@ -1,11 +1,9 @@
-#include "CMark.h"
-#include <Window/StatusBar.h>
-#include <File/ImageProcess/ImageProcess.h>
-#include "EXIFResolver.h"
-#include "Base/ImagePack.h"
-#include "Log/CLog.h"
+#include <CMark.h>
 
-#include <QBuffer>
+#include "EXIFResolver.h"
+#include <Base/ImagePack.h>
+#include <Log/CLog.h>
+
 #include <QString>
 
 namespace CM
@@ -92,8 +90,9 @@ namespace CM
         return std::move(infoMaps);
     }
 
-    void EXIFResolver::destroyCache()
+    void EXIFResolver::destroyCached()
     {
+        std::lock_guard<std::mutex> local(g_InfoMutex);
         g_LoadedInfos.clear();
         g_LoadImageCheckCode.clear();
     }
@@ -127,12 +126,10 @@ namespace CM
         default:
             break;
         }
-        // CM::CLog::Info(QString::fromStdString(outputInfos));
-        // StatusBar::showMessage(QString(outputInfos.c_str()));
         return {status,outputInfos};
     }
 
-    void EXIFResolver::resolver(const ImagePack &pack, bool synchronization)
+    void EXIFResolver::resolver(const ImagePack &pack, const bool synchronization)
     {
         {
             std::lock_guard<std::mutex> local(g_InfoMutex);
@@ -188,7 +185,7 @@ namespace CM
         return {};
     }
 
-    std::string EXIFResolver::ExifItem(size_t fileIndexCode, ExifKey key)
+    std::string EXIFResolver::ExifItem(const size_t fileIndexCode, const ExifKey key)
     {
         const auto exifInfos = getExifInfo(fileIndexCode);
         auto res = exifInfos.count(ExifKey::CameraMake)? exifInfos.at(key):"";

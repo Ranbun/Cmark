@@ -17,6 +17,9 @@ namespace CM
         class ResourcesTools;
     }
 
+
+    /// TODO: replace it
+    
     class EXIFResolver : public QObject
     {
         friend  class Tools::ResourcesTools;
@@ -57,9 +60,9 @@ namespace CM
          */
         static ExifInfoMap resolverImageExif(const std::weak_ptr<CM::EXIFInfo>& infoPtr);
 
-        static std::string ExifItem(size_t index, ExifKey key);
+        static std::string ExifItem(size_t fileIndexCode, ExifKey key);
 
-        static void destroyCache();
+        static void destroyCached();
 
     private:
 

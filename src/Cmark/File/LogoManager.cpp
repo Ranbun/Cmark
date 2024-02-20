@@ -7,9 +7,9 @@
 
 namespace CM
 {
-    std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> LogoManager::m_logos{};
-    std::unordered_map<std::string, CameraIndex> LogoManager::cameraMakerMap;
-    std::once_flag LogoManager::m_initFlag;
+    std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> LogoManager::m_Logos{};
+    std::unordered_map<std::string, CameraIndex> LogoManager::m_CameraMakerMap;
+    std::once_flag LogoManager::m_InitFlag;
 
     CameraIndex LogoManager::resolverCameraIndex(const std::string& cameraMake)
     {
@@ -24,8 +24,8 @@ namespace CM
         auto lists = Make.split(" ");
         const auto maker = lists[0].toLower().toStdString();
 
-        const auto res = cameraMakerMap.find(maker);
-        if (res != cameraMakerMap.end())
+        const auto res = m_CameraMakerMap.find(maker);
+        if (res != m_CameraMakerMap.end())
         {
             return res->second;
         }
@@ -44,7 +44,7 @@ namespace CM
             return {index, logo};
         };
 
-        if (m_logos.count(cameraIndex)) ///< the logo loaded
+        if (m_Logos.count(cameraIndex)) ///< the logo loaded
         {
             return;
         }
@@ -52,34 +52,34 @@ namespace CM
         switch (cameraIndex)
         {
         case CameraIndex::Nikon:
-            m_logos.insert(loadLogo(CameraIndex::Nikon, "./sources/logos/nikon.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Nikon, "./sources/logos/nikon.png"));
             break;
         case CameraIndex::Sony:
-            m_logos.insert(loadLogo(CameraIndex::Sony, "./sources/logos/sony.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Sony, "./sources/logos/sony.png"));
             break;
         case CameraIndex::Canon:
-            m_logos.insert(loadLogo(CameraIndex::Canon, "./sources/logos/canon.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Canon, "./sources/logos/canon.png"));
             break;
         case CameraIndex::Panasonic:
-            m_logos.insert(loadLogo(CameraIndex::Panasonic, "./sources/logos/panasonic.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Panasonic, "./sources/logos/panasonic.png"));
             break;
         case CameraIndex::Leica:
-            m_logos.insert(loadLogo(CameraIndex::Leica, "./sources/logos/leica_logo.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Leica, "./sources/logos/leica_logo.png"));
             break;
         case CameraIndex::Hasselblad:
-            m_logos.insert(loadLogo(CameraIndex::Hasselblad, "./sources/logos/hasselblad.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Hasselblad, "./sources/logos/hasselblad.png"));
             break;
         case CameraIndex::Apple:
-            m_logos.insert(loadLogo(CameraIndex::Apple, "./sources/logos/apple.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Apple, "./sources/logos/apple.png"));
             break;
         case CameraIndex::Fujifilm:
-            m_logos.insert(loadLogo(CameraIndex::Fujifilm, "./sources/logos/fujifilm.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Fujifilm, "./sources/logos/fujifilm.png"));
             break;
         case CameraIndex::None:
             {
                 auto logo = std::make_shared<QPixmap>(64, 64);
                 logo->fill(Qt::transparent);
-                m_logos.insert({CameraIndex::None, logo});
+                m_Logos.insert({CameraIndex::None, logo});
             }
             break;
         /// TODO: need add others......
@@ -92,9 +92,9 @@ namespace CM
     {
         loadCameraLogo(cameraIndex); ///< load logo again
 
-        if (m_logos.count(cameraIndex)) ///< get loaded logo
+        if (m_Logos.count(cameraIndex)) ///< get loaded logo
         {
-            return m_logos.at(cameraIndex);
+            return m_Logos.at(cameraIndex);
         }
 
         throw std::runtime_error("Can't found Camera Maker Logo!");
@@ -102,16 +102,16 @@ namespace CM
 
     void LogoManager::Init()
     {
-        std::call_once(m_initFlag, []()
+        std::call_once(m_InitFlag, []()
         {
-            cameraMakerMap.insert({"nikon", CameraIndex::Nikon});
-            cameraMakerMap.insert({"sony", CameraIndex::Sony});
-            cameraMakerMap.insert({"canon", CameraIndex::Canon});
-            cameraMakerMap.insert({"panasonic", CameraIndex::Panasonic});
-            cameraMakerMap.insert({"hassel", CameraIndex::Hasselblad});
-            cameraMakerMap.insert({"leica", CameraIndex::Leica});
-            cameraMakerMap.insert({"fujifilm", CameraIndex::Fujifilm});
-            cameraMakerMap.insert({"empty", CameraIndex::None});
+            m_CameraMakerMap.insert({"nikon", CameraIndex::Nikon});
+            m_CameraMakerMap.insert({"sony", CameraIndex::Sony});
+            m_CameraMakerMap.insert({"canon", CameraIndex::Canon});
+            m_CameraMakerMap.insert({"panasonic", CameraIndex::Panasonic});
+            m_CameraMakerMap.insert({"hassel", CameraIndex::Hasselblad});
+            m_CameraMakerMap.insert({"leica", CameraIndex::Leica});
+            m_CameraMakerMap.insert({"fujifilm", CameraIndex::Fujifilm});
+            m_CameraMakerMap.insert({"empty", CameraIndex::None});
         });
     }
 } // CM

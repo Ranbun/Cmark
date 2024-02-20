@@ -1,5 +1,22 @@
 #include "ImageProcess.h"
-#include "Log/CLog.h"
+
+#include <Log/CLog.h>
+
+#include <QBuffer>
+
+namespace
+{
+    [[maybe_unused]] auto ImageSaveDefaultName() -> QString
+    {
+        const QDateTime currentDateTime = QDateTime::currentDateTime();
+        auto outputName = currentDateTime.toString("yyyy-MM-dd__HHHmmMssS");
+
+        constexpr std::hash<std::string> nameGenerator;
+        const auto nameCode = nameGenerator(outputName.toStdString());
+        outputName = outputName + "__" + QString::number(nameCode);
+        return { outputName };
+    }
+}
 
 namespace CM
 {
@@ -59,7 +76,7 @@ namespace CM
         if(fileInfo.exists())
         {
             buffer.close();
-            CLog::Print<QString>(name + QString(" exists."));
+            CLogInstance.PrintMes<QString>(name + QString(" exists."));
             return;
         }
         const auto format = fileInfo.suffix().toLower().toStdString();
@@ -71,7 +88,7 @@ namespace CM
             {
                 file.write(buffer.data());
                 file.close();
-                CLog::Print<QString>(QString("Image saved successfully."));
+                CLogInstance.PrintMes<QString>(QString("Image saved successfully."));
             }
         }
 
@@ -104,8 +121,9 @@ namespace CM
 
     float ImageProcess::imageRatio(const QPixmap &pixmap)
     {
-        auto size = QSizeF(pixmap.size());
-        return size.width() / size.height();
-    }
+        const auto size = QSizeF(pixmap.size());
+        return size.width() / size.height(); // NOLINT(clang-diagnostic-implicit-float-conversion)
+
+    }  
 
 } // CM

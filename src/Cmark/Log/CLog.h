@@ -8,9 +8,13 @@ namespace CM
     class CLog
     {
     public:
+        static void Init();
+
         template<typename T>
-        static void Print(const T & value)
+        void PrintMes(const T & value)
         {
+            assert(this);
+
             if(auto typeName = QMetaType::typeName(qMetaTypeId<T>()))
             {
                 qDebug() << value;
@@ -45,7 +49,15 @@ namespace CM
         {
             qFatal("%s",value.c_str());
         }
+
+    private:
+        static std::once_flag m_InitFlag;
+
     };
+
+
+    inline CLog g_Log;
+    #define CLogInstance CM::g_Log
 
 } // CM
 

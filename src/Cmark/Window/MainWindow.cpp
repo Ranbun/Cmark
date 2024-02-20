@@ -4,11 +4,10 @@
 
 #include <future>
 #include <QFileDialog>
-#include <QFileInfoList>
 #include <QMenuBar>
 #include <QPainter>
 #include <QToolBar>
-
+#include <File/BatchImageProcess.h>
 #include <File/ResourcesTool.h>
 #include <Log/CLog.h>
 
@@ -16,9 +15,6 @@
 #include "FileTreeDockWidget.h"
 #include "ImagePropertyDockWidget.h"
 #include "StatusBar.h"
-#include "Scene/CScene.h"
-
-#include <File/BatchImageProcess.h>
 
 
 namespace CM
@@ -114,12 +110,6 @@ namespace CM
         {
             CLog::Warning(info);
         }, Qt::QueuedConnection);
-
-
-#if  0
-        connect(m_EditPreviewSceneLayoutAction, &QAction::triggered, m_DisplayWidget.get(),
-                &DisplayWidget::sigPreViewLayoutSettingsPanel);
-#endif
     }
 
     void MainWindow::InitMenu()

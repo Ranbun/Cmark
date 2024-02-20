@@ -5,8 +5,6 @@
 #include <Base/ImagePack.h>
 #include <File/ImageProcess/ImageProcess.h>
 
-/// make it thread feature
-
 namespace CM
 {
     namespace
@@ -54,7 +52,7 @@ namespace CM
         if (getImage(pack.m_FileIndexCode))
             return;
 
-        auto readFileToImage = [synchronization](const ImagePack& imagePack)
+        auto readFileToImage = [](const ImagePack& imagePack)
         {
             auto imageIndexCode = imagePack.m_FileIndexCode;
             QImage readImage;
@@ -84,7 +82,6 @@ namespace CM
             insert({ imageIndexCode, preViewImage });
         };
 
-
         if(!synchronization)
         {
             std::vector<std::future<void>> futures;
@@ -100,9 +97,13 @@ namespace CM
         }
     }
 
-    void PictureManager::destroy()
+    void PictureManager::destroyCached()
     {
         std::lock_guard<std::mutex> local(g_Mutex);
+        for(auto & [key, waitFlag]: g_LoadFinishSignals)
+        {
+            waitFlag.get_future().wait();
+        }
         g_LoadFinishSignals.clear();
         m_Maps.clear();
     }
