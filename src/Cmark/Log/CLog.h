@@ -17,7 +17,10 @@ namespace CM
 
             if(auto typeName = QMetaType::typeName(qMetaTypeId<T>()))
             {
+#if _DEBUG
                 qDebug() << value;
+#endif 
+
             }
         }
         template<typename T>
@@ -25,7 +28,10 @@ namespace CM
         {
             if(auto typeName = QMetaType::typeName(qMetaTypeId<T>()))
             {
+#if _DEBUG
                 qInfo() << value;
+#endif 
+
             }
         }
 
@@ -34,7 +40,9 @@ namespace CM
         {
             if(auto typeName = QMetaType::typeName(qMetaTypeId<T>()))
             {
+#if _DEBUG
                 qWarning() << value;
+#endif 
             }
         }
 
@@ -47,7 +55,10 @@ namespace CM
         template<>
         static void Fatal(const std::string& value)
         {
+
+#if _DEBUG
             qFatal("%s",value.c_str());
+#endif 
         }
 
     private:

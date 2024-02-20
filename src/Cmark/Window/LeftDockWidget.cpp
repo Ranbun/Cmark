@@ -9,7 +9,7 @@
 #include <QFileSystemModel>
 
 #if _DEBUG
-#include <QDebug>
+    #include <QDebug>
 #endif
 
 namespace CM
@@ -55,12 +55,14 @@ namespace CM
 
         m_FileSystemModel->setRootPath(QDir::currentPath());
 
+        CLogInstance.Info(QDir::currentPath());
+
         QStringList filter;
         filter << "*.jpg";
         m_FileSystemModel->setNameFilters(filter);
         m_FileSystemModel->setNameFilterDisables(false);
 
-        m_TreeView->setRootIndex(m_FileSystemModel->index("./sources/pictures/"));
+        m_TreeView->setRootIndex(m_FileSystemModel->index("./"));
 
     }
 
