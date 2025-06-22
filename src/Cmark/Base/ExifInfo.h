@@ -2,6 +2,7 @@
 #define CMARK_EXIFINFO_H_
 
 #include <string>
+#include <cstdint>
 
 namespace CM
 {

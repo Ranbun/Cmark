@@ -1,18 +1,18 @@
 #ifndef CAMERAMARK_LOGOMANAGER_H
 #define CAMERAMARK_LOGOMANAGER_H
 
-#include <mutex>
 #include <iostream>
 #include <memory>
+#include <mutex>
 
 class QPixmap;
 
 namespace CM
 {
+    /// 目前支持只下列的厂商
     enum class CameraIndex : uint8_t
     {
         None = 0,
-        ///< empty
         Nikon,
         Sony,
         Canon,
@@ -21,7 +21,6 @@ namespace CM
         Leica,
         Hasselblad,
         Fujifilm
-        /// ...... TODO: need add others
     };
 
     namespace Tools

@@ -4,6 +4,7 @@
 
 #include <QMessageBox>
 #include <QPixmap>
+#include <unordered_map>
 
 namespace CM
 {

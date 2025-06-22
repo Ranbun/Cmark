@@ -17,10 +17,8 @@ namespace CM
         class ResourcesTools;
     }
 
-
     /// TODO: replace it
-    
-    class EXIFResolver : public QObject
+    class EXIFResolver final : public QObject
     {
         friend  class Tools::ResourcesTools;
     public:
