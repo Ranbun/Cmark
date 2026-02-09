@@ -123,7 +123,7 @@ namespace CM
     float ImageProcess::imageRatio(const QPixmap &pixmap)
     {
         const auto size = QSizeF(pixmap.size());
-        return size.width() / size.height(); // NOLINT(clang-diagnostic-implicit-float-conversion)
+        return size.width() / size.height();
     }
 
 } // CM

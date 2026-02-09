@@ -3,10 +3,9 @@
 #include "FileTreeDockWidget.h"
 #include <Log/CLog.h>
 
-#include <QTextEdit>
-#include <QVBoxLayout>
 #include <QTreeView>
 #include <QFileSystemModel>
+#include <QLayout>
 
 #if _DEBUG
     #include <QDebug>
@@ -61,10 +60,7 @@ namespace CM
         filter << "*.jpg";
         m_FileSystemModel->setNameFilters(filter);
         m_FileSystemModel->setNameFilterDisables(false);
-
-        // m_TreeView->setRootIndex(m_FileSystemModel->index("./"));
-        m_TreeView->setRootIndex(m_FileSystemModel->index("E:\\Github\\Cmark\\src\\Cmark\\sources\\pictures"));
-
+        m_TreeView->setRootIndex(m_FileSystemModel->index(QDir::currentPath()));
     }
 
     FileTreeDockWidget::~FileTreeDockWidget() = default;
@@ -98,7 +94,6 @@ namespace CM
     QString FileTreeDockWidget::rootImagePath() const
     {
         const auto rootDirIndex = m_TreeView->rootIndex();
-        return m_FileSystemModel->rootPath();
-
+        return rootDirIndex.isValid()? m_FileSystemModel->rootPath() : QString() ;
     }
 }

@@ -12,22 +12,27 @@ namespace CM
 
 namespace CM
 {
-    class BatchImageProcessor final
+    class BatchImageProcessor final : public QObject
     {
+        Q_OBJECT
     public:
         explicit BatchImageProcessor(QString rootPath);
-        ~BatchImageProcessor();
+        ~BatchImageProcessor() override;
 
         BatchImageProcessor(const BatchImageProcessor&) = delete;
         BatchImageProcessor(const BatchImageProcessor &&) = delete;
 
         BatchImageProcessor& operator=(const BatchImageProcessor&) = delete;
         BatchImageProcessor& operator=(const BatchImageProcessor&&) = delete;
-
-
         QFileInfoList & availableFileInfos();
 
+        /**
+         * @brief do task
+         */
         void Run();
+
+    signals:
+        void workFinished();                     // 通知任务结束
 
     protected:
         void scanDirectory(const QString &path);
@@ -37,9 +42,7 @@ namespace CM
         QList<QString> m_AvailableFileType{"jpeg", "jpg"};
         QFileInfoList m_ImageFileLists;
         QSet<QString> m_ScannedDirectories;
-
         ThreadPool * m_Pool {};
-
 
     };
 }

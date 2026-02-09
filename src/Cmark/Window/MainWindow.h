@@ -2,7 +2,6 @@
 #define CAMERAMARK_MAINWINDOW_H
 
 #include <QMainWindow>
-#include <CThread/ThreadPool.h>
 
 namespace CM
 {
@@ -27,17 +26,15 @@ namespace CM
         std::shared_ptr<ImagePropertyDockWidget> m_ImagePropertyDockWidget{ nullptr };
 
         /// File Actions
-        QAction* m_NewAction{ nullptr };
+        QAction* m_CleanWorkspaceAction{ nullptr };
         QAction* m_OpenDirectoryAction{ nullptr };   ///< 打开文件夹
         QAction* m_BatchProcessImage{ nullptr };
-        QAction* m_OpenFile{ nullptr };
+        QAction* m_PreviewFile{ nullptr };
 
-        /// Edit Actions
-        QAction* m_EditPreviewSceneLayoutAction{ nullptr };
+        QAction* m_EnablePreView{ nullptr };
 
     protected:
         void resizeEvent(QResizeEvent* event) override;
-
 
     private:
         void InitWindowLayout();
@@ -46,10 +43,7 @@ namespace CM
         void InitTool();
         void InitConnect();
 
-
-
     signals:
-        QString sigBatchProcessImagesRootPath();
         void sigWarning(QString info);
 
     };

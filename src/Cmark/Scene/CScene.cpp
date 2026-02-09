@@ -5,39 +5,8 @@
 #include "PreViewImageItem.h"
 #include "SceneDef.h"
 
-#include <QFileDialog>
-#include <QGraphicsView>
-
-#include <QGraphicsProxyWidget>
-#include <QPushButton>
-#include <QTextCursor>
-
 namespace CM
 {
-#ifdef TOOLWIDGET
-    namespace
-    {
-        QGraphicsProxyWidget *CreateItem(const QSizeF &minimum = QSizeF(100.0, 100.0),
-                                         const QSizeF &preferred = QSize(150.0, 100.0),
-                                         const QSizeF &maximum = QSizeF(200.0, 100.0),
-                                         const QString &name = "0")
-        {
-            auto w = new QGraphicsProxyWidget;
-            w->setContentsMargins(0, 0, 0, 0);
-            w->setWindowFrameMargins(0, 0, 0, 0);
-            auto p = new QPushButton(name);
-            w->setWidget(p);
-            w->setData(0, name);
-            w->setMinimumSize(minimum);
-            w->setPreferredSize(preferred);
-            w->setMaximumSize(maximum);
-
-            w->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-            return w;
-        }
-    }
-#endif
-
     CScene::CScene(QObject *parent)
         : QGraphicsScene(parent), m_LogoItem(new QGraphicsPixmapItem), m_SceneLayout(std::make_shared<SceneLayoutSettings>())
     {
@@ -76,77 +45,6 @@ namespace CM
             {
                 it->setVisible(val);
             } });
-
-#ifdef TOOLWIDGET
-        constexpr QSizeF minSize(30, 100);
-        constexpr QSizeF prefSize(210, 100);
-        constexpr QSizeF maxSize(300, 100);
-
-        auto a = CreateItem(minSize, prefSize, maxSize, "A");
-        {
-            auto ap = dynamic_cast<QPushButton *>(a->widget());
-            ap->setText("Camera Maker");
-            ap->setContentsMargins(0.0, 0.0, 0.0, 0.0);
-            ap->setStyleSheet("border: none;");
-            ap->setStyleSheet("QPushButton{text-align : left;}");
-            ap->setFlat(true);
-
-            auto pa = ap->palette();
-            pa.setColor(QPalette::Background, QColor(255, 255, 255, 255));
-            ap->setPalette(pa);
-        }
-
-        auto b = CreateItem(minSize, prefSize, maxSize, "B");
-
-        {
-            auto bp = dynamic_cast<QPushButton *>(b->widget());
-            bp->setText("Photo Times");
-            bp->setContentsMargins(0.0, 0, 0.0, 0.0);
-            bp->setStyleSheet("border: none;");
-            bp->setStyleSheet("QPushButton{text-align : left;}");
-            bp->setFlat(true);
-
-            auto pa = bp->palette();
-            pa.setColor(QPalette::Background, QColor(255, 255, 255, 255));
-            bp->setPalette(pa);
-        }
-
-        auto c = CreateItem(minSize, prefSize, maxSize, "C");
-        dynamic_cast<QPushButton *>(c->widget())->setText("Lens Group");
-
-        auto d = CreateItem(minSize, prefSize, maxSize, "D");
-        dynamic_cast<QPushButton *>(d->widget())->setText("Lens Infos");
-
-        const auto toolWidgetLayout = new QGraphicsAnchorLayout;
-        toolWidgetLayout->setSpacing(0);
-        toolWidgetLayout->setContentsMargins(0, 0, 0, 0);
-
-        a->setMaximumHeight(20);
-        a->setMaximumWidth(200);
-        a->setContentsMargins(0, 0, 0, 0);
-
-        b->setMaximumHeight(20);
-        b->setMaximumWidth(200);
-
-        toolWidgetLayout->addAnchor(a, Qt::AnchorTop, toolWidgetLayout, Qt::AnchorTop);
-        toolWidgetLayout->addAnchor(a, Qt::AnchorLeft, toolWidgetLayout, Qt::AnchorLeft);
-
-        toolWidgetLayout->addAnchor(b, Qt::AnchorLeft, toolWidgetLayout, Qt::AnchorLeft);
-        const auto anchor = toolWidgetLayout->addAnchor(b, Qt::AnchorTop, a, Qt::AnchorBottom);
-        anchor->setSpacing(24);
-        toolWidgetLayout->addAnchor(b, Qt::AnchorRight, a, Qt::AnchorRight);
-
-        toolWidgetLayout->setHorizontalSpacing(0);
-        toolWidgetLayout->setVerticalSpacing(0);
-
-        m_ToolWidget = new QGraphicsWidget(nullptr, Qt::Window | Qt::FramelessWindowHint);
-
-        m_ToolWidget->setLayout(toolWidgetLayout);
-        m_ToolWidget->setPos(30, 200);
-        m_ToolWidget->setContentsMargins(0, 0, 0, 0);
-        m_ToolWidget->setWindowFrameMargins(0, 0, 0, 0);
-        // this->addItem(m_ToolWidget);
-#endif
     }
 
     void CScene::InitTexItems()
@@ -458,12 +356,6 @@ namespace CM
         {
             emit sigNoScenes(false);
         }
-
-#ifdef TOOLWIDGET
-        auto logoPos = m_LogoItem->pos();
-        auto x = m_SceneLayout->leftTextOffset();
-        m_ToolWidget->setPos(x, logoPos.y());
-#endif
     }
 
     void CScene::updateLayout()

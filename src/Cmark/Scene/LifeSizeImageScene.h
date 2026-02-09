@@ -8,7 +8,7 @@ namespace CM
     class LifeSizeImageScene : public  CScene
     {
     public:
-        LifeSizeImageScene(QObject * parent = nullptr);
+        explicit LifeSizeImageScene(QObject * parent = nullptr);
         ~LifeSizeImageScene() override;
         void saveSceneAsImage(const std::function<void(QGraphicsScene *)> &saveFunc);
     };

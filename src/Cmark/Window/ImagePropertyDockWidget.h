@@ -12,7 +12,6 @@ namespace CM
     public:
         explicit ImagePropertyDockWidget(QWidget *parent = nullptr);
 
-
         ImagePropertyDockWidget(const ImagePropertyDockWidget&) = delete;
         ImagePropertyDockWidget(ImagePropertyDockWidget&&) = delete;
 
@@ -21,16 +20,14 @@ namespace CM
 
         ~ImagePropertyDockWidget() override = default;
 
-
     signals:
-        void sigShowProperty(const QString & path);
+        void sigShowProperty(const std::string & path);
 
     protected:
-
         void resizeEvent(QResizeEvent* event) override;
 
     protected:
-        void onSigShowProperty(const QString & path);
+        void onSigShowProperty(const std::string & path);
 
     private:
         void init();
@@ -39,13 +36,20 @@ namespace CM
         void initConnect();
 
     private:
-        QLabel*  m_FilePathLabel;        ///< file path 
-        QLabel*  m_FilePathTitleLabel;   ///< file path 
-        QLabel*  m_DimensionTitle;             ///< 维度
-        QLabel*  m_Dimension;             ///< 维度
+        QLabel* m_FilePathTitleLabel{};
+        QLabel* m_FilePathLabel{};
+        QLabel* m_DimensionTitle{};
+        QLabel* m_Dimension{};
+        QLabel* m_CameraMakeLabel{};
+        QLabel* m_CameraModelLabel{};
+        QLabel* m_FocalLengthLabel{};
+        QLabel* m_FStopLabel{};
+        QLabel* m_LensModelLabel{};
 
-        QString m_FilePath;
+        QLabel* m_ShutterSpeedLabel{};
+        QLabel* m_ISOSpeedLabel{};
 
+        QString m_FilePath{};
     };
 
 } // CM

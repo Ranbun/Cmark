@@ -12,7 +12,6 @@ namespace CM
 
     class FileProcess: public QObject
     {
-
     public:
         FileProcess() = default;
         ~FileProcess() override = default;

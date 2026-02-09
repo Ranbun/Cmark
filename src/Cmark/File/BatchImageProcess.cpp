@@ -245,10 +245,10 @@ namespace CM
 
 
     BatchImageProcessor::BatchImageProcessor(QString rootPath)
-        : m_Root(std::move(rootPath))
-        , m_AvailableFileType({"jpeg", "jpg"})
-        , m_Pool(new ThreadPool(5))
-
+        : QObject(nullptr)
+        , m_Root(std::move(rootPath))
+        , m_AvailableFileType({"jpeg", "jpg"})  /// TODO: 做成配置文件
+        , m_Pool(new ThreadPool(5))              /// TODO: 做成配置文件
     {
     }
 
@@ -318,7 +318,6 @@ namespace CM
             future.wait(); /// wait thread
         }
 
-
         futures.clear();
 
         for (auto& [fileIndexCode, pixmap] : PictureManager::images())
@@ -338,5 +337,7 @@ namespace CM
         {
             future.wait();
         }
+
+        emit workFinished();
     }
 }

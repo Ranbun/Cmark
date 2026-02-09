@@ -15,13 +15,14 @@ namespace CM
         BitsPerSample,
         ImageWidth,
         ImageHeight,
+
         /// data or time
         ImageDate,
         ExposureTime,  /// 曝光时间
 
         FocalLength, ///< 焦距
-        FStop,     ///< 光圈
-        ISOSpeed,  ///<感光度
+        FStop,       ///< 光圈
+        ISOSpeed,    ///<感光度
         ShutterSpeed,
 
         LensModel,  ///< 棱镜组 -- 镜头信息
@@ -33,7 +34,7 @@ namespace CM
     /**
      * @brief Exif信息条目与实际存储的信息的映射
      */
-    using ExifInfoMap = std::unordered_map<ExifKey,std::string>;
+    using ExifInfoMap = std::unordered_map<ExifKey, std::string>;
 
 }
 

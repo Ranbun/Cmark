@@ -19,7 +19,7 @@ namespace CM
         Resolver& operator=(const Resolver&) = delete;
         Resolver& operator=(const Resolver&&) = delete;
 
-        virtual  std::shared_ptr<EXIFInfo> resolver(const ImagePack & imagePack) = 0;
+        virtual std::shared_ptr<EXIFInfo> resolver(const ImagePack & imagePack) = 0;
     };
 }
 

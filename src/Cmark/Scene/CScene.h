@@ -149,10 +149,6 @@ namespace CM
 
     protected:
 
-#ifdef TOOLWIDGET
-        QGraphicsWidget* m_ToolWidget;    ///< 悬浮窗口
-#endif
-
         PreViewImageItem* m_ShowImageItem{}; ///< 预览加载的图片Item对象
         QGraphicsPixmapItem* m_LogoItem{}; ///< 加载的logo Item对象
 

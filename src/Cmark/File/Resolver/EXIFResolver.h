@@ -50,7 +50,6 @@ namespace CM
         static ExifInfoMap getExifInfo(size_t index);
 
     public:
-
         /**
          * @brief 解析加载完成的exif信息 返回可用的信息
          * @param infoPtr 加载的对应的文件的exif信息

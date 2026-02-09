@@ -8,6 +8,7 @@
 #include <future>
 #include <memory>
 #include <functional>
+#include <condition_variable>
 
 namespace CM
 {
@@ -34,7 +35,7 @@ namespace CM
 
             std::future<return_type> res = task->get_future();
             {
-                std::unique_lock<std::mutex> local;
+                std::unique_lock<std::mutex> local(queueMutex);
                 if(m_stop)
                 {
                     throw std::runtime_error("enqueue on stopped ThreadPool");

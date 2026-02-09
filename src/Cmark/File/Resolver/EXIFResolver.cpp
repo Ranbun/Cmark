@@ -133,7 +133,7 @@ namespace CM
     {
         {
             std::lock_guard<std::mutex> local(g_InfoMutex);
-            if(g_LoadedInfos.count(pack.m_FileIndexCode))
+            if (g_LoadedInfos.count(pack.m_FileIndexCode))
             {
                 return;
             }

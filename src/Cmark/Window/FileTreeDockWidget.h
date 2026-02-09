@@ -7,7 +7,6 @@
 #define  CAMERAMARK_FILETREEDOCKWIDGET_H_
 
 #include <QDockWidget>
-#include <QTextEdit>
 #include <QDir>
 
 class QTreeView;

@@ -31,14 +31,17 @@ namespace CM
             return res->second;
         }
 
+#if _DEBUG
         QMessageBox::about(nullptr, "Warning", ("We Don't supported: " + maker).c_str());
         throw std::runtime_error("Can't found Camera Maker!");
+#endif
+
+        return CameraIndex::None;
     }
 
     void LogoManager::loadCameraLogo(const CameraIndex& cameraIndex)
     {
-        auto loadLogo = [](CameraIndex index,
-                           const std::string& path)-> std::pair<CameraIndex, std::shared_ptr<QPixmap>>
+        auto loadLogo = [](CameraIndex index, const std::string& path)-> std::pair<CameraIndex, std::shared_ptr<QPixmap>>
         {
             /// TODO: maybe use QImageReader get pixmap
             auto logo = std::make_shared<QPixmap>(path.c_str());
@@ -76,6 +79,7 @@ namespace CM
         case CameraIndex::Fujifilm:
             m_Logos.insert(loadLogo(CameraIndex::Fujifilm, "./sources/logos/fujifilm.png"));
             break;
+        /// TODO: need add others......
         case CameraIndex::None:
             {
                 auto logo = std::make_shared<QPixmap>(64, 64);
@@ -83,7 +87,6 @@ namespace CM
                 m_Logos.insert({CameraIndex::None, logo});
             }
             break;
-        /// TODO: need add others......
         default:
             throw std::runtime_error("Can't support current camera, add logo");
         }
@@ -97,8 +100,10 @@ namespace CM
         {
             return m_Logos.at(cameraIndex);
         }
-
+        return nullptr;
+#if _DEBUG
         throw std::runtime_error("Can't found Camera Maker Logo!");
+#endif
     }
 
     void LogoManager::Init()
