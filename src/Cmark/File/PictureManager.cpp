@@ -10,14 +10,14 @@ namespace CM
     namespace
     {
         std::unordered_map<size_t, std::promise<void>> g_LoadFinishSignals;
-        std::mutex g_Mutex;
+        std::mutex g_mutex;
     }
 
     FixMap<size_t, std::shared_ptr<QPixmap>> PictureManager::m_Maps;
 
     void PictureManager::insert(const size_t key, const std::shared_ptr<QPixmap>& value)
     {
-        std::lock_guard<std::mutex> local(g_Mutex);
+        std::scoped_lock local(g_mutex);
         m_Maps.insert(key, value);
     }
 
@@ -30,7 +30,7 @@ namespace CM
             g_LoadFinishSignals.erase(key);
         }
 
-        std::lock_guard<std::mutex> local(g_Mutex);
+        std::scoped_lock local(g_mutex);
         return m_Maps.getPixmap(key);
     }
 
@@ -43,7 +43,7 @@ namespace CM
             g_LoadFinishSignals.erase(index);
         }
 
-        std::lock_guard<std::mutex> local(g_Mutex);
+        std::scoped_lock local(g_mutex);
         m_Maps.remove(index);
     }
 
@@ -59,7 +59,7 @@ namespace CM
             readImage.fill(Qt::transparent);
 
             {
-                std::lock_guard localMutex(*imagePack.m_LocalMutex);
+                std::scoped_lock localMutex(*imagePack.m_LocalMutex);
                 const QFileInfo fileInfo(QString::fromStdString(imagePack.m_FileName));
                 const auto format = fileInfo.suffix().toUpper();
                 readImage = *ImageProcess::toQImage(imagePack.m_ImageData, format);
@@ -99,18 +99,19 @@ namespace CM
 
     void PictureManager::destroyCached()
     {
-        std::lock_guard<std::mutex> local(g_Mutex);
+        std::scoped_lock local(g_mutex);
         for(auto & [key, waitFlag]: g_LoadFinishSignals)
         {
             waitFlag.get_future().wait();
         }
+
         g_LoadFinishSignals.clear();
         m_Maps.clear();
     }
 
     void PictureManager::insert(const std::pair<size_t, std::shared_ptr<QPixmap>> &d)
     {
-        std::lock_guard local(g_Mutex);
+        std::scoped_lock local(g_mutex);
         m_Maps.insert(d);
     }
 }

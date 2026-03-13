@@ -6,174 +6,125 @@
 
 #include "Base/Type.h"
 #include "SceneLayoutSettings.h"
-
 #include "File/LogoManager.h"
 
 namespace CM
 {
-    class PreViewImageItem;
+class PreViewImageItem;
 }
 
 namespace CM
 {
-    enum class ShowExifTexPositionIndex
-    {
-        LeftTop,
-        LeftBottom,
-        RightTop,
-        RightBottom
-    };
+enum class ShowExifTexPositionIndex
+{
+    LeftTop,
+    LeftBottom,
+    RightTop,
+    RightBottom
+};
 
-    /**
-     * @brief 记录显示的Exif信息和它的布局位置
-     */
-    struct ShowExifInfo
-    {
-        ShowExifTexPositionIndex m_Layout; ///< 显示信息的位置
-        std::vector<ExifKey> m_Keys; ///< 显示的信息 - 某一个位置可以有多条信息
-        /// TODO: make it editor in widget
-    };
+/**
+ * @brief 记录显示的 Exif 信息和其布局位置
+ */
+struct ShowExifInfo
+{
+    ShowExifTexPositionIndex layout;  ///< 显示信息的位置
+    std::vector<ExifKey> keys;        ///< 该位置显示的信息列表
+};
 
-    class CScene : public QGraphicsScene
-    {
-        Q_OBJECT
-    public:
-        explicit CScene(QObject* parent = nullptr);
+class CScene : public QGraphicsScene
+{
+    Q_OBJECT
+public:
+    explicit CScene(QObject *parent = nullptr);
 
-        CScene(const CScene& scene) = delete;
-        CScene(const CScene&& scene) = delete;
-        CScene & operator=(const CScene& scene) = delete;
-        CScene& operator=(const CScene&& scene) = delete;
-        CScene(CScene&& scene) = delete;
-        ~CScene() override;
+    CScene(const CScene &) = delete;
+    CScene(CScene &&) = delete;
+    CScene &operator=(const CScene &) = delete;
+    CScene &operator=(CScene &&) = delete;
+    ~CScene() override;
 
-        /**
-         * @brief 当前显示的所有文字信息
-         * @param exifInfoMap 所有的文字信息
-         */
-        void resetTexItemsPlainText(const CM::ExifInfoMap& exifInfoMap);
+    /** @brief 设置当前显示的所有文字信息（Exif） */
+    void resetTexItemsPlainText(const CM::ExifInfoMap &exifInfoMap);
 
-        /**
-         * @brief 更新logo
-         * @param logo logo的pixmap对象
-         * @param cameraIndex 相机的Logo索引
-         */
-        void resetLogoPixmap(const std::shared_ptr<QPixmap>& logo, CameraIndex cameraIndex = CameraIndex::None);
+    /** @brief 更新 Logo 图 */
+    void resetLogoPixmap(const std::shared_ptr<QPixmap> &logo, CameraIndex cameraIndex = CameraIndex::None);
 
-        /**
-         * @brief 更新预览显示的图片
-         * @param pixmap 图片对象
-         * @param imageIndexCode 设置的图片的索引 通过索引可以获取图片
-         */
-        void resetPreviewImageTarget(const QPixmap& pixmap, size_t imageIndexCode);
+    /** @brief 更新预览显示的图片 */
+    void resetPreviewImageTarget(const QPixmap &pixmap, size_t imageIndexCode);
 
-        /**
-         * @brief 根据布局更新场景中所有item
-         * @param layout 设置的布局
-         */
-        void applyLayout(const std::shared_ptr<SceneLayoutSettings>& layout = nullptr);
+    /** @brief 应用布局，更新场景中所有 item */
+    void applyLayout(const std::shared_ptr<SceneLayoutSettings> &layout = nullptr);
 
-        /**
-         * @brief applyLayout scene  layout
-         */
-        virtual void updateLayout();
+    /** @brief 刷新布局计算（子类可重写） */
+    virtual void updateLayout();
 
-        /**
-         * @brief 获取当前窗口布局文件
-         * @return shared_otr
-         */
-        std::shared_ptr<SceneLayoutSettings> layoutSettings() const;
+    /** @brief 获取当前场景布局设置 */
+    std::shared_ptr<SceneLayoutSettings> layoutSettings() const;
 
+    /** @brief 重置场景显示状态 */
+    void resetStatus();
 
-        /**
-         * @brief 记录一些场景的显示状态
-         */
-        void resetStatus();
+    /** @brief 设置是否仅显示图片（隐藏 Logo、EXIF 文字、边距等） */
+    void setImageOnlyMode(bool enable);
 
-    protected:
-        /**
-         * @brief 更新显示的图片的信息
-         */
-        virtual void updateShowImage();
+    /** @brief 是否处于仅图片模式 */
+    [[nodiscard]] bool isImageOnlyMode() const;
 
-        /**
-         * @brief 更新logo的位置
-         */
-        virtual void updateLogoPosition();
+protected:
+    /** @brief 更新显示图片的布局信息 */
+    virtual void updateShowImage();
 
-        /**
-         * @brief 更新所有文字的位置
-         */
-        virtual void updateTexItemsPosition();
+    /** @brief 更新 Logo 位置 */
+    virtual void updateLogoPosition();
 
-        /**
-         * @brief 更新右侧显示的文本与logo之间的分割线
-         */
-        virtual void updateSplitRect();
+    /** @brief 更新所有文字项位置 */
+    virtual void updateTexItemsPosition();
 
-        /**
-         * @brief 更新margin rect的位置与大小
-         */
-        virtual void updateMarginItems();
+    /** @brief 更新右侧文字与 Logo 之间的分割线 */
+    virtual void updateSplitRect();
 
-    private:
-        /**
-         * @brief 初始化场景显示的Item
-         */
-        void Init();
+    /** @brief 更新边距矩形的尺寸与位置 */
+    virtual void updateMarginItems();
 
-        /**
-         * @brief init text item
-         */
-        void InitTexItems();
+    /** @brief 根据显示标志和仅图模式更新 overlay 项可见性 */
+    virtual void updateOverlayItemsVisibility();
 
-        /**
-         * @brief init logo item
-         */
-        void InitLogoItem();
+    /** @brief 当前场景有效显示矩形（仅图模式下为图片区域） */
+    virtual QRectF effectiveSceneRect() const;
 
-        /**
-         * @brief init preview image
-         */
-        void InitTargetImageItem();
+    PreViewImageItem *m_showImageItem{};
+    QGraphicsPixmapItem *m_logoItem{};
 
-        /**
-         * @brief init scene margin
-         */
-        void InitMargin();
+    QGraphicsRectItem *m_left{};
+    QGraphicsRectItem *m_right{};
+    QGraphicsRectItem *m_top{};
+    QGraphicsRectItem *m_bottom{};
 
-        /**
-         * @brief  分割线
-         */
-        void InitSplitRect();
+    QGraphicsRectItem *m_splitRectItem{};
 
-    protected:
+    std::unordered_map<ShowExifTexPositionIndex, QGraphicsTextItem *> m_textItem;
+    std::vector<ShowExifInfo> m_showInfos;
+    ExifInfoMap m_targetImageExifInfoMap;
 
-        PreViewImageItem* m_ShowImageItem{}; ///< 预览加载的图片Item对象
-        QGraphicsPixmapItem* m_LogoItem{}; ///< 加载的logo Item对象
+    std::shared_ptr<SceneLayoutSettings> m_sceneLayout;
+    QFont m_plainTextFont;
 
-        QGraphicsRectItem* m_Left{}; ///< 左边框Rect对象 画笔为transparent
-        QGraphicsRectItem* m_Right{}; ///< 右边框Rect对象 画笔为transparent
-        QGraphicsRectItem* m_Top{}; ///< 上边框Rect对象 画笔为transparent
-        QGraphicsRectItem* m_Bottom{}; ///< 下边框Rect对象 画笔为transparent
+    bool m_showItemFlags{true};
+    bool m_imageOnlyMode{false};
 
-        QGraphicsRectItem* m_SplitRectItem{}; ///< logo与右侧文字之间的分割线对象
+private:
+    void init();
+    void initTexItems();
+    void initLogoItem();
+    void initTargetImageItem();
+    void initMargin();
+    void initSplitRect();
 
-        std::unordered_map<ShowExifTexPositionIndex, QGraphicsTextItem*> m_TextItem; ///< 所有显示的Exif信息对应的GraphicsTextItem
+signals:
+    void noScenesChanged(bool showOverlays);
+};
 
-        std::vector<ShowExifInfo> m_ShowInfos; ///< 最终显示到屏幕上的Exif信息
-        ExifInfoMap m_TargetImageExifInfoLists; ///< 解析的当前图片的所有Info信息
+} // namespace CM
 
-        std::shared_ptr<SceneLayoutSettings> m_SceneLayout{nullptr}; ///< 记录场景的布局
-
-        QFont m_PlainTextFont;   ///< 场景显示的文字Item的字体
-
-        bool m_ShowItemFlags{true};
-
-    signals:
-        void sigNoScenes(bool val);
-
-    };
-} // CM
-
-#endif //CAMERAMARK_CSCENE_H
+#endif // CAMERAMARK_CSCENE_H

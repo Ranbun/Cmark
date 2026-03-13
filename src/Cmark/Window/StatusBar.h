@@ -6,22 +6,22 @@ class QStatusBar;
 
 namespace CM
 {
-    class StatusBar
-    {
-    public:
-        static void showMessage(const QString &message);
-        static void showMessage(const QString &message,int timeout);
-        static void Init(QStatusBar * bar);
-        static void clearMessage();
-        static void repaint();
+class StatusBar
+{
+public:
+    static void showMessage(const QString &message);
+    static void showMessage(const QString &message, int timeout);
+    static void Init(QStatusBar *bar);
+    static void clearMessage();
+    static void repaint();
 
-        static QStatusBar * statusBar();
+    static QStatusBar *statusBar();
 
-    private:
-        static QStatusBar * m_StatusBar;
-        static void check();
-    };
+private:
+    static QStatusBar *m_StatusBar;
+    static void check();
+};
 
-} // CM
+}  // namespace CM
 
-#endif //CAMERAMARK_STATUSBAR_H
+#endif  // CAMERAMARK_STATUSBAR_H

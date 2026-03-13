@@ -2,15 +2,16 @@
 
 #include "LogoManager.h"
 
+#include <unordered_map>
+#include <QImageReader>
 #include <QMessageBox>
 #include <QPixmap>
-#include <unordered_map>
 
 namespace CM
 {
     std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> LogoManager::m_Logos{};
     std::unordered_map<std::string, CameraIndex> LogoManager::m_CameraMakerMap;
-    std::once_flag LogoManager::m_InitFlag;
+    std::once_flag LogoManager::m_initFlag;
 
     CameraIndex LogoManager::resolverCameraIndex(const std::string& cameraMake)
     {
@@ -21,7 +22,6 @@ namespace CM
         }
 
         /// TODO : 需要更兼容的获取camera maker的方法
-
         auto lists = Make.split(" ");
         const auto maker = lists[0].toLower().toStdString();
 
@@ -34,17 +34,19 @@ namespace CM
 #if _DEBUG
         QMessageBox::about(nullptr, "Warning", ("We Don't supported: " + maker).c_str());
         throw std::runtime_error("Can't found Camera Maker!");
-#endif
-
+#else
         return CameraIndex::None;
+#endif 
     }
 
     void LogoManager::loadCameraLogo(const CameraIndex& cameraIndex)
     {
         auto loadLogo = [](CameraIndex index, const std::string& path)-> std::pair<CameraIndex, std::shared_ptr<QPixmap>>
         {
-            /// TODO: maybe use QImageReader get pixmap
-            auto logo = std::make_shared<QPixmap>(path.c_str());
+            QImageReader logoReader(QString::fromStdString(path));
+            auto temp = QPixmap::fromImageReader(&logoReader);
+
+            auto logo = std::make_shared<QPixmap>(std::move(temp));
             return {index, logo};
         };
 
@@ -79,36 +81,44 @@ namespace CM
         case CameraIndex::Fujifilm:
             m_Logos.insert(loadLogo(CameraIndex::Fujifilm, "./sources/logos/fujifilm.png"));
             break;
-        /// TODO: need add others......
         case CameraIndex::None:
+#if _DEBUG
+            throw std::runtime_error("Can't support current camera, please add.");
+#else
             {
                 auto logo = std::make_shared<QPixmap>(64, 64);
                 logo->fill(Qt::transparent);
                 m_Logos.insert({CameraIndex::None, logo});
             }
+#endif
             break;
-        default:
-            throw std::runtime_error("Can't support current camera, add logo");
         }
     }
 
     std::shared_ptr<QPixmap> LogoManager::getCameraMakerLogo(const CameraIndex& cameraIndex)
     {
         loadCameraLogo(cameraIndex); ///< load logo again
-
         if (m_Logos.count(cameraIndex)) ///< get loaded logo
         {
             return m_Logos.at(cameraIndex);
         }
-        return nullptr;
+
 #if _DEBUG
         throw std::runtime_error("Can't found Camera Maker Logo!");
+#else
+        return nullptr;
 #endif
+    }
+
+    void LogoManager::destroy()
+    {
+        m_Logos.clear();
+        m_CameraMakerMap.clear();
     }
 
     void LogoManager::Init()
     {
-        std::call_once(m_InitFlag, []()
+        std::call_once(m_initFlag, []()
         {
             m_CameraMakerMap.insert({"nikon", CameraIndex::Nikon});
             m_CameraMakerMap.insert({"sony", CameraIndex::Sony});

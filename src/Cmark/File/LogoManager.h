@@ -9,7 +9,6 @@ class QPixmap;
 
 namespace CM
 {
-    /// 目前支持只下列的厂商
     enum class CameraIndex : uint8_t
     {
         None = 0,
@@ -61,16 +60,12 @@ namespace CM
         /**
          * @brief 销毁logo manager 清空所有加载的logo
          */
-        static void destroy()
-        {
-            m_Logos.clear();
-            m_CameraMakerMap.clear();
-        }
+        static void destroy();
 
     private:
         static std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> m_Logos;
         static std::unordered_map<std::string, CameraIndex> m_CameraMakerMap;
-        static std::once_flag m_InitFlag;
+        static std::once_flag m_initFlag;
     };
 } // CM
 

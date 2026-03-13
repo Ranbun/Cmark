@@ -56,4 +56,11 @@ sources/test
 # clion
 out/
 
+# CMake
 CMakeLists.txt.user
+
+# clangd
+.cache/
+
+# vscode
+.vscode/

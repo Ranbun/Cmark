@@ -12,6 +12,8 @@
 #include <Log/CLog.h>
 #include <Scene/CScene.h>
 
+#include <iostream>
+
 namespace CM
 {
     namespace

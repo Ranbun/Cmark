@@ -1,0 +1,19 @@
+---
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+BreakBeforeBraces: Allman
+NamespaceIndentation: None
+AccessModifierOffset: -4
+PointerAlignment: Right
+ColumnLimit: 120
+Standard: Latest
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+PackConstructorInitializers: Never
+BreakConstructorInitializers: BeforeComma
+IncludeBlocks: Preserve
+---

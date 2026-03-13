@@ -1,33 +1,33 @@
 #ifndef CAMERAMARK_CMARK_H_
 #define CAMERAMARK_CMARK_H_
 
-#if  _DEBUG
-    #include <QDebug>
+#if _DEBUG
+#include <QDebug>
 #endif
 
 #include <iostream>
 
-#include <string>
-#include <iostream>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
 
-#include <locale>
 #include <codecvt>
+#include <locale>
 
 #include <cmath>
 
 #include <algorithm>
-#include <vector>
 #include <tuple>
 #include <unordered_map>
+#include <vector>
 
-#include <numeric>
 #include <memory>
+#include <numeric>
 
-#include <thread>
 #include <future>
 #include <mutex>
+#include <thread>
 
 #include <functional>
 

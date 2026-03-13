@@ -1,26 +1,19 @@
-#include <CMark.h>
-
 #include "LifeSizeImageScene.h"
+
+#include <CMark.h>
 
 namespace CM
 {
-
-    LifeSizeImageScene::LifeSizeImageScene(QObject * parent)
-    : CScene(parent)
+    LifeSizeImageScene::LifeSizeImageScene(QObject* parent)
+        : CScene(parent)
     {
-
     }
 
-    LifeSizeImageScene::~LifeSizeImageScene() = default;
-
-    void LifeSizeImageScene::saveSceneAsImage(const std::function<void(QGraphicsScene *)> &saveFunc)
+    void LifeSizeImageScene::saveSceneAsImage(const std::function<void(QGraphicsScene*)>& saveFunc)
     {
-        m_SceneLayout->update();
+        m_sceneLayout->update();
         applyLayout(nullptr);
-
-        const auto sceneRect = itemsBoundingRect();
-        setSceneRect(sceneRect);
-
+        setSceneRect(effectiveSceneRect());
         saveFunc(this);
     }
-} // CM
+} // namespace CM

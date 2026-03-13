@@ -1,10 +1,8 @@
 #ifndef CMARK_PICTUREMANAGER_H_
 #define CMARK_PICTUREMANAGER_H_
 
-
 #include <Base/FixMap.hpp>
 #include <Base/ImagePack.h>
-
 
 namespace CM
 {
