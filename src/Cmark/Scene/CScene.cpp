@@ -1,5 +1,5 @@
-#include "CMark.h"
 #include "CScene.h"
+#include "CMark.h"
 #include "PreViewImageItem.h"
 #include "SceneDef.h"
 
@@ -38,9 +38,9 @@ void CScene::initTexItems()
     m_showInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::LeftTop, {ExifKey::CameraModel}});
     m_showInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::LeftBottom, {ExifKey::ImageDate}});
     m_showInfos.emplace_back(ShowExifInfo{ShowExifTexPositionIndex::RightTop, {ExifKey::LensModel}});
-    m_showInfos.emplace_back(ShowExifInfo{
-        ShowExifTexPositionIndex::RightBottom,
-        {ExifKey::FocalLength, ExifKey::FStop, ExifKey::ExposureTime, ExifKey::ISOSpeed}});
+    m_showInfos.emplace_back(
+        ShowExifInfo{ShowExifTexPositionIndex::RightBottom,
+                     {ExifKey::FocalLength, ExifKey::FStop, ExifKey::ExposureTime, ExifKey::ISOSpeed}});
 
     m_textItem.insert({ShowExifTexPositionIndex::LeftTop, addText("")});
     m_textItem.insert({ShowExifTexPositionIndex::LeftBottom, addText("")});
@@ -56,16 +56,16 @@ void CScene::initTexItems()
     {
         switch (key)
         {
-        case ShowExifTexPositionIndex::LeftTop:
-        case ShowExifTexPositionIndex::RightTop:
-            font.setBold(true);
-            item->setFont(font);
-            font.setBold(false);
-            break;
-        case ShowExifTexPositionIndex::LeftBottom:
-        case ShowExifTexPositionIndex::RightBottom:
-            item->setFont(font);
-            break;
+            case ShowExifTexPositionIndex::LeftTop:
+            case ShowExifTexPositionIndex::RightTop:
+                font.setBold(true);
+                item->setFont(font);
+                font.setBold(false);
+                break;
+            case ShowExifTexPositionIndex::LeftBottom:
+            case ShowExifTexPositionIndex::RightBottom:
+                item->setFont(font);
+                break;
         }
     }
 }
@@ -82,12 +82,13 @@ void CScene::resetTexItemsPlainText(const ExifInfoMap &exifInfoMap)
             exifInfos.push_back(m_targetImageExifInfoMap[key]);
 
         auto res = std::accumulate(exifInfos.begin(), exifInfos.end(), std::string(),
-            [](const std::string &a, const std::string &b) {
-                if (a.empty() && b.empty())
-                    return std::string();
-                const auto tail = b.empty() ? std::string() : std::string(" ") + b;
-                return a + tail;
-            });
+                                   [](const std::string &a, const std::string &b)
+                                   {
+                                       if (a.empty() && b.empty())
+                                           return std::string();
+                                       const auto tail = b.empty() ? std::string() : std::string(" ") + b;
+                                       return a + tail;
+                                   });
         item->setVisible(!res.empty());
         item->setPlainText(res.c_str());
     }
@@ -117,23 +118,23 @@ void CScene::updateTexItemsPosition()
 
         switch (layoutIndex)
         {
-        case ShowExifTexPositionIndex::LeftTop:
-            item->setPos(QPoint(m_sceneLayout->leftTextOffset(), top + imageSize.h + logoWithImageSpacing));
-            break;
-        case ShowExifTexPositionIndex::LeftBottom:
-            item->setPos(QPoint(m_sceneLayout->leftTextOffset(),
-                top + logoWithImageSpacing + imageSize.h + logoSize.h - itemRect.height()));
-            break;
-        case ShowExifTexPositionIndex::RightTop:
-            item->setPos(QPoint(
-                left + imageSize.w + right - m_sceneLayout->rightTextMaxWidth() - m_sceneLayout->rightTextOffset(),
-                top + imageSize.h + logoWithImageSpacing));
-            break;
-        case ShowExifTexPositionIndex::RightBottom:
-            item->setPos(QPoint(
-                left + imageSize.w + right - m_sceneLayout->rightTextMaxWidth() - m_sceneLayout->rightTextOffset(),
-                top + logoWithImageSpacing + imageSize.h + logoSize.h - itemRect.height()));
-            break;
+            case ShowExifTexPositionIndex::LeftTop:
+                item->setPos(QPoint(m_sceneLayout->leftTextOffset(), top + imageSize.h + logoWithImageSpacing));
+                break;
+            case ShowExifTexPositionIndex::LeftBottom:
+                item->setPos(QPoint(m_sceneLayout->leftTextOffset(),
+                                    top + logoWithImageSpacing + imageSize.h + logoSize.h - itemRect.height()));
+                break;
+            case ShowExifTexPositionIndex::RightTop:
+                item->setPos(QPoint(
+                    left + imageSize.w + right - m_sceneLayout->rightTextMaxWidth() - m_sceneLayout->rightTextOffset(),
+                    top + imageSize.h + logoWithImageSpacing));
+                break;
+            case ShowExifTexPositionIndex::RightBottom:
+                item->setPos(QPoint(
+                    left + imageSize.w + right - m_sceneLayout->rightTextMaxWidth() - m_sceneLayout->rightTextOffset(),
+                    top + logoWithImageSpacing + imageSize.h + logoSize.h - itemRect.height()));
+                break;
         }
     }
 }
@@ -167,8 +168,9 @@ void CScene::updateLogoPosition()
     const auto &[l, r, t, b] = m_sceneLayout->getMargin();
     Q_UNUSED(b);
 
-    const auto x = l + r + imageW - m_sceneLayout->logoWithSplitLineSpace() * 2.0 - m_sceneLayout->logoSize().w
-        - m_sceneLayout->rightTextMaxWidth() - m_sceneLayout->rightTextOffset() - m_sceneLayout->splitRectWidth();
+    const auto x = l + r + imageW - m_sceneLayout->logoWithSplitLineSpace() * 2.0 - m_sceneLayout->logoSize().w -
+                   m_sceneLayout->rightTextMaxWidth() - m_sceneLayout->rightTextOffset() -
+                   m_sceneLayout->splitRectWidth();
     const auto y = t + imageH + logoSpaceWithImage;
     m_logoItem->setPos(x, y);
 }
@@ -186,7 +188,7 @@ void CScene::resetPreviewImageTarget(const QPixmap &pixmap, size_t imageIndexCod
     m_sceneLayout->setImageSize({pixmap.width(), pixmap.height()});
     m_showImageItem->resetPixmap(imageIndexCode);
     m_showImageItem->setData(static_cast<int>(GraphicsItemDataIndex::PixmapIndex),
-        QVariant::fromValue(static_cast<qulonglong>(imageIndexCode)));
+                             QVariant::fromValue(static_cast<qulonglong>(imageIndexCode)));
 
     m_showItemFlags = m_showImageItem->validImage();
 }
@@ -266,8 +268,8 @@ void CScene::updateSplitRect()
     Q_UNUSED(bottom);
 
     const auto splitRectW = m_sceneLayout->splitRectWidth();
-    const auto x = left + right + imageW - m_sceneLayout->rightTextOffset() - m_sceneLayout->rightTextMaxWidth()
-        - m_sceneLayout->logoWithSplitLineSpace() - splitRectW;
+    const auto x = left + right + imageW - m_sceneLayout->rightTextOffset() - m_sceneLayout->rightTextMaxWidth() -
+                   m_sceneLayout->logoWithSplitLineSpace() - splitRectW;
     const auto y = top + imageH + spacing;
 
     m_splitRectItem->setRect(x, y, splitRectW, logoSize.h);
@@ -308,6 +310,7 @@ void CScene::setImageOnlyMode(bool enable)
     m_imageOnlyMode = enable;
     updateOverlayItemsVisibility();
     applyLayout(layoutSettings());
+    updateLayout();
     update();
 }
 
@@ -365,4 +368,4 @@ void CScene::updateShowImage()
     m_showImageItem->applyLayout(m_sceneLayout);
 }
 
-} // namespace CM
+}  // namespace CM

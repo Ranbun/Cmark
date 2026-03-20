@@ -219,13 +219,29 @@ void DisplayWidget::onDisplayImageMode(const DisplayWidgetMode mode)
 {
     if (mode == DisplayWidgetMode::IMAGE)
     {
-        const auto current_scene = dynamic_cast<CM::CScene*>(m_currentScene);
-        current_scene->setImageOnlyMode(true);
+        if (const auto current_scene = dynamic_cast<CM::PreViewImageScene*>(m_currentScene))
+        {
+            current_scene->setImageOnlyMode(true);
+            current_scene->ForceUpdate();
+        }
+        else
+        {
+            const auto scene = dynamic_cast<CM::CScene*>(m_currentScene);
+            scene->setImageOnlyMode(true);
+        }
     }
     else
     {
-        const auto current_scene = dynamic_cast<CM::CScene*>(m_currentScene);
-        current_scene->setImageOnlyMode(false);
+        if (const auto current_scene = dynamic_cast<CM::PreViewImageScene*>(m_currentScene))
+        {
+            current_scene->setImageOnlyMode(false);
+            current_scene->ForceUpdate();
+        }
+        else
+        {
+            const auto scene = dynamic_cast<CM::CScene*>(m_currentScene);
+            scene->setImageOnlyMode(false);
+        }
     }
 }
 }  // namespace CM

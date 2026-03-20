@@ -64,3 +64,5 @@ CMakeLists.txt.user
 
 # vscode
 .vscode/
+compile_commands.json
+Cmark.code-workspace

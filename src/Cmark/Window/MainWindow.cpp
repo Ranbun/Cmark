@@ -71,6 +71,7 @@ void MainWindow::InitUi()
 
 void MainWindow::InitConnect()
 {
+    /// menu actions
     connect(m_CleanWorkspaceAction, &QAction::triggered,
             [this]()
             {
@@ -97,7 +98,7 @@ void MainWindow::InitConnect()
                 StatusBar::repaint();
             });
 
-    connect(m_BatchProcessImage, &QAction::triggered, this,
+    connect(m_BatchProcessImageAction, &QAction::triggered, this,
             [this]()
             {
                 const QString rootPath = m_FileTreeDockWidget->rootImagePath();
@@ -120,7 +121,7 @@ void MainWindow::InitConnect()
             });
 
     /// 打开文件
-    connect(m_PreviewFile, &QAction::triggered, this,
+    connect(m_PreviewFileAction, &QAction::triggered, this,
             [this]()
             {
                 const QString file = QFileDialog::getOpenFileName(this);
@@ -133,9 +134,14 @@ void MainWindow::InitConnect()
                 emit m_DisplayWidget->sigPreviewImage(file.toStdString());
             });
 
+    /// 显示图片属性
     connect(m_DisplayWidget.get(), &DisplayWidget::sigShowPreviewItemProperty, this,
-            [this](const std::string& path) { emit m_ImagePropertyDockWidget->sigShowProperty(path); });
+            [this](const std::string& path)
+            {
+                emit m_ImagePropertyDockWidget->sigShowProperty(path);
+            });
 
+    /// 显示文件
     connect(m_FileTreeDockWidget.get(), &FileTreeDockWidget::previewImage,
             [this](const QString& path)
             {
@@ -150,7 +156,8 @@ void MainWindow::InitConnect()
     connect(
         this, &MainWindow::sigWarning, this, [](const QString& info) { CLog::Warning(info); }, Qt::QueuedConnection);
 
-    connect(m_EnablePreView, &QAction::triggered, this,
+    /// 开启预览信息
+    connect(m_EnablePreViewAction, &QAction::triggered, this,
             [this](bool checked)
             {
                 if (checked)
@@ -174,9 +181,9 @@ void MainWindow::InitMenu()
     const auto file = new QMenu(R"(File(&F))");
     currentMenuBar->addMenu(file);
 
-    m_PreviewFile = new QAction("Preview File");
-    file->addAction(m_PreviewFile);
-    m_PreviewFile->setIcon(QIcon("./sources/icons/openFile.png"));
+    m_PreviewFileAction = new QAction("Preview File");
+    file->addAction(m_PreviewFileAction);
+    m_PreviewFileAction->setIcon(QIcon("./sources/icons/openFile.png"));
 
     m_OpenDirectoryAction = new QAction("Open Directory");
     m_OpenDirectoryAction->setToolTip(tr("Open Directory"));
@@ -184,11 +191,11 @@ void MainWindow::InitMenu()
     m_OpenDirectoryAction->setIcon(QIcon("./sources/icons/openDirectory.png"));
     file->addAction(m_OpenDirectoryAction);
 
-    m_BatchProcessImage = new QAction("Process All");
-    m_BatchProcessImage->setToolTip(tr("Process All Image Files"));
-    m_BatchProcessImage->setIcon(QIcon("./sources/icons/multiProcess.png"));
-    m_BatchProcessImage->setShortcut({"Ctrl+Shift+A"});
-    file->addAction(m_BatchProcessImage);
+    m_BatchProcessImageAction = new QAction("Process All");
+    m_BatchProcessImageAction->setToolTip(tr("Process All Image Files"));
+    m_BatchProcessImageAction->setIcon(QIcon("./sources/icons/multiProcess.png"));
+    m_BatchProcessImageAction->setShortcut({"Ctrl+Shift+A"});
+    file->addAction(m_BatchProcessImageAction);
 
     m_CleanWorkspaceAction = new QAction("Clean WorkSpace");
     m_CleanWorkspaceAction->setIcon(QIcon("./sources/icons/new.png"));
@@ -197,11 +204,11 @@ void MainWindow::InitMenu()
 
     const auto Edit = new QMenu(R"(Edit(&E))");
     currentMenuBar->addMenu(Edit);
-    m_EnablePreView = new QAction("Enable PreView", this);
-    m_EnablePreView->setToolTip(tr("Enable PreView"));
-    m_EnablePreView->setCheckable(true);
-    m_EnablePreView->setChecked(false);
-    Edit->addAction(m_EnablePreView);
+    m_EnablePreViewAction = new QAction("Enable PreView", this);
+    m_EnablePreViewAction->setToolTip(tr("Enable PreView"));
+    m_EnablePreViewAction->setCheckable(true);
+    m_EnablePreViewAction->setChecked(false);
+    Edit->addAction(m_EnablePreViewAction);
 }
 
 void MainWindow::InitTool()
@@ -212,7 +219,7 @@ void MainWindow::InitTool()
     toolBar->setMovable(false);
     toolBar->setIconSize({16, 16});
 
-    toolBar->addAction(m_PreviewFile);
+    toolBar->addAction(m_PreviewFileAction);
     toolBar->addAction(m_OpenDirectoryAction);
 
     /// 添加分割线

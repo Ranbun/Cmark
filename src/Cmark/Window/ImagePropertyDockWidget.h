@@ -26,7 +26,7 @@ signals:
 protected:
     void resizeEvent(QResizeEvent* event) override;
 
-protected:
+private slots:
     void onSigShowProperty(const std::string& path);
 
 private:

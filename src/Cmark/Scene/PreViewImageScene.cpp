@@ -23,9 +23,15 @@ namespace CM
         applyLayout(m_sceneLayout);
         setSceneRect(effectiveSceneRect());
     }
+    void PreViewImageScene::ForceUpdate()
+    {
+        emit  sigShowImage(m_currentFileIndex);
+    }
 
     void PreViewImageScene::showImage(const size_t fileIndexCode)
     {
+        m_currentFileIndex = fileIndexCode;
+
         // 1. 加载图片与 EXIF 数据
         const auto preViewImage = PictureManager::getImage(fileIndexCode);
         const auto exifInfos = EXIFResolver::getExifInfo(fileIndexCode);
@@ -54,6 +60,7 @@ namespace CM
         {
             view->setSceneRect(bound);
             view->fitInView(bound, Qt::KeepAspectRatio);
+            view->repaint();
         }
     }
 

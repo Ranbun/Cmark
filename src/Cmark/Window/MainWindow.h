@@ -18,19 +18,20 @@ class MainWindow final : public QMainWindow
 public:
     MainWindow();
 
-protected:
-    /// widget
-    std::shared_ptr<DisplayWidget> m_DisplayWidget{nullptr};
-    std::shared_ptr<FileTreeDockWidget> m_FileTreeDockWidget{nullptr};
-    std::shared_ptr<ImagePropertyDockWidget> m_ImagePropertyDockWidget{nullptr};
+private:
+    /// layout widgets
+    std::shared_ptr<DisplayWidget> m_DisplayWidget{nullptr};                      ///< display widget: show scene(image)
+    std::shared_ptr<FileTreeDockWidget> m_FileTreeDockWidget{nullptr};            ///< show file tree
+    std::shared_ptr<ImagePropertyDockWidget> m_ImagePropertyDockWidget{nullptr};  ///< show file property
 
-    /// File Actions
+    /// File Menu Actions
     QAction* m_CleanWorkspaceAction{nullptr};
     QAction* m_OpenDirectoryAction{nullptr};  ///< 打开文件夹
-    QAction* m_BatchProcessImage{nullptr};
-    QAction* m_PreviewFile{nullptr};
+    QAction* m_BatchProcessImageAction{nullptr};
+    QAction* m_PreviewFileAction{nullptr};
 
-    QAction* m_EnablePreView{nullptr};
+    /// Edit Menu Actions
+    QAction* m_EnablePreViewAction{nullptr};
 
 protected:
     void resizeEvent(QResizeEvent* event) override;

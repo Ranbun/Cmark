@@ -25,6 +25,8 @@ namespace CM
         /** @brief 根据当前 items 边界更新场景矩形 */
         void updateSceneRect();
 
+        void ForceUpdate();
+
     signals:
         /** @brief 请求显示指定索引的图片 */
         void sigShowImage(size_t code);
@@ -32,6 +34,10 @@ namespace CM
     private:
         void showImage(size_t fileIndexCode);
         void initConnect();
+
+    private:
+        size_t m_currentFileIndex{0};
+
     };
 
 } // namespace CM
