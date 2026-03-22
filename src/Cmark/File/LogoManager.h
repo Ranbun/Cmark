@@ -1,9 +1,9 @@
 #ifndef CAMERAMARK_LOGOMANAGER_H
 #define CAMERAMARK_LOGOMANAGER_H
 
-#include <iostream>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 
 class QPixmap;
 
@@ -32,7 +32,15 @@ namespace CM
         friend class Tools::ResourcesTools;
 
     public:
-        LogoManager() = default;
+        LogoManager() = delete;
+
+        LogoManager(const LogoManager&) = delete;
+        LogoManager(const LogoManager&&) = delete;
+
+        LogoManager& operator=(const LogoManager&) = delete;
+        LogoManager& operator=(const LogoManager&&) = delete;
+
+        ~LogoManager() = delete;
 
         static void Init();
 

@@ -47,9 +47,8 @@ namespace CM
         /**
          * @brief load image from QByteArray
          * @param pack params pack
-         * @param synchronization bool 是否同步
          */
-        static void loadImage(const ImagePack &pack, bool synchronization = true);
+        static void loadImage(const ImagePack& pack);
 
 
         /**

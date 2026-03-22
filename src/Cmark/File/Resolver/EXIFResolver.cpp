@@ -129,7 +129,7 @@ namespace CM
         return {status,outputInfos};
     }
 
-    void EXIFResolver::resolver(const ImagePack &pack, const bool synchronization)
+    void EXIFResolver::resolver(const ImagePack& pack)
     {
         {
             std::lock_guard<std::mutex> local(g_InfoMutex);
@@ -147,15 +147,7 @@ namespace CM
             g_LoadImageCheckCode.insert({imagePack.m_FileIndexCode, outputExIfInfos->m_LoadedCheckCode});
         };
 
-        if(!synchronization)
-        {
-            std::thread loading(loadImageFile, std::ref(pack));
-            loading.join();
-        }
-        else
-        {
-            loadImageFile(pack);
-        }
+        loadImageFile(pack);
 
         auto loadStatusCode = 0;
         {

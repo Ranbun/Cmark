@@ -188,21 +188,12 @@ void DisplayWidget::onPreviewImage(const std::string& path)
             using PictureManagerInterFace = CM::PictureManager;
             const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
 
-            {
-                auto [w, h] = SceneLayoutSettings::fixPreViewImageSize();
-                auto data = ImageProcess::loadFile(QString::fromStdString(path));
-                ImagePack loadImagePack{fileIndexCode, data, path, std::make_shared<std::mutex>(), {w, h}};
+            auto [w, h] = SceneLayoutSettings::fixPreViewImageSize();
+            const auto data = ImageProcess::loadFile(QString::fromStdString(path));
+            const ImagePack loadImagePack{fileIndexCode, data, path, std::make_shared<std::mutex>(), {w, h}};
 
-                const auto loadF =
-                    std::async(std::launch::async, PictureManagerInterFace::loadImage, std::ref(loadImagePack), false);
-                const auto resolverF =
-                    std::async(std::launch::async, EXIFResolver::resolver, std::ref(loadImagePack), false);
-                loadF.wait();
-                resolverF.wait();
-
-                data->clear();
-                data.reset();
-            }
+            PictureManagerInterFace::loadImage(loadImagePack);
+            EXIFResolver::resolver(loadImagePack);
 
             const auto cameraIndex =
                 LogoManager::resolverCameraIndex(EXIFResolver::ExifItem(fileIndexCode, ExifKey::CameraMake));

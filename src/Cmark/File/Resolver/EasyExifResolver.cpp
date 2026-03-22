@@ -1,3 +1,8 @@
+/**
+ * @file EasyExifResolver.cpp
+ * @brief 将 easyexif::EXIFInfo 的解析结果映射到 CM::EXIFInfo，并返回 easyexif 的解析状态码。
+ */
+
 #include "EasyExifResolver.h"
 #include "exif.h"
 

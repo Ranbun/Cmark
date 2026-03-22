@@ -36,10 +36,9 @@ namespace CM
         /**
          * @brief 加载图片并解析相应的exif信息
          * @param pack 图片路径
-         * @param synchronization 是否同步解析
          * @return 加载的图片的索引 可以通过此索引获取加载的exif信息
          */
-        static void resolver(const ImagePack &pack, bool synchronization = true);
+        static void resolver(const ImagePack &pack);
 
 
         /**
