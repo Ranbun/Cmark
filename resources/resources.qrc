@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/multiProcess.png</file>
+        <file>icons/new.png</file>
+        <file>icons/openDirectory.png</file>
+        <file>icons/openFile.png</file>
+        <file>icons/previewSceneLayoutsettings.png</file>
+        <file>icons/previewSceneSave.png</file>
+        <file>icons/save.png</file>
+        <file>icons/save_uploaded.png</file>
+        <file>logos/apple.png</file>
+        <file>logos/canon.png</file>
+        <file>logos/fujifilm.png</file>
+        <file>logos/hasselblad.png</file>
+        <file>logos/leica_logo.png</file>
+        <file>logos/nikon.png</file>
+        <file>logos/panasonic.png</file>
+        <file>logos/panasonic2.png</file>
+        <file>logos/sony.png</file>
+    </qresource>
+</RCC>

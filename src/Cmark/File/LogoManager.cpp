@@ -58,28 +58,28 @@ namespace CM
         switch (cameraIndex)
         {
         case CameraIndex::Nikon:
-            m_Logos.insert(loadLogo(CameraIndex::Nikon, "./sources/logos/nikon.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Nikon, ":/logos/nikon.png"));
             break;
         case CameraIndex::Sony:
-            m_Logos.insert(loadLogo(CameraIndex::Sony, "./sources/logos/sony.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Sony, ":/logos/sony.png"));
             break;
         case CameraIndex::Canon:
-            m_Logos.insert(loadLogo(CameraIndex::Canon, "./sources/logos/canon.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Canon, ":/logos/canon.png"));
             break;
         case CameraIndex::Panasonic:
-            m_Logos.insert(loadLogo(CameraIndex::Panasonic, "./sources/logos/panasonic.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Panasonic, ":/logos/panasonic.png"));
             break;
         case CameraIndex::Leica:
-            m_Logos.insert(loadLogo(CameraIndex::Leica, "./sources/logos/leica_logo.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Leica, ":/logos/leica_logo.png"));
             break;
         case CameraIndex::Hasselblad:
-            m_Logos.insert(loadLogo(CameraIndex::Hasselblad, "./sources/logos/hasselblad.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Hasselblad, ":/logos/hasselblad.png"));
             break;
         case CameraIndex::Apple:
-            m_Logos.insert(loadLogo(CameraIndex::Apple, "./sources/logos/apple.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Apple, ":/logos/apple.png"));
             break;
         case CameraIndex::Fujifilm:
-            m_Logos.insert(loadLogo(CameraIndex::Fujifilm, "./sources/logos/fujifilm.png"));
+            m_Logos.insert(loadLogo(CameraIndex::Fujifilm, ":/logos/fujifilm.png"));
             break;
         case CameraIndex::None:
 #if _DEBUG

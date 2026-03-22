@@ -183,22 +183,22 @@ void MainWindow::InitMenu()
 
     m_PreviewFileAction = new QAction("Preview File");
     file->addAction(m_PreviewFileAction);
-    m_PreviewFileAction->setIcon(QIcon("./sources/icons/openFile.png"));
+    m_PreviewFileAction->setIcon(QIcon(":/icons/openFile.png"));
 
     m_OpenDirectoryAction = new QAction("Open Directory");
     m_OpenDirectoryAction->setToolTip(tr("Open Directory"));
     m_OpenDirectoryAction->setShortcut({"Ctrl+P"});
-    m_OpenDirectoryAction->setIcon(QIcon("./sources/icons/openDirectory.png"));
+    m_OpenDirectoryAction->setIcon(QIcon(":/icons/openDirectory.png"));
     file->addAction(m_OpenDirectoryAction);
 
     m_BatchProcessImageAction = new QAction("Process All");
     m_BatchProcessImageAction->setToolTip(tr("Process All Image Files"));
-    m_BatchProcessImageAction->setIcon(QIcon("./sources/icons/multiProcess.png"));
+    m_BatchProcessImageAction->setIcon(QIcon(":/icons/multiProcess.png"));
     m_BatchProcessImageAction->setShortcut({"Ctrl+Shift+A"});
     file->addAction(m_BatchProcessImageAction);
 
     m_CleanWorkspaceAction = new QAction("Clean WorkSpace");
-    m_CleanWorkspaceAction->setIcon(QIcon("./sources/icons/new.png"));
+    m_CleanWorkspaceAction->setIcon(QIcon(":/icons/new.png"));
     m_CleanWorkspaceAction->setToolTip(tr("set FileSystem Empty "));
     file->addAction(m_CleanWorkspaceAction);
 
@@ -229,7 +229,7 @@ void MainWindow::InitTool()
     {
         const auto savePreviewImageAction = toolBar->addAction("Save preview");
         savePreviewImageAction->setToolTip("Save preview Image");
-        QPixmap previewSceneSaveIcon("./sources/icons/save.png");
+        QPixmap previewSceneSaveIcon(":/icons/save.png");
         previewSceneSaveIcon = previewSceneSaveIcon.scaled({16, 16}, Qt::KeepAspectRatio);
         savePreviewImageAction->setIcon(previewSceneSaveIcon);
 
