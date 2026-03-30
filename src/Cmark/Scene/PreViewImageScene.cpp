@@ -36,8 +36,12 @@ namespace CM
         const auto preViewImage = PictureManager::getImage(fileIndexCode);
         const auto exifInfos = EXIFResolver::getExifInfo(fileIndexCode);
         const auto cameraMake = exifInfos.count(ExifKey::CameraMake) ? exifInfos.at(ExifKey::CameraMake) : "";
-        const auto cameraIndex = LogoManager::resolverCameraIndex(cameraMake);
-        const auto previewImageLogo = LogoManager::getCameraMakerLogo(cameraIndex);
+        auto& logoMgr = LogoManager::instance();
+        const auto cameraIndex = logoMgr.resolveCameraIndex(cameraMake);
+        const auto logoImage = logoMgr.getCameraMakerLogo(cameraIndex);
+        const auto previewImageLogo = logoImage
+            ? std::make_shared<QPixmap>(QPixmap::fromImage(*logoImage))
+            : std::make_shared<QPixmap>();
 
         // 2. 更新场景显示内容
         resetStatus();

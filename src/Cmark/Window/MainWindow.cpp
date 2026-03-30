@@ -11,11 +11,13 @@
 
 #include <QCheckBox>
 #include <QFileDialog>
+#include <QHBoxLayout>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QStyle>
 #include <QThread>
 #include <QToolBar>
+#include <QWidgetAction>
 
 namespace CM
 {
@@ -136,10 +138,7 @@ void MainWindow::InitConnect()
 
     /// 显示图片属性
     connect(m_DisplayWidget.get(), &DisplayWidget::sigShowPreviewItemProperty, this,
-            [this](const std::string& path)
-            {
-                emit m_ImagePropertyDockWidget->sigShowProperty(path);
-            });
+            [this](const std::string& path) { emit m_ImagePropertyDockWidget->sigShowProperty(path); });
 
     /// 显示文件
     connect(m_FileTreeDockWidget.get(), &FileTreeDockWidget::previewImage,
@@ -157,7 +156,7 @@ void MainWindow::InitConnect()
         this, &MainWindow::sigWarning, this, [](const QString& info) { CLog::Warning(info); }, Qt::QueuedConnection);
 
     /// 开启预览信息
-    connect(m_EnablePreViewAction, &QAction::triggered, this,
+    connect(m_EnablePreViewAction, &QAction::toggled, this,
             [this](bool checked)
             {
                 if (checked)
@@ -178,12 +177,12 @@ void MainWindow::InitMenu()
 
     const auto currentMenuBar = menuBar();
 
-    const auto file = new QMenu(R"(File(&F))");
+    const auto file = new QMenu(R"(File)");
     currentMenuBar->addMenu(file);
 
     m_PreviewFileAction = new QAction("Preview File");
     file->addAction(m_PreviewFileAction);
-    m_PreviewFileAction->setIcon(QIcon(":/icons/openFile.png"));
+    m_PreviewFileAction->setIcon(QIcon(":/icons/previewFile.png"));
 
     m_OpenDirectoryAction = new QAction("Open Directory");
     m_OpenDirectoryAction->setToolTip(tr("Open Directory"));
@@ -202,13 +201,42 @@ void MainWindow::InitMenu()
     m_CleanWorkspaceAction->setToolTip(tr("set FileSystem Empty "));
     file->addAction(m_CleanWorkspaceAction);
 
-    const auto Edit = new QMenu(R"(Edit(&E))");
+    const auto Edit = new QMenu(R"(Edit)");
     currentMenuBar->addMenu(Edit);
     m_EnablePreViewAction = new QAction("Enable PreView", this);
+    m_EnablePreViewAction->setIcon(QIcon(":/icons/enablePreview.png"));
     m_EnablePreViewAction->setToolTip(tr("Enable PreView"));
     m_EnablePreViewAction->setCheckable(true);
     m_EnablePreViewAction->setChecked(false);
-    Edit->addAction(m_EnablePreViewAction);
+    {
+        auto* enablePreviewWidgetAction = new QWidgetAction(this);
+        auto* actionRow = new QWidget(Edit);
+        auto* rowLayout = new QHBoxLayout(actionRow);
+        rowLayout->setContentsMargins(8, 2, 8, 2);
+        rowLayout->setSpacing(6);
+
+        auto* enablePreviewCheckBox = new QCheckBox("Enable PreView", actionRow);
+        enablePreviewCheckBox->setChecked(m_EnablePreViewAction->isChecked());
+        rowLayout->addWidget(enablePreviewCheckBox);
+        rowLayout->addStretch();
+
+        connect(enablePreviewCheckBox, &QCheckBox::toggled, m_EnablePreViewAction, &QAction::setChecked);
+        connect(m_EnablePreViewAction, &QAction::toggled, enablePreviewCheckBox, &QCheckBox::setChecked);
+
+        enablePreviewWidgetAction->setDefaultWidget(actionRow);
+        Edit->addAction(enablePreviewWidgetAction);
+    }
+
+    const auto About = new QMenu(R"(About)");
+    currentMenuBar->addMenu(About);
+
+    const auto Help = new QMenu(R"(Help)");
+    currentMenuBar->addMenu(Help);
+
+    const auto HelpAction = new QAction("Help");
+    HelpAction->setToolTip(tr("Help"));
+    HelpAction->setIcon(QIcon(":/icons/help.png"));
+    Help->addAction(HelpAction);
 }
 
 void MainWindow::InitTool()
@@ -236,5 +264,8 @@ void MainWindow::InitTool()
         connect(savePreviewImageAction, &QAction::triggered,
                 [this]() { m_DisplayWidget->saveScene(SceneIndex::PreviewScene); });
     }
+
+    toolBar->addSeparator();
+    toolBar->addAction(m_EnablePreViewAction);
 }
 }  // namespace CM

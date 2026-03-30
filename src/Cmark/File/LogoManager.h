@@ -3,9 +3,10 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
 #include <unordered_map>
 
-class QPixmap;
+class QImage;
 
 namespace CM
 {
@@ -22,59 +23,56 @@ namespace CM
         Fujifilm
     };
 
-    namespace Tools
+    /**
+     * @brief 集中定义相机厂商信息：厂商名、枚举、Logo 资源路径
+     */
+    struct CameraInfo
     {
-        class ResourcesTools;
-    }
+        std::string makerName;
+        CameraIndex index;
+        std::string logoPath;
+    };
 
     class LogoManager
     {
-        friend class Tools::ResourcesTools;
-
     public:
-        LogoManager() = delete;
+        static LogoManager& instance();
 
         LogoManager(const LogoManager&) = delete;
-        LogoManager(const LogoManager&&) = delete;
-
+        LogoManager(LogoManager&&) = delete;
         LogoManager& operator=(const LogoManager&) = delete;
-        LogoManager& operator=(const LogoManager&&) = delete;
-
-        ~LogoManager() = delete;
-
-        static void Init();
+        LogoManager& operator=(LogoManager&&) = delete;
 
         /**
-         * @brief 通过cameraMake参数获取使用的相机
+         * @brief 通过 cameraMake 参数获取使用的相机
          * @param cameraMake exif Info
-         * @return CameraIndex指示相机的制造商
+         * @return CameraIndex 指示相机的制造商
          */
-        static CameraIndex resolverCameraIndex(const std::string &cameraMake);
+        CameraIndex resolveCameraIndex(const std::string& cameraMake);
 
         /**
-         * @brief load logo
-         * @param cameraIndex 加载的logo的相机
+         * @brief 获取 camera maker logo
+         * @param cameraIndex 相机索引
+         * @return logo with QImage (线程安全)
          */
-        static void loadCameraLogo(const CameraIndex &cameraIndex);
+        std::shared_ptr<QImage> getCameraMakerLogo(CameraIndex cameraIndex);
 
         /**
-         * @brief 获取camera maker logo
-         * @param cameraIndex
-         * @return logo with QPixmap
+         * @brief 销毁 logo manager，清空所有加载的 logo
          */
-        static std::shared_ptr<QPixmap> getCameraMakerLogo(const CameraIndex &cameraIndex);
-
-    protected:
-        /**
-         * @brief 销毁logo manager 清空所有加载的logo
-         */
-        static void destroy();
+        void destroy();
 
     private:
-        static std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> m_Logos;
-        static std::unordered_map<std::string, CameraIndex> m_CameraMakerMap;
-        static std::once_flag m_initFlag;
+        LogoManager();
+        ~LogoManager() = default;
+
+        void loadCameraLogo(CameraIndex cameraIndex);
+
+        std::mutex m_dataMutex;
+        std::unordered_map<CameraIndex, std::shared_ptr<QImage>> m_logos;
+        std::unordered_map<std::string, CameraIndex> m_cameraMakerMap;
+        std::unordered_map<CameraIndex, std::string> m_logoPathMap;
     };
-} // CM
+} // namespace CM
 
 #endif // CAMERAMARK_LOGOMANAGER_H

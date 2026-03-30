@@ -2,6 +2,7 @@
 #define CMARK_RESOURCESTOOLS_H_
 
 #include "PictureManager.h"
+#include <File/LogoManager.h>
 #include <File/Resolver/EXIFResolver.h>
 
 namespace CM::Tools
@@ -24,6 +25,7 @@ namespace CM::Tools
         {
             EXIFResolver::destroyCached();
             PictureManager::destroyCached();
+            LogoManager::instance().destroy();
         }
     };
 }

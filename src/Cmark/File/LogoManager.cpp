@@ -1,133 +1,137 @@
 #include "LogoManager.h"
 
+#include <QImage>
 #include <QImageReader>
-#include <QPixmap>
+#include <QList>
 
 namespace CM
 {
-std::unordered_map<CameraIndex, std::shared_ptr<QPixmap>> LogoManager::m_Logos{};
-std::unordered_map<std::string, CameraIndex> LogoManager::m_CameraMakerMap;
-std::once_flag LogoManager::m_initFlag;
-
-static std::mutex m_DataMutex;
-
-CameraIndex LogoManager::resolverCameraIndex(const std::string& cameraMake)
-{
-    QString Make = cameraMake.c_str();
-    if (Make.isEmpty())
-    {
-        Make = QString("empty");
-    }
-
-    /// TODO : 需要更兼容的获取camera maker的方法
-    auto lists = Make.split(" ");
-    const auto maker = lists[0].toLower().toStdString();
-
-    std::scoped_lock local(m_DataMutex);
-    const auto res = m_CameraMakerMap.find(maker);
-    if (res != m_CameraMakerMap.end())
-    {
-        return res->second;
-    }
-
-#if _DEBUG
-    throw std::runtime_error("Can't found Camera Maker!");
-#else
-    return CameraIndex::None;
-#endif
-}
-
-void LogoManager::loadCameraLogo(const CameraIndex& cameraIndex)
-{
-    auto loadLogo = [](CameraIndex index, const std::string& path) -> std::pair<CameraIndex, std::shared_ptr<QPixmap>>
-    {
-        QImageReader logoReader(QString::fromStdString(path));
-        auto temp = QPixmap::fromImageReader(&logoReader);
-
-        auto logo = std::make_shared<QPixmap>(std::move(temp));
-        return {index, logo};
+    /// 集中定义所有支持的相机厂商
+    static const std::vector<CameraInfo> kCameraInfoTable = {
+        {"nikon",      CameraIndex::Nikon,      ":/logos/nikon.png"},
+        {"sony",       CameraIndex::Sony,       ":/logos/sony.png"},
+        {"canon",      CameraIndex::Canon,      ":/logos/canon.png"},
+        {"panasonic",  CameraIndex::Panasonic,  ":/logos/panasonic.png"},
+        {"leica",      CameraIndex::Leica,      ":/logos/leica_logo.png"},
+        {"hassel",     CameraIndex::Hasselblad, ":/logos/hasselblad.png"},
+        {"fujifilm",   CameraIndex::Fujifilm,   ":/logos/fujifilm.png"},
+        {"apple",      CameraIndex::Apple,      ":/logos/apple.png"},
+        {"empty",      CameraIndex::None,       ""},
     };
 
-    static std::unordered_map<CameraIndex, std::string> logPath{
-        {CameraIndex::Nikon, ":/logos/nikon.png"},      {CameraIndex::Sony, ":/logos/sony.png"},
-        {CameraIndex::Canon, ":/logos/canon.png"},      {CameraIndex::Panasonic, ":/logos/panasonic.png"},
-        {CameraIndex::Leica, ":/logos/leica_logo.png"}, {CameraIndex::Hasselblad, ":/logos/hasselblad.png"},
-        {CameraIndex::Apple, ":/logos/apple.png"},      {CameraIndex::Fujifilm, ":/logos/fujifilm.png"},
-    };
-
+    LogoManager& LogoManager::instance()
     {
-        std::scoped_lock lock(m_DataMutex);
-        if (m_Logos.count(cameraIndex))  ///< the logo loaded
+        static LogoManager inst;
+        return inst;
+    }
+
+    LogoManager::LogoManager()
+    {
+        for (const auto& info : kCameraInfoTable)
         {
-            return;
+            m_cameraMakerMap[info.makerName] = info.index;
+            if (!info.logoPath.empty())
+            {
+                m_logoPathMap[info.index] = info.logoPath;
+            }
         }
     }
 
-    if (logPath.count(cameraIndex))
+    CameraIndex LogoManager::resolveCameraIndex(const std::string& cameraMake)
     {
-        auto res = std::move(loadLogo(cameraIndex, logPath.at(cameraIndex)));
-        std::scoped_lock lock(m_DataMutex);
-        if (!m_Logos.count(cameraIndex))
+        QString make = cameraMake.c_str();
+        if (make.isEmpty())
         {
-            m_Logos.insert(std::move(res));
+            make = QString("empty");
         }
-    }
-    else
-    {
-#if _DEBUG
-        throw std::runtime_error("Can't support current camera, please add.");
+
+        /// TODO : 需要更兼容的获取 camera maker 的方法
+
+        const auto lists = make.split(" ");
+        const auto maker = lists[0].toLower().toStdString();
+
+        std::scoped_lock lock(m_dataMutex);
+        const auto it = m_cameraMakerMap.find(maker);
+        if (it != m_cameraMakerMap.end())
+        {
+            return it->second;
+        }
+
+#ifdef _DEBUG
+        throw std::runtime_error("Can't find Camera Maker!");
 #else
-        auto logo = std::make_shared<QPixmap>(64, 64);
-        logo->fill(Qt::transparent);
-        std::scoped_lock lock(m_DataMutex);
-        if (!m_Logos.count(cameraIndex))
-        {
-            m_Logos.insert({cameraIndex, logo});
-        }
+        return CameraIndex::None;
 #endif
     }
-}
 
-std::shared_ptr<QPixmap> LogoManager::getCameraMakerLogo(const CameraIndex& cameraIndex)
-{
-    loadCameraLogo(cameraIndex);  ///< load logo again
-
-    std::scoped_lock local(m_DataMutex);
-    if (m_Logos.count(cameraIndex))  ///< get loaded logo
+    void LogoManager::loadCameraLogo(CameraIndex cameraIndex)
     {
-        return m_Logos.at(cameraIndex);
+        // 快速检查：已加载则跳过
+        {
+            std::scoped_lock lock(m_dataMutex);
+            if (m_logos.count(cameraIndex))
+            {
+                return;
+            }
+        }
+
+        // 在锁外查找路径并执行 I/O 加载
+        std::string logoPath;
+        {
+            std::scoped_lock lock(m_dataMutex);
+            auto pathIt = m_logoPathMap.find(cameraIndex);
+            if (pathIt != m_logoPathMap.end())
+            {
+                logoPath = pathIt->second;
+            }
+        }
+
+        std::shared_ptr<QImage> logo;
+        if (!logoPath.empty())
+        {
+            QImageReader logoReader(QString::fromStdString(logoPath));
+            auto temp = logoReader.read();
+            logo = std::make_shared<QImage>(std::move(temp));
+        }
+        else
+        {
+#ifdef _DEBUG
+            throw std::runtime_error("Can't support current camera, please add.");
+#else
+            logo = std::make_shared<QImage>(64, 64, QImage::Format_ARGB32);
+            logo->fill(Qt::transparent);
+#endif
+        }
+
+        // 加锁插入（double-check）
+        std::scoped_lock lock(m_dataMutex);
+        if (!m_logos.count(cameraIndex))
+        {
+            m_logos[cameraIndex] = std::move(logo);
+        }
     }
 
-#if _DEBUG
-    throw std::runtime_error("Can't found Camera Maker Logo!");
+    std::shared_ptr<QImage> LogoManager::getCameraMakerLogo(CameraIndex cameraIndex)
+    {
+        loadCameraLogo(cameraIndex);
+
+        std::scoped_lock lock(m_dataMutex);
+        auto it = m_logos.find(cameraIndex);
+        if (it != m_logos.end())
+        {
+            return it->second;
+        }
+
+#ifdef _DEBUG
+        throw std::runtime_error("Can't find Camera Maker Logo!");
 #else
-    return nullptr;
+        return nullptr;
 #endif
-}
+    }
 
-void LogoManager::destroy()
-{
-    std::scoped_lock local(m_DataMutex);
-    m_Logos.clear();
-    // m_CameraMakerMap.clear();
-}
-
-void LogoManager::Init()
-{
-    std::call_once(m_initFlag,
-                   []()
-                   {
-                       std::scoped_lock local(m_DataMutex);
-                       m_CameraMakerMap.insert({"nikon", CameraIndex::Nikon});
-                       m_CameraMakerMap.insert({"sony", CameraIndex::Sony});
-                       m_CameraMakerMap.insert({"canon", CameraIndex::Canon});
-                       m_CameraMakerMap.insert({"panasonic", CameraIndex::Panasonic});
-                       m_CameraMakerMap.insert({"hassel", CameraIndex::Hasselblad});
-                       m_CameraMakerMap.insert({"leica", CameraIndex::Leica});
-                       m_CameraMakerMap.insert({"fujifilm", CameraIndex::Fujifilm});
-                       m_CameraMakerMap.insert({"apple", CameraIndex::Apple});
-                       m_CameraMakerMap.insert({"empty", CameraIndex::None});
-                       /// add new camera maker here
-                   });
-}
-}  // namespace CM
+    void LogoManager::destroy()
+    {
+        std::scoped_lock lock(m_dataMutex);
+        m_logos.clear();
+    }
+} // namespace CM

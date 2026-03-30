@@ -10,7 +10,6 @@ int main(int argc, char **argv)
     CM::MainWindow manApp;
 
     CLogInstance.Init();
-    CM::LogoManager::Init();
 
     manApp.resize(720, 560);
     manApp.setWindowTitle("Camera Mark");

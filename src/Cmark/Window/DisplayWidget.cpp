@@ -195,9 +195,10 @@ void DisplayWidget::onPreviewImage(const std::string& path)
             PictureManagerInterFace::loadImage(loadImagePack);
             EXIFResolver::resolver(loadImagePack);
 
+            auto& logoMgr = LogoManager::instance();
             const auto cameraIndex =
-                LogoManager::resolverCameraIndex(EXIFResolver::ExifItem(fileIndexCode, ExifKey::CameraMake));
-            LogoManager::loadCameraLogo(cameraIndex);
+                logoMgr.resolveCameraIndex(EXIFResolver::ExifItem(fileIndexCode, ExifKey::CameraMake));
+            logoMgr.getCameraMakerLogo(cameraIndex);  ///< 懒加载 logo（getCameraMakerLogo 内部处理）
 
             return fileIndexCode;
         });

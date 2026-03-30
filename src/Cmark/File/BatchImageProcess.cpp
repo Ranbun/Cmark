@@ -72,9 +72,13 @@ namespace CM
          */
         void WriteFile(const WritePack& pack)
         {
-            const auto cameraLogoIndex = LogoManager::resolverCameraIndex(
+            auto& logoMgr = LogoManager::instance();
+            const auto cameraLogoIndex = logoMgr.resolveCameraIndex(
                 EXIFResolver::ExifItem(pack.m_FileIndexCode, ExifKey::CameraMake));
-            const auto logo = LogoManager::getCameraMakerLogo(cameraLogoIndex);
+            const auto logoImage = logoMgr.getCameraMakerLogo(cameraLogoIndex);
+            const auto logo = logoImage
+                ? std::make_shared<QPixmap>(QPixmap::fromImage(*logoImage))
+                : std::make_shared<QPixmap>();
 
             const auto preViewImage = PictureManager::getImage(pack.m_FileIndexCode);
 
