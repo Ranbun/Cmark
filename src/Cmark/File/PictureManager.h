@@ -2,67 +2,50 @@
 #define CMARK_PICTUREMANAGER_H_
 
 #include <Base/FixMap.hpp>
-#include <Base/ImagePack.h>
+#include <QPixmap>
+#include <QThreadPool>
+#include <future>
+#include <mutex>
+#include <unordered_map>
 
 namespace CM
 {
-    namespace Tools
-    {
-        class ResourcesTools;
-    }
-
-    class PictureManager
-    {
-        friend class Tools::ResourcesTools;
-
-    public:
-        PictureManager() = default;
-
-        /**
-         * @brief 插入pixmap
-         * @param d const std::pair<size_t, std::shared_ptr<QPixmap>>& 插入的pixmap
-         */
-        static void insert(const std::pair<size_t, std::shared_ptr<QPixmap>>& d);
-
-        /**
-         * @brief 插入QPixmap
-         * @param key size_t 图片索引
-         * @param value const std::shared_ptr<QPixmap>& 插入的QPixmap
-         */
-        static void insert(size_t key, const std::shared_ptr<QPixmap>& value);
-
-        /**
-         * @brief 获取加载完成的pixmap
-         * @param key size_t 文件的索引
-         * @return std::shared_ptr<QPixmap> 加载的结果
-         */
-        static std::shared_ptr<QPixmap> getImage(size_t key);
-
-        /**
-         * @brief 移除一个被加载的图片
-         * @param index size_t
-         */
-        static void remove(size_t index);
-
-        /**
-         * @brief load image from QByteArray
-         * @param pack params pack
-         */
-        static void loadImage(const ImagePack& pack);
-
-
-        /**
-         * @brief 获取所有记录的Image
-         * @return FixMap<size_t, std::shared_ptr<QPixmap>>
-         */
-        static FixMap<size_t, std::shared_ptr<QPixmap>> & images(){return m_Maps;}
-
-    private:
-        static void destroyCached();
-
-    private:
-        static FixMap<size_t, std::shared_ptr<QPixmap>> m_Maps;
-    };
+namespace Tools
+{
+class ResourcesTools;
 }
+
+class PictureManager
+{
+    friend class Tools::ResourcesTools;
+
+public:
+    static PictureManager& Instance();
+
+    PictureManager(const PictureManager&) = delete;
+    PictureManager(PictureManager&&) = delete;
+    PictureManager& operator=(const PictureManager&) = delete;
+    PictureManager& operator=(PictureManager&&) = delete;
+
+    /**
+     * @brief 获取加载完成的pixmap
+     * @param key size_t 文件的索引
+     * @return std::shared_ptr<QPixmap> 加载的结果
+     */
+    std::shared_ptr<QImage> getImage(size_t key);
+    std::shared_future<std::shared_ptr<QImage>> loadImage(const std::string& path);
+
+private:
+    PictureManager();
+    void destroyCached();
+
+private:
+    LRUCache<size_t, std::shared_ptr<QImage>> m_Cache;
+    std::unordered_map<size_t, std::shared_future<std::shared_ptr<QImage>>> m_PendingTasks;
+    QThreadPool m_ThreadPool;
+    std::mutex m_PendingMutex;
+
+};
+}  // namespace CM
 
 #endif

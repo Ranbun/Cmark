@@ -182,29 +182,15 @@ void DisplayWidget::onLoadPreviewFinished()
 
 void DisplayWidget::onPreviewImage(const std::string& path)
 {
-    const auto future = QtConcurrent::run(
-        [path]() -> size_t
-        {
-            using PictureManagerInterFace = CM::PictureManager;
-            const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
-
-            auto [w, h] = SceneLayoutSettings::fixPreViewImageSize();
-            const auto data = ImageProcess::loadFile(QString::fromStdString(path));
-            const ImagePack loadImagePack{fileIndexCode, data, path, std::make_shared<std::mutex>(), {w, h}};
-
-            PictureManagerInterFace::loadImage(loadImagePack);
-            EXIFResolver::resolver(loadImagePack);
-
-            auto& logoMgr = LogoManager::instance();
-            const auto cameraIndex =
-                logoMgr.resolveCameraIndex(EXIFResolver::ExifItem(fileIndexCode, ExifKey::CameraMake));
-            logoMgr.getCameraMakerLogo(cameraIndex);  ///< 懒加载 logo（getCameraMakerLogo 内部处理）
-
-            return fileIndexCode;
-        });
-
+   auto & picManager = CM::PictureManager::Instance();
+    picManager.loadImage(path);
     m_showImagePath = path;
-    m_loadPreviewWatcher.setFuture(future);
+
+    // m_loadPreviewWatcher.setFuture(future);
+
+    const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
+    emit sigShowImage(fileIndexCode);
+    emit sigShowPreviewItemProperty(m_showImagePath);
 }
 
 void DisplayWidget::onDisplayImageMode(const DisplayWidgetMode mode)

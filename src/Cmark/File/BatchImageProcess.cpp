@@ -51,7 +51,8 @@ namespace CM
                 fileIndexCode, data, fileInfo.filePath().toStdString(), std::make_shared<std::mutex>(), {w, h}
             };
             /// load image
-            PictureManager::loadImage(loadImagePack);
+            // PictureManager::Instance().loadImage(loadImagePack);
+            // TODO:
             EXIFResolver::resolver(loadImagePack);
 
             data->clear();
@@ -80,7 +81,8 @@ namespace CM
                 ? std::make_shared<QPixmap>(QPixmap::fromImage(*logoImage))
                 : std::make_shared<QPixmap>();
 
-            const auto preViewImage = PictureManager::getImage(pack.m_FileIndexCode);
+            auto temp = PictureManager::Instance().getImage(pack.m_FileIndexCode);
+            const auto preViewImage = std::make_shared<QPixmap>(QPixmap::fromImage(*temp));
 
             SceneLayoutSettings layout;
             auto size = preViewImage->size();
@@ -326,17 +328,18 @@ namespace CM
 
         futures.clear();
 
-        for (auto& [fileIndexCode, pixmap] : PictureManager::images())
-        {
-            if (!g_LoadedFileInfos.count(fileIndexCode))
-            {
-                continue;
-            }
-
-            const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
-            const auto fileName = g_LoadedFileInfos.at(fileIndexCode).fileName();
-            futures.emplace_back(m_Pool->enqueue(WriteFile, WritePack{fileIndexCode, fileName, w, h}));
-        }
+        // TODO: fix it
+        // for (auto& [fileIndexCode, pixmap] : PictureManager::Instance().images())
+        // {
+        //     if (!g_LoadedFileInfos.count(fileIndexCode))
+        //     {
+        //         continue;
+        //     }
+        //
+        //     const auto& [w, h] = SceneLayoutSettings::fixPreViewImageSize();
+        //     const auto fileName = g_LoadedFileInfos.at(fileIndexCode).fileName();
+        //     futures.emplace_back(m_Pool->enqueue(WriteFile, WritePack{fileIndexCode, fileName, w, h}));
+        // }
 
         /// wait thread finish
         for (auto& future : futures)

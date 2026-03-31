@@ -1,109 +1,161 @@
-#include <CMark.h>
-
 #include "PictureManager.h"
 
 #include <Base/ImagePack.h>
+#include <CMark.h>
 #include <File/ImageProcess/ImageProcess.h>
+#include <QtConcurrent/QtConcurrentRun>
+#include "Resolver/EXIFResolver.h"
+#include "SceneLayoutSettings.h"
 
 namespace CM
 {
-namespace
-{
-std::unordered_map<size_t, std::promise<void>> g_LoadFinishSignals;
-std::mutex g_mutex;
-}  // namespace
 
-FixMap<size_t, std::shared_ptr<QPixmap>> PictureManager::m_Maps;
-
-void PictureManager::insert(const size_t key, const std::shared_ptr<QPixmap>& value)
+class Task : public QRunnable
 {
-    std::scoped_lock local(g_mutex);
-    m_Maps.insert(key, value);
-}
+    std::function<void()> m_func;
 
-std::shared_ptr<QPixmap> PictureManager::getImage(const size_t key)
-{
-    if (g_LoadFinishSignals.count(key))
+public:
+    explicit Task(const std::function<void()>& func)
+        : m_func(std::move(func))
     {
-        auto& exitSignal = g_LoadFinishSignals.at(key);
-        exitSignal.get_future().wait();  ///< 等待线程结束
-        g_LoadFinishSignals.erase(key);
+        setAutoDelete(true);
     }
-
-    std::scoped_lock local(g_mutex);
-    return m_Maps.getPixmap(key);
-}
-
-void PictureManager::remove(const size_t index)
-{
-    if (g_LoadFinishSignals.count(index))
+    void run() override
     {
-        auto& exitSignal = g_LoadFinishSignals.at(index);
-        exitSignal.get_future().wait();  ///< 等待线程结束
-        g_LoadFinishSignals.erase(index);
-    }
-
-    std::scoped_lock local(g_mutex);
-    m_Maps.remove(index);
-}
-
-void PictureManager::loadImage(const ImagePack& pack)
-{
-    if (getImage(pack.m_FileIndexCode))
-    {
-        return;
-    }
-
-    auto readFileToImage = [](const ImagePack& imagePack)
-    {
-        auto imageIndexCode = imagePack.m_FileIndexCode;
-        QImage readImage;
-        readImage.fill(Qt::transparent);
-
+        if (m_func)
         {
-            std::scoped_lock localMutex(*imagePack.m_LocalMutex);
-            const QFileInfo fileInfo(QString::fromStdString(imagePack.m_FileName));
-            const auto format = fileInfo.suffix().toUpper();
-            readImage = *ImageProcess::toQImage(imagePack.m_ImageData, format);
+            m_func();
         }
+    }
+};
 
-        /// convert to QPixmap
-        auto preViewImage = std::make_shared<QPixmap>(QPixmap::fromImage(readImage));
-        if (imagePack.m_Size.m_W != -1 && imagePack.m_Size.m_H != -1)
+PictureManager& PictureManager::Instance()
+{
+    static PictureManager instance;
+    return instance;
+}
+
+std::shared_ptr<QImage> PictureManager::getImage(const size_t key)
+{
+    std::shared_ptr<QImage> cachedImage;
+    if (m_Cache.getItem(key, cachedImage))
+    {
+        return cachedImage;
+    }
+
+    std::unique_lock lock(m_PendingMutex);
+    if (m_PendingTasks.count(key))
+    {
+        const auto feature = m_PendingTasks.at(key);
+        feature.wait();
+
+        m_Cache.getItem(key, cachedImage);
+        return cachedImage;
+    }
+
+    if (key == 0)
+    {
+        /// maybe we need a welcome image in this!
+        return {};
+    }
+
+#if _DEBUG
+    throw std::runtime_error("Can not found Image!");
+#else
+    cachedImage = std::make_shared<QImage>();
+    cachedImage->scaled(1, 1);
+    cachedImage->fill(Qt::transparent);
+    return cachedImage;
+#endif
+}
+
+std::shared_future<std::shared_ptr<QImage>> PictureManager::loadImage(const std::string& path)
+{
+    const auto indexCode = ImageProcess::generateFileIndexCode(path);
+
+    /// check image exist
+    std::shared_ptr<QImage> cachedImage;
+    if (m_Cache.getItem(indexCode, cachedImage))
+    {
+        std::promise<std::shared_ptr<QImage>> loadSignalPromise;
+        loadSignalPromise.set_value(cachedImage);
+        return loadSignalPromise.get_future().share();
+    }
+
+    /// check task exist
+    std::unique_lock lock(m_PendingMutex);
+    if (m_PendingTasks.count(indexCode))
+    {
+        return m_PendingTasks.at(indexCode);
+    }
+    /// create task to thread pool
+    const auto promise = std::make_shared<std::promise<std::shared_ptr<QImage>>>();
+    std::shared_future<std::shared_ptr<QImage>> feature = promise->get_future().share();
+
+    /// register task
+    m_PendingTasks[indexCode] = feature;
+
+    lock.unlock();
+
+    m_ThreadPool.start(new Task(
+        [indexCode, path, promise, this]()
         {
-            const auto& [w, h] = imagePack.m_Size;
+            try
+            {
+                auto loadedImage = std::make_shared<QImage>();
 
-            const auto newWidth = w;
-            const auto imageSize = QSizeF(preViewImage->size());
-            const auto imageRatio = imageSize.width() / imageSize.height();
-            const auto newHeight = static_cast<int>(std::floor(static_cast<float>(newWidth) / imageRatio));
+                auto [w, h] = SceneLayoutSettings::fixPreViewImageSize();
+                const auto data = ImageProcess::loadFile(QString::fromStdString(path));
+                const ImagePack loadImagePack{indexCode, data, path, std::make_shared<std::mutex>(), {w, h}};
 
-            *preViewImage =
-                preViewImage->scaled(newWidth, newHeight, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-        }
+                const QFileInfo fileInfo(QString::fromStdString(path));
+                const auto format = fileInfo.suffix().toUpper();
 
-        /// insert image
-        insert({imageIndexCode, preViewImage});
-    };
+                loadedImage = ImageProcess::toQImage(data, format);
 
-    readFileToImage(pack);
+                if (w != -1 && h != -1)
+                {
+                    const auto imageSize = QSizeF(loadedImage->size());
+                    const auto imageRatio = imageSize.width() / imageSize.height();
+                    const auto newHeight = static_cast<int>(std::floor(static_cast<float>(w) / imageRatio));
+
+                    *loadedImage =
+                        loadedImage->scaled(w, newHeight, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+                }
+                EXIFResolver::resolver(loadImagePack);
+
+                m_Cache.insert(indexCode, loadedImage);
+                promise->set_value(loadedImage);
+#if _DEBUG
+                if (loadedImage->isNull())
+                {
+                    throw std::runtime_error("Failed to load image from: " + path);
+                }
+#endif
+            }
+            catch (...)
+            {
+                promise->set_exception(std::current_exception());
+            }
+
+            std::scoped_lock PendingLock(m_PendingMutex);
+            m_PendingTasks.erase(indexCode);
+        }));
+
+    return feature;
+}
+
+PictureManager::PictureManager()
+{
+    m_ThreadPool.setMaxThreadCount(4);
 }
 
 void PictureManager::destroyCached()
 {
-    std::scoped_lock local(g_mutex);
-    for (auto& [key, waitFlag] : g_LoadFinishSignals)
-    {
-        waitFlag.get_future().wait();
-    }
+    m_ThreadPool.waitForDone();
 
-    g_LoadFinishSignals.clear();
-    m_Maps.clear();
+    m_Cache.clear();
+    m_PendingTasks.clear();
 }
 
-void PictureManager::insert(const std::pair<size_t, std::shared_ptr<QPixmap>>& d)
-{
-    std::scoped_lock local(g_mutex);
-    m_Maps.insert(d);
-}
 }  // namespace CM

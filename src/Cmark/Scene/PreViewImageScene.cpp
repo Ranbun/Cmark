@@ -33,7 +33,8 @@ namespace CM
         m_currentFileIndex = fileIndexCode;
 
         // 1. 加载图片与 EXIF 数据
-        const auto preViewImage = PictureManager::getImage(fileIndexCode);
+        auto & picManager = PictureManager::Instance();
+        const auto preViewImage = std::make_shared<QPixmap>(QPixmap::fromImage(*picManager.getImage(fileIndexCode)));
         const auto exifInfos = EXIFResolver::getExifInfo(fileIndexCode);
         const auto cameraMake = exifInfos.count(ExifKey::CameraMake) ? exifInfos.at(ExifKey::CameraMake) : "";
         auto& logoMgr = LogoManager::instance();

@@ -24,7 +24,7 @@ namespace CM::Tools
         static void destroy()
         {
             EXIFResolver::destroyCached();
-            PictureManager::destroyCached();
+            PictureManager::Instance().destroyCached();
             LogoManager::instance().destroy();
         }
     };

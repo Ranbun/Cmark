@@ -32,7 +32,9 @@ void PreViewImageItem::resizeImage(const int w, const int h)
 
 void PreViewImageItem::resetPixmap(const size_t imageIndex)
 {
-    const auto pic = CM::PictureManager::getImage(imageIndex);
+    auto & picManager = PictureManager::Instance();
+    const auto pic = std::make_shared<QPixmap>(QPixmap::fromImage(*picManager.getImage(imageIndex)));
+
     if (pic->isNull())
     {
         throw std::runtime_error("Pixmap is Null!");
@@ -92,7 +94,14 @@ QPixmap PreViewImageItem::scaledPixmap(const std::shared_ptr<QPixmap>& image, co
 std::shared_ptr<QPixmap> PreViewImageItem::target() const
 {
     const auto pixmapIndex = data(static_cast<int>(CM::GraphicsItemDataIndex::PixmapIndex)).toULongLong();
-    return CM::PictureManager::getImage(pixmapIndex);
+    auto & picManager = CM::PictureManager::Instance();
+    auto image = picManager.getImage(pixmapIndex);
+    if (image == nullptr)
+    {
+        image = std::make_shared<QImage>();
+    }
+    // TODO: update this
+    return std::make_shared<QPixmap>(QPixmap::fromImage(*image));
 }
 
 void PreViewImageItem::updateImageRatio(const std::shared_ptr<QPixmap>& tar)
