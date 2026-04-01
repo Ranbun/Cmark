@@ -182,15 +182,10 @@ void DisplayWidget::onLoadPreviewFinished()
 
 void DisplayWidget::onPreviewImage(const std::string& path)
 {
-   auto & picManager = CM::PictureManager::Instance();
-    picManager.loadImage(path);
+    auto& picManager = CM::PictureManager::Instance();
+    auto future = picManager.loadImage(path);
     m_showImagePath = path;
-
-    // m_loadPreviewWatcher.setFuture(future);
-
-    const auto fileIndexCode = ImageProcess::generateFileIndexCode(path);
-    emit sigShowImage(fileIndexCode);
-    emit sigShowPreviewItemProperty(m_showImagePath);
+    m_loadPreviewWatcher.setFuture(future);
 }
 
 void DisplayWidget::onDisplayImageMode(const DisplayWidgetMode mode)

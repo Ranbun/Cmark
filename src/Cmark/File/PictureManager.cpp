@@ -9,26 +9,6 @@
 
 namespace CM
 {
-
-class Task : public QRunnable
-{
-    std::function<void()> m_func;
-
-public:
-    explicit Task(const std::function<void()>& func)
-        : m_func(std::move(func))
-    {
-        setAutoDelete(true);
-    }
-    void run() override
-    {
-        if (m_func)
-        {
-            m_func();
-        }
-    }
-};
-
 PictureManager& PictureManager::Instance()
 {
     static PictureManager instance;
@@ -46,8 +26,8 @@ std::shared_ptr<QImage> PictureManager::getImage(const size_t key)
     std::unique_lock lock(m_PendingMutex);
     if (m_PendingTasks.count(key))
     {
-        const auto feature = m_PendingTasks.at(key);
-        feature.wait();
+        auto feature = m_PendingTasks.at(key);
+        feature.waitForFinished();  ///< 阻塞等待
 
         m_Cache.getItem(key, cachedImage);
         return cachedImage;
@@ -69,7 +49,7 @@ std::shared_ptr<QImage> PictureManager::getImage(const size_t key)
 #endif
 }
 
-std::shared_future<std::shared_ptr<QImage>> PictureManager::loadImage(const std::string& path)
+QFuture<size_t> PictureManager::loadImage(const std::string& path)
 {
     const auto indexCode = ImageProcess::generateFileIndexCode(path);
 
@@ -77,9 +57,11 @@ std::shared_future<std::shared_ptr<QImage>> PictureManager::loadImage(const std:
     std::shared_ptr<QImage> cachedImage;
     if (m_Cache.getItem(indexCode, cachedImage))
     {
-        std::promise<std::shared_ptr<QImage>> loadSignalPromise;
-        loadSignalPromise.set_value(cachedImage);
-        return loadSignalPromise.get_future().share();
+        QFutureInterface<size_t> future;
+        future.reportStarted();
+        future.reportResult(indexCode);
+        future.reportFinished();
+        return std::move(future.future());
     }
 
     /// check task exist
@@ -88,22 +70,16 @@ std::shared_future<std::shared_ptr<QImage>> PictureManager::loadImage(const std:
     {
         return m_PendingTasks.at(indexCode);
     }
-    /// create task to thread pool
-    const auto promise = std::make_shared<std::promise<std::shared_ptr<QImage>>>();
-    std::shared_future<std::shared_ptr<QImage>> feature = promise->get_future().share();
-
-    /// register task
-    m_PendingTasks[indexCode] = feature;
-
     lock.unlock();
 
-    m_ThreadPool.start(new Task(
-        [indexCode, path, promise, this]()
+    /// register task
+    auto future = QtConcurrent::run(
+        &m_ThreadPool,
+        [indexCode, path, this]() -> size_t
         {
+            auto loadedImage = std::make_shared<QImage>();
             try
             {
-                auto loadedImage = std::make_shared<QImage>();
-
                 auto [w, h] = SceneLayoutSettings::fixPreViewImageSize();
                 const auto data = ImageProcess::loadFile(QString::fromStdString(path));
                 const ImagePack loadImagePack{indexCode, data, path, std::make_shared<std::mutex>(), {w, h}};
@@ -125,7 +101,7 @@ std::shared_future<std::shared_ptr<QImage>> PictureManager::loadImage(const std:
                 EXIFResolver::resolver(loadImagePack);
 
                 m_Cache.insert(indexCode, loadedImage);
-                promise->set_value(loadedImage);
+
 #if _DEBUG
                 if (loadedImage->isNull())
                 {
@@ -135,14 +111,25 @@ std::shared_future<std::shared_ptr<QImage>> PictureManager::loadImage(const std:
             }
             catch (...)
             {
-                promise->set_exception(std::current_exception());
+                loadedImage->fill(Qt::transparent);
             }
 
             std::scoped_lock PendingLock(m_PendingMutex);
             m_PendingTasks.erase(indexCode);
-        }));
 
-    return feature;
+            return indexCode;
+        });
+
+    {
+        std::scoped_lock PendingLock(m_PendingMutex);
+        if (m_PendingTasks.count(indexCode))
+        {
+            return m_PendingTasks.at(indexCode);
+        }
+        m_PendingTasks[indexCode] = future;
+    }
+
+    return std::move(future);
 }
 
 PictureManager::PictureManager()
