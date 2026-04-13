@@ -1,22 +1,38 @@
 SET(target_ Cmark)
 
 FILE(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h
-        ${third_party}/easyexif/exif.cpp ${third_party}/easyexif/exif.h
+    ${third_party}/easyexif/exif.cpp ${third_party}/easyexif/exif.h
+    ${third_party}/sceneLayout/SceneLayoutEditor.cpp ${third_party}/sceneLayout/SceneLayoutEditor.h
+    ${third_party}/sceneLayout/SceneLayoutSettings.cpp ${third_party}/sceneLayout/SceneLayoutSettings.h
+
+    ${third_party}/sceneLayout/dialog.ui
 )
 
 SET(CMAKE_AUTOMOC ON)
+SET(CMAKE_AUTORCC ON)
+SET(CMAKE_AUTOUIC ON)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 FIND_PACKAGE(Qt5Widgets CONFIG REQUIRED)
 FIND_PACKAGE(Qt5Gui CONFIG REQUIRED)
+FIND_PACKAGE(Qt5Concurrent CONFIG REQUIRED)
 
-ADD_EXECUTABLE(${target_} ${SOURCE_FILES})
+SET(CMARK_ICON ${CMAKE_SOURCE_DIR}/resources/executableLogo/Cmark.rc)
+SET(RESOURCES ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
+
+IF(CMAKE_BUILD_TYPE MATCHES "Release")
+    ADD_EXECUTABLE(${target_} WIN32 ${SOURCE_FILES} ${CMARK_ICON} ${RESOURCES})
+ELSE()
+    ADD_EXECUTABLE(${target_} ${SOURCE_FILES} ${CMARK_ICON} ${RESOURCES})
+ENDIF()
 
 TARGET_INCLUDE_DIRECTORIES(${target_} PRIVATE
-        ${third_party}/easyexif
-        ${CMAKE_CURRENT_SOURCE_DIR})
+    ${third_party}/easyexif
+    ${third_party}/sceneLayout
+    ${third_party}/QtExtened
+    ${CMAKE_CURRENT_SOURCE_DIR})
 
-SET(LIBRARIES Qt5::Widgets Qt5::Gui)
+SET(LIBRARIES Qt5::Widgets Qt5::Gui Qt5::Concurrent)
 
 IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
     LIST(APPEND LIBRARIES pthread)
@@ -26,10 +42,11 @@ TARGET_LINK_LIBRARIES(${target_} PRIVATE ${LIBRARIES})
 
 SET(EXE_OUTPUT_DIR ${PROJECT_BINARY_DIR}/bin)
 
-FILE(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/sources DESTINATION ${EXE_OUTPUT_DIR}/)
+# Resources are now embedded via .qrc
 SET_TARGET_PROPERTIES(
-        ${target_} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${EXE_OUTPUT_DIR}"
-        # LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
-        # ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
+    ${target_} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${EXE_OUTPUT_DIR}"
+
+    # LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
+    # ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
 )

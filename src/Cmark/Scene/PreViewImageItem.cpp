@@ -1,69 +1,114 @@
 #include "PreViewImageItem.h"
 
+#include <iostream>
+
+#include "File/PictureManager.h"
+#include "SceneDef.h"
+
+#if _DEBUG
+
+#include <qDebug>
+
+#endif
+
 namespace CM
 {
-    PreViewImageItem::PreViewImageItem(QGraphicsItem *parent, const SceneLayout & layout)
+PreViewImageItem::PreViewImageItem(QGraphicsItem* parent, const std::shared_ptr<SceneLayoutSettings>& layout)
     : QGraphicsPixmapItem(parent)
-    , m_sceneLayout(layout)
-    {
+    , m_SceneLayout(layout)
+{
+}
 
+void PreViewImageItem::resizeImage(const int w, const int h)
+{
+    const auto pixmap = target();
+    if (!pixmap || pixmap->isNull())
+    {
+        return;
     }
 
-    void PreViewImageItem::updatePixmapSize()
+    setPixmap(scaledPixmap(pixmap, w, h));
+}
+
+void PreViewImageItem::resetPixmap(const size_t imageIndex)
+{
+    auto & picManager = PictureManager::Instance();
+    const auto pic = std::make_shared<QPixmap>(QPixmap::fromImage(*picManager.getImage(imageIndex)));
+
+    if (pic->isNull())
     {
-        /// TODO: image size should ......
-        const auto currentScene = scene();
-        if(!currentScene) return;
-        const auto &  sceneRect = currentScene->sceneRect().toRect();
-
-        const auto & [left,right,top,bottom] = m_sceneLayout.getMargin();
-
-        auto newWidth = sceneRect.width() - left - right;
-        auto ImageRatio = static_cast<float>(m_pixmap.height()) / static_cast<float>(m_pixmap.width());
-        auto newHeight = static_cast<int>(ImageRatio * static_cast<float>(newWidth));
-
-        if(m_pixmap.isNull()) return;
-
-        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap,newWidth,newHeight));
+        throw std::runtime_error("Pixmap is Null!");
     }
 
-    void PreViewImageItem::resetPixmap(const QPixmap & previewPixmap)
+    const auto& [w, h] = m_SceneLayout.lock()->imageSize();
+    setPixmap(scaledPixmap(pic, w, h));
+
+    updateImageRatio(pic);
+
+    const auto rect = boundingRect().toRect();
+    update(rect);
+}
+
+void PreViewImageItem::applyLayout(const std::shared_ptr<SceneLayoutSettings>& layout)
+{
+    if (layout)
     {
-        m_pixmap = previewPixmap;
-        if(m_pixmap.isNull())
-        {
-            throw std::runtime_error("Pixmap is Null!");
-        }
+        const auto& [w, h] = layout->imageSize();
+        resizeImage(w, h);
 
-        auto rect = sceneBoundingRect().toRect();
-        setPixmap(PreViewImageItem::scaledPixmap(m_pixmap, rect.width(),rect.height()));
+        const auto& [x, y] = layout->imagePos();
+        setPos(0, 0);
     }
+}
 
-    void PreViewImageItem::update()
+const float& PreViewImageItem::imageRatio() const
+{
+    return m_ImageRatio;
+}
+
+auto PreViewImageItem::validImage() const -> bool
+{
+    const auto p = target();
+    if (!p || p->isNull())
     {
-        updatePixmapSize();
-        updatePixmapPosition();
+        return false;
     }
+    return true;
+}
 
-    void PreViewImageItem::updatePixmapPosition()
+QPixmap PreViewImageItem::scaledPixmap(const QPixmap& image, int w, int h)
+{
+    if (image.isNull())
     {
-        const auto currentScene = scene();
-        if(!currentScene) return;
-
-        auto posX = m_sceneLayout.getMargin().left;
-        auto posY = m_sceneLayout.getMargin().right;
-        setPos(posX, posY);
+        return {w, h};
     }
+    return image.scaled(w, h, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+}
 
-    QPixmap PreViewImageItem::scaledPixmap(const QPixmap &image, int w, int h)
+QPixmap PreViewImageItem::scaledPixmap(const std::shared_ptr<QPixmap>& image, const int w, const int h)
+{
+    auto p = scaledPixmap(*image, w, h);
+    return p;
+}
+
+std::shared_ptr<QPixmap> PreViewImageItem::target() const
+{
+    const auto pixmapIndex = data(static_cast<int>(CM::GraphicsItemDataIndex::PixmapIndex)).toULongLong();
+    auto & picManager = CM::PictureManager::Instance();
+    auto image = picManager.getImage(pixmapIndex);
+    if (image == nullptr)
     {
-        if(image.isNull())
-        {
-            return {w,h};
-        }
-        return image.scaled(w,h,Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        image = std::make_shared<QImage>();
     }
+    // TODO: update this
+    return std::make_shared<QPixmap>(QPixmap::fromImage(*image));
+}
 
-    PreViewImageItem::~PreViewImageItem() = default;
+void PreViewImageItem::updateImageRatio(const std::shared_ptr<QPixmap>& tar)
+{
+    const auto pixSize = QSizeF(tar->size());
+    m_ImageRatio = static_cast<float>(pixSize.width() / pixSize.height());  /// w / h
+}
 
-} // CM
+PreViewImageItem::~PreViewImageItem() = default;
+}  // namespace CM

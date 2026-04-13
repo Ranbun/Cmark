@@ -14,4 +14,9 @@ INCLUDE(easyexif)
 
 SET(third_party ${CMAKE_SOURCE_DIR}/src/vendor/)
 
+IF(WITH_TEST)
+    include(CTest)
+    enable_testing()
+ENDIF(WITH_TEST)
+
 ADD_SUBDIRECTORY(src)

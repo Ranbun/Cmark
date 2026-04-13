@@ -1,0 +1,49 @@
+/**
+ * @brief 文件树窗口
+ * @note 显示当前路径下的所有文件(*.PNG)
+ */
+
+#ifndef CAMERAMARK_FILETREEDOCKWIDGET_H_
+#define CAMERAMARK_FILETREEDOCKWIDGET_H_
+
+#include <QDir>
+#include <QDockWidget>
+
+class QTreeView;
+class QFileSystemModel;
+
+namespace CM
+{
+class FileTreeDockWidget : public QDockWidget
+{
+    Q_OBJECT
+  public:
+    explicit FileTreeDockWidget(const QString &title, QWidget *parent = nullptr);
+    ~FileTreeDockWidget() override;
+
+    FileTreeDockWidget(const FileTreeDockWidget &other) = delete;
+    FileTreeDockWidget(const FileTreeDockWidget &&other) = delete;
+
+    FileTreeDockWidget &operator=(const FileTreeDockWidget &other) = delete;
+    FileTreeDockWidget &operator=(const FileTreeDockWidget &&other) = delete;
+
+    void New();
+    void Open(const QDir &dir);
+
+    /**
+     * @brief 获取当前FileSystem Model 指向的文件路径
+     * @return QString
+     */
+    [[nodiscard]] QString rootImagePath() const;
+
+  private:
+    QTreeView *m_TreeView;
+    QFileSystemModel *m_FileSystemModel;
+
+  signals:
+    void previewImage(const QString &path);
+};
+
+}  // namespace CM
+
+#endif  // ! CAMERAMARK_FILETREEDOCKWIDGET_H_

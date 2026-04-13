@@ -32,15 +32,37 @@
 *.app
 
 # directory
-.idea
-out
-
-/src/vendor/easyexif
-.vs
-
-Folder.DotSettings.user
-src/Cmark/sources/pictures
-
+.idea/
+out/
+.vs/
 .vscode/
+src/Cmark/sources/pictures/
+/src/vendor/easyexif
+src/Cmark/sources/pictures/
+
+# Reshaper
+Folder.DotSettings.user
+Folder.DotSettings
 
 
+# Qt build dir
+build-sceneLayout*
+src/vendor/build-batchImageProcessSetting-Desktop_Qt_5_15_2_MinGW_64_bit-Debug
+
+# Cmake user file
+src/vendor/sceneLayout/CMakeLists.txt.user
+sources/test
+
+# clion
+out/
+
+# CMake
+CMakeLists.txt.user
+
+# clangd
+.cache/
+
+# vscode
+.vscode/
+compile_commands.json
+Cmark.code-workspace
