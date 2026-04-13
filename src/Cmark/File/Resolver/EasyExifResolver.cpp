@@ -17,12 +17,8 @@ namespace CM
         const auto imagePixels = imagePack.m_ImageData;
         const auto data = imagePixels->constData();
 
-        std::unique_lock localMutex(*imagePack.m_LocalMutex);
-
         const auto exifCheckCode = exifResolver.parseFrom(reinterpret_cast<const unsigned char*>(data),
                                                           imagePixels->size());
-        localMutex.unlock();
-
 
         auto outputExIfInfos = std::make_shared<EXIFInfo>();
         outputExIfInfos->m_LoadedCheckCode = exifCheckCode;

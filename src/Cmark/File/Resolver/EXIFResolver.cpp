@@ -1,108 +1,105 @@
 #include <CMark.h>
 
-#include "EXIFResolver.h"
 #include <Base/ImagePack.h>
 #include <Log/CLog.h>
+#include "EXIFResolver.h"
 
 #include <QString>
 
 namespace CM
 {
-    namespace
+namespace
+{
+std::unordered_map<size_t, std::shared_ptr<EXIFInfo>> g_LoadedInfos;
+std::unordered_map<size_t, int> g_LoadImageCheckCode;
+std::mutex g_InfoMutex;
+}  // namespace
+
+std::shared_ptr<Resolver> EXIFResolver::m_ExifInfoResolver = std::make_shared<EasyExifResolver>();
+
+ExifInfoMap EXIFResolver::resolverImageExif(const std::weak_ptr<EXIFInfo>& infoPtr)
+{
+    auto result = *infoPtr.lock();
+
+    ExifInfoMap infoMaps;
+    if (!result.Make.empty())
     {
-        std::unordered_map<size_t, std::shared_ptr<EXIFInfo>> g_LoadedInfos;
-        std::unordered_map<size_t, int> g_LoadImageCheckCode;
-        std::mutex g_InfoMutex;
+        infoMaps.insert({ExifKey::CameraMake, result.Make});
     }
 
-    std::shared_ptr<Resolver> EXIFResolver::m_ExifInfoResolver = std::make_shared<EasyExifResolver>();
-
-    ExifInfoMap EXIFResolver::resolverImageExif(const std::weak_ptr<EXIFInfo>& infoPtr)
+    if (!result.Model.empty())
     {
-        auto result = *infoPtr.lock();
-
-        ExifInfoMap infoMaps;
-        if (!result.Make.empty())
-        {
-            infoMaps.insert({ExifKey::CameraMake, result.Make});
-        }
-
-        if (!result.Model.empty())
-        {
-            infoMaps.insert({ExifKey::CameraModel, result.Model});
-        }
-
-        if (result.ImageWidth)
-        {
-            infoMaps.insert({ExifKey::ImageWidth, std::to_string(result.ImageWidth)});
-        }
-
-        if (result.ImageHeight)
-        {
-            infoMaps.insert({ExifKey::ImageHeight, std::to_string(result.ImageHeight)});
-        }
-
-        if (!result.DateTime.empty())
-        {
-            infoMaps.insert({ExifKey::ImageDate, result.DateTime});
-        }
-
-        /// Exposure Time
-        if (const auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
-            result.ExposureTime > 1e-5 && inExposureTime)
-        {
-            infoMaps.insert({ExifKey::ExposureTime, std::string("1/") + std::to_string(inExposureTime)});
-        }
-
-        if (const auto fNumber = static_cast<int>(result.FNumber);
-            fNumber)
-        {
-            std::string fStop = std::string("f/") + std::to_string(fNumber) + std::string(".") +
-                std::to_string(static_cast<int>(result.FNumber * 10) % 10);
-
-
-            infoMaps.insert({ExifKey::FStop, fStop});
-        }
-
-
-        if (result.ISOSpeedRatings)
-        {
-            infoMaps.insert({ExifKey::ISOSpeed, std::string("ISO") + std::to_string(result.ISOSpeedRatings)});
-        }
-
-        if (!result.LensInfo.Model.empty())
-        {
-            infoMaps.insert({ExifKey::LensModel, result.LensInfo.Model});
-        }
-
-        /// TODO: we need resolver all info and write it to ExifMap and output it
-        if (const auto shutterSpeed = static_cast<int>(1.0 / result.ExposureTime);
-            result.ExposureTime > 1e-5 && shutterSpeed)
-        {
-            infoMaps.insert({ExifKey::ShutterSpeed, std::to_string(shutterSpeed)});
-        }
-
-        /// Focal Length
-        if (const auto focalLength = static_cast<int>(result.FocalLength); focalLength)
-        {
-            infoMaps.insert({ExifKey::FocalLength, std::to_string(focalLength) + "mm"});
-        }
-        return std::move(infoMaps);
+        infoMaps.insert({ExifKey::CameraModel, result.Model});
     }
 
-    void EXIFResolver::destroyCached()
+    if (result.ImageWidth)
     {
-        std::lock_guard<std::mutex> local(g_InfoMutex);
-        g_LoadedInfos.clear();
-        g_LoadImageCheckCode.clear();
+        infoMaps.insert({ExifKey::ImageWidth, std::to_string(result.ImageWidth)});
     }
 
-    std::tuple<bool, std::string> EXIFResolver::check(const int checkCode)
+    if (result.ImageHeight)
     {
-        bool status = true;
-        std::string outputInfos{"Resolver Picture Info Success!"};
-        switch (checkCode)
-        {
+        infoMaps.insert({ExifKey::ImageHeight, std::to_string(result.ImageHeight)});
+    }
+
+    if (!result.DateTime.empty())
+    {
+        infoMaps.insert({ExifKey::ImageDate, result.DateTime});
+    }
+
+    /// Exposure Time
+    if (const auto inExposureTime = static_cast<unsigned int>(1.0 / result.ExposureTime);
+        result.ExposureTime > 1e-5 && inExposureTime)
+    {
+        infoMaps.insert({ExifKey::ExposureTime, std::string("1/") + std::to_string(inExposureTime)});
+    }
+
+    if (const auto fNumber = static_cast<int>(result.FNumber); fNumber)
+    {
+        std::string fStop = std::string("f/") + std::to_string(fNumber) + std::string(".") +
+                            std::to_string(static_cast<int>(result.FNumber * 10) % 10);
+
+        infoMaps.insert({ExifKey::FStop, fStop});
+    }
+
+    if (result.ISOSpeedRatings)
+    {
+        infoMaps.insert({ExifKey::ISOSpeed, std::string("ISO") + std::to_string(result.ISOSpeedRatings)});
+    }
+
+    if (!result.LensInfo.Model.empty())
+    {
+        infoMaps.insert({ExifKey::LensModel, result.LensInfo.Model});
+    }
+
+    /// TODO: we need resolver all info and write it to ExifMap and output it
+    if (const auto shutterSpeed = static_cast<int>(1.0 / result.ExposureTime);
+        result.ExposureTime > 1e-5 && shutterSpeed)
+    {
+        infoMaps.insert({ExifKey::ShutterSpeed, std::to_string(shutterSpeed)});
+    }
+
+    /// Focal Length
+    if (const auto focalLength = static_cast<int>(result.FocalLength); focalLength)
+    {
+        infoMaps.insert({ExifKey::FocalLength, std::to_string(focalLength) + "mm"});
+    }
+    return std::move(infoMaps);
+}
+
+void EXIFResolver::destroyCached()
+{
+    std::lock_guard<std::mutex> local(g_InfoMutex);
+    g_LoadedInfos.clear();
+    g_LoadImageCheckCode.clear();
+}
+
+std::tuple<bool, std::string> EXIFResolver::check(const int checkCode)
+{
+    bool status = true;
+    std::string outputInfos{"Resolver Picture Info Success!"};
+    switch (checkCode)
+    {
         case 0:
             status = true;
             outputInfos = "Resolver Picture Info Success!";
@@ -125,63 +122,68 @@ namespace CM
             break;
         default:
             break;
-        }
-        return {status,outputInfos};
     }
+    return {status, outputInfos};
+}
 
-    void EXIFResolver::resolver(const ImagePack& pack)
+void EXIFResolver::resolver(const ImagePack& pack)
+{
     {
+        std::lock_guard<std::mutex> local(g_InfoMutex);
+        if (g_LoadedInfos.count(pack.m_FileIndexCode))
         {
-            std::lock_guard<std::mutex> local(g_InfoMutex);
-            if (g_LoadedInfos.count(pack.m_FileIndexCode))
-            {
-                return;
-            }
-        }
-
-        auto loadImageFile = [](const ImagePack& imagePack)
-        {
-            auto outputExIfInfos = m_ExifInfoResolver->resolver(imagePack);
-            std::lock_guard<std::mutex> local(g_InfoMutex);
-            g_LoadedInfos.insert({imagePack.m_FileIndexCode, outputExIfInfos});
-            g_LoadImageCheckCode.insert({imagePack.m_FileIndexCode, outputExIfInfos->m_LoadedCheckCode});
-        };
-
-        loadImageFile(pack);
-
-        auto loadStatusCode = 0;
-        {
-            std::lock_guard local(g_InfoMutex);
-            if (g_LoadImageCheckCode.count(pack.m_FileIndexCode))
-            {
-                loadStatusCode = g_LoadImageCheckCode.at(pack.m_FileIndexCode);
-            }
-        }
-
-        auto [status,infos] = check(loadStatusCode);
-        if(status)
-        {
-            CLog::Info(QString::fromStdString(infos));
             return;
         }
-        CLog::Warning(QString::fromStdString(infos));
     }
 
-    ExifInfoMap EXIFResolver::getExifInfo(const size_t index)
+    auto loadImageFile = [](const ImagePack& imagePack)
     {
-        if(g_LoadedInfos.count(index))
+        auto outputExIfInfos = m_ExifInfoResolver->resolver(imagePack);
+        std::lock_guard<std::mutex> local(g_InfoMutex);
+        g_LoadedInfos.insert({imagePack.m_FileIndexCode, outputExIfInfos});
+        g_LoadImageCheckCode.insert({imagePack.m_FileIndexCode, outputExIfInfos->m_LoadedCheckCode});
+    };
+
+    loadImageFile(pack);
+
+    auto loadStatusCode = 0;
+    {
+        std::lock_guard local(g_InfoMutex);
+        if (g_LoadImageCheckCode.count(pack.m_FileIndexCode))
         {
-            return resolverImageExif(g_LoadedInfos.at(index));
+            loadStatusCode = g_LoadImageCheckCode.at(pack.m_FileIndexCode);
         }
-
-        return {};
     }
 
-    std::string EXIFResolver::ExifItem(const size_t fileIndexCode, const ExifKey key)
+    auto [status, infos] = check(loadStatusCode);
+    if (status)
     {
-        const auto exifInfos = getExifInfo(fileIndexCode);
-        auto res = exifInfos.count(ExifKey::CameraMake)? exifInfos.at(key):"";
-        return res;
+
+#if _DEBUG
+        CLog::Info(QString::fromStdString(infos));
+#endif
+
+        return;
     }
 
-} // CM
+    CLog::Warning(QString::fromStdString(infos));
+}
+
+ExifInfoMap EXIFResolver::getExifInfo(const size_t index)
+{
+    if (g_LoadedInfos.count(index))
+    {
+        return resolverImageExif(g_LoadedInfos.at(index));
+    }
+
+    return {};
+}
+
+std::string EXIFResolver::ExifItem(const size_t fileIndexCode, const ExifKey key)
+{
+    const auto exifInfos = getExifInfo(fileIndexCode);
+    auto res = exifInfos.count(ExifKey::CameraMake) ? exifInfos.at(key) : "";
+    return res;
+}
+
+}  // namespace CM

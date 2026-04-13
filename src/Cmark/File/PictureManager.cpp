@@ -40,6 +40,7 @@ std::shared_ptr<QImage> PictureManager::getImage(const size_t key)
     }
 
 #if _DEBUG
+
     throw std::runtime_error("Can not found Image!");
 #else
     cachedImage = std::make_shared<QImage>();
@@ -82,7 +83,7 @@ QFuture<size_t> PictureManager::loadImage(const std::string& path)
             {
                 auto [w, h] = SceneLayoutSettings::fixPreViewImageSize();
                 const auto data = ImageProcess::loadFile(QString::fromStdString(path));
-                const ImagePack loadImagePack{indexCode, data, path, std::make_shared<std::mutex>(), {w, h}};
+                const ImagePack loadImagePack{indexCode, data, path, {w, h}};
 
                 const QFileInfo fileInfo(QString::fromStdString(path));
                 const auto format = fileInfo.suffix().toUpper();

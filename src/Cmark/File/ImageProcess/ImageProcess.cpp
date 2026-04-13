@@ -89,7 +89,9 @@ namespace CM
             {
                 file.write(buffer.data());
                 file.close();
-                CLogInstance.PrintMes<QString>(QString("Image saved successfully."));
+#if _DEBUG
+                CLog::Info(QString("Image saved successfully."));
+#endif
             }
         }
 

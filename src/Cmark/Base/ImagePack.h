@@ -19,8 +19,8 @@ namespace CM
         size_t m_FileIndexCode;
         std::shared_ptr<QByteArray> m_ImageData;
         std::string m_FileName;
-        std::shared_ptr<std::mutex> m_LocalMutex;
         ImageSize m_Size{-1,-1};
+
     };
 
 }
