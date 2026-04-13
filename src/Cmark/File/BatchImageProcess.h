@@ -1,9 +1,10 @@
 #ifndef CAMERAMARK_BATCHIMAGEPROCESS_H
 #define CAMERAMARK_BATCHIMAGEPROCESS_H
 
-#include <QFileInfoList>
 #include <QSet>
 #include <QString>
+#include <memory>
+#include "FileQueue.h"
 
 namespace CM
 {
@@ -21,21 +22,14 @@ namespace CM
 
         BatchImageProcessor(const BatchImageProcessor&) = delete;
         BatchImageProcessor(const BatchImageProcessor &&) = delete;
-
         BatchImageProcessor& operator=(const BatchImageProcessor&) = delete;
         BatchImageProcessor& operator=(const BatchImageProcessor&&) = delete;
-        QFileInfoList & availableFileInfos();
 
-        /**
-         * @brief do task
-         */
         void Run();
-
+public slots:
+        void onConsumerFinished();
     signals:
-        void workFinished();                     // 通知任务结束
-
-    protected:
-        void scanDirectory(const QString &path);
+        void workFinished();
 
     private:
         QString m_Root;
@@ -43,6 +37,10 @@ namespace CM
         QFileInfoList m_ImageFileLists;
         QSet<QString> m_ScannedDirectories;
         ThreadPool * m_Pool {};
+
+        std::shared_ptr<CM::FileQueue> m_Queue;
+
+        uint32_t m_ActiveConsumers = 0;
 
     };
 }
